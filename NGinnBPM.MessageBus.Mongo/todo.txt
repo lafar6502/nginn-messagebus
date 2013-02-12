@@ -1,0 +1,19 @@
+﻿NGinnBPM.MessageBus.Mongo
+an attempt to implement NGInn.MessageBus functionality on top of MongoDB
+
+Idea I
+Use capped collections for queue storage
+and tailable cursor for retrieving messages from the queue
+Tailable cursors are only available for capped collections
+
+Pros: 
+- automatic cleanup
+- performance and very low latency
+- simple
+Cons:
+- no easy way of implementing scheduled messages/retrying/failures
+
+
+Idea II
+Use an ordinary (uncapped collection)
+Implement atomic message retrieval (findAndModify)

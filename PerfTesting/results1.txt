@@ -1,0 +1,74 @@
+2001-11-03, laptop, sql 2008 dev edition, windows 7 x64, intel i7 proc
+
+Test 1 - single threaded sending of single messages, no batching
+Sent 100000 messages in 00:01:52.5324364, 888,632675156405 msgs/second
+Sent 100000 messages in 00:01:23.7237887, 1194,40366415238 msgs/second
+Sent 100000 messages in 00:01:53.5244932, 880,867178361471 msgs/second
+Sent 100000 messages in 00:01:34.2533909, 1060,96978628702 msgs/second
+
+Test 2 - single threaded sending of batches of 10 messages
+Sent 100000 messages in 00:01:31.3492249, 1094,70003833607 msgs/second
+Sent 100000 messages in 00:01:11.7971065, 1392,81378978692 msgs/second
+Sent 100000 messages in 00:01:20.1415839, 1247,79165988008 msgs/second
+Sent 100000 messages in 00:01:15.2953066, 1328,10402819981 msgs/second
+
+Test 3 - single threaded receiving from local queue
+100000 messages in 226 secs, 442 msg/sec
+100000 messages in 214	secs, 467 msg/sec
+
+Test 4 - multi threaded receiving, 4 threads
+97	1030
+91	1098
+96	1041
+
+Test 5 - multi threaded receiving ,8 threads
+79	1265
+88	1136
+99	1010
+
+test 6 - multi threaded recv, 12 threads
+78	1282
+85	1176
+
+Test 7: multi threaded send of batches of 10 messages - 4 threads
+TestMTSending2 sent 100000 messages in 00:00:19.2501010, 5194,77793908718 msgs/second
+TestMTSending2 sent 100000 messages in 00:00:18.6980695, 5348,14570028205 msgs/second
+TestMTSending2 sent 100000 messages in 00:00:17.5670048, 5692,4900481612 msgs/se
+
+Test 8: multi threaded sending of single messages - 4 threads
+TestMTSending2 sent 100000 messages in 00:00:28.1396095, 3553,70958506016 msgs/s
+TestMTSending2 sent 100000 messages in 00:00:25.4554560, 3928,43090298599 msgs/s
+
+Test 9: multi-threaded sending of single messages - 8 threads
+TestMTSending2 sent 100000 messages in 00:00:15.1708677, 6591,58078347753 msgs/s
+TestMTSending2 sent 100000 messages in 00:00:18.4710564, 5413,87551607498 msgs/s
+TestMTSending2 sent 100000 messages in 00:00:15.2618730, 6552,27572657694 msgs/s
+
+Test 10: multi-threaded sending of batched messages: 8 threads, batch 10 
+TestMTSending2 sent 100000 messages in 00:00:18.7580729, 5331,03803003133 msgs/s
+TestMTSending2 sent 100000 messages in 00:00:21.0962066, 4740,18869344975 msgs/s
+TestMTSending2 sent 100000 messages in 00:00:18.4820571, 5410,65312475417 msgs/s
+
+Test 11: single threaded receiving, sql 'output' clause
+211	473
+212	471
+
+Test 12: multi threaded receiving, output clause, 8 threads
+185	540
+195	512
+
+Test 13: Request-Reply, 8 recv threads
+109	917
+108	925
+104	961
+108	925
+
+Test 14: Request-Reply, 12 recv threads
+110	909
+99	1010
+98	1020
+
+Test 15: Request-Reply, 4 recv threads
+115	869
+111	900
+119	840

@@ -1,0 +1,135 @@
+<project name="NGinn-MessageBus" default="build" basedir=".">
+	<property name="build_dir" value="build/${nant.settings.currentframework}" />
+	<property name="libdir" value="extlib" />
+	<property name="debug" value="Full" />
+	<property name="def" value="DOTNET_4_0" />
+	<if test="${nant.settings.currentframework=='net-3.5'}">
+		<echo message="3.5 build" />
+		<property name="def" value="DOTNET_3_5" />
+	</if>
+	
+	<target name="build" depends="NGinnBPM.ServiceHost, NGinnBPM.MessageBus.Mongo.Windsor">
+		
+	</target>
+	
+	<target name="clean">
+		<delete dir="${build_dir}" />
+	</target>
+	
+	<target name="prepare">
+		<mkdir dir="${build_dir}" />
+		<copy todir="${build_dir}">
+            <fileset basedir="extlib">
+                <include name="Castle.*" />
+                <include name="NLog.*" />
+                <include name="MongoDB.*.dll" />
+            </fileset>
+		</copy>
+		<copy todir="${build_dir}">
+			<fileset basedir="extlib/${nant.settings.currentframework}">
+                <include name="*.dll" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="NGinnBPM.MessageBus" depends="prepare">
+		<csc target="library" output="${build_dir}/NGinnBPM.MessageBus.dll" debug="true" define="${def}">
+            <references>
+                <include name="${build_dir}/NLog.dll" />
+                <include name="${build_dir}/Newtonsoft.Json.dll" />
+                <include name="System.Data.dll" />
+                <include name="System.Net.dll" />
+                <include name="System.Runtime.Serialization.dll" />
+                <include name="System.Messaging.dll" />
+            </references>
+            <sources basedir="NGinnBPM.MessageBus">
+                <include name="**/*.cs" />
+            </sources>
+            <resources basedir="NGinnBPM.MessageBus" prefix="NGinnBPM.MessageBus" dynamicprefix="true">
+                <include name="StaticRC/index.htm" />
+                <include name="*.sql" />
+            </resources>
+        </csc>
+	</target>
+	
+	<target name="NGinnBPM.MessageBus.Windsor" depends="NGinnBPM.MessageBus">
+		<csc target="library" output="${build_dir}/NGinnBPM.MessageBus.Windsor.dll" debug="true" define="${def}">
+            <references>
+                <include name="${build_dir}/NLog.dll" />
+                <include name="${build_dir}/Newtonsoft.Json.dll" />
+                <include name="${build_dir}/Castle.Core.dll" />
+                <include name="${build_dir}/Castle.Windsor.dll" />
+                <include name="${build_dir}/NGinnBPM.MessageBus.dll" />
+                <include name="System.Data.dll" />
+                <include name="System.Net.dll" />
+                <include name="System.Runtime.Serialization.dll" />
+                <include name="System.Messaging.dll" />
+            </references>
+            <sources basedir="NGinnBPM.MessageBus.Windsor">
+                <include name="**/*.cs" />
+            </sources>
+        </csc>
+	</target>
+    
+    <target name="NGinnBPM.MessageBus.Mongo" depends="NGinnBPM.MessageBus">
+		<csc target="library" output="${build_dir}/NGinnBPM.MessageBus.Mongo.dll" debug="true" define="${def}">
+            <references>
+                <include name="${build_dir}/NLog.dll" />
+                <include name="${build_dir}/Newtonsoft.Json.dll" />
+                <include name="${build_dir}/MongoDB.Driver.dll" />
+                <include name="${build_dir}/MongoDB.Bson.dll" />
+                <include name="${build_dir}/NGinnBPM.MessageBus.dll" />
+                <include name="System.Data.dll" />
+                <include name="System.Net.dll" />
+            </references>
+            <sources basedir="NGinnBPM.MessageBus.Mongo">
+                <include name="**/*.cs" />
+            </sources>
+        </csc>
+	</target>
+    
+    <target name="NGinnBPM.MessageBus.Mongo.Windsor" depends="NGinnBPM.MessageBus.Mongo, NGinnBPM.MessageBus.Windsor">
+		<csc target="library" output="${build_dir}/NGinnBPM.MessageBus.Mongo.Windsor.dll" debug="true" define="${def}">
+            <references>
+                <include name="${build_dir}/NLog.dll" />
+                <include name="${build_dir}/MongoDB.Driver.dll" />
+                <include name="${build_dir}/MongoDB.Bson.dll" />
+                <include name="${build_dir}/Castle.Core.dll" />
+                <include name="${build_dir}/Castle.Windsor.dll" />
+                <include name="${build_dir}/NGinnBPM.MessageBus.dll" />
+                <include name="${build_dir}/NGinnBPM.MessageBus.Windsor.dll" />
+                <include name="${build_dir}/NGinnBPM.MessageBus.Mongo.dll" />
+                <include name="System.Data.dll" />
+                <include name="System.Net.dll" />
+            </references>
+            <sources basedir="NGinnBPM.MessageBus.Mongo.Windsor">
+                <include name="**/*.cs" />
+            </sources>
+        </csc>
+	</target>
+	
+	<target name="NGinnBPM.ServiceHost" depends="NGinnBPM.MessageBus.Windsor">
+		<csc target="exe" output="${build_dir}/NGinnBPM.ServiceHost.exe" debug="true" define="${def}">
+            <references>
+                <include name="${build_dir}/NLog.dll" />
+                <include name="${build_dir}/Newtonsoft.Json.dll" />
+				<include name="${build_dir}/Castle.Core.dll" />
+                <include name="${build_dir}/Castle.Windsor.dll" />
+                <include name="System.Data.dll" />
+                <include name="System.Net.dll" />
+                <include name="System.Runtime.Serialization.dll" />
+                <include name="System.Messaging.dll" />
+				<include name="${build_dir}/NGinnBPM.MessageBus.dll" />
+				<include name="${build_dir}/NGinnBPM.MessageBus.Windsor.dll" />
+            </references>
+            <sources basedir="NGinnBPM.ServiceHost">
+                <include name="**/*.cs" />
+            </sources>
+            <resources basedir="NGinnBPM.ServiceHost" prefix="NGinnBPM.ServiceHost" dynamicprefix="true">
+                <include name="*.resx" />
+            </resources>
+        </csc>
+	</target>
+	
+   
+</project>

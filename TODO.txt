@@ -1,0 +1,20 @@
+
+IMessageConsumer<T>
+IMessageHandlerService<T>
+InitiatedBy<T>
+IHandleSagaMessage<T>
+
+4 interfejsy do obslugi komunikatow. Jak to ujednoliciæ
+
+Message bus -> saga, service, message consumer, custom message handler
+Service call -> IMessageHandlerService -> saga
+
+Jak to wszystko pogodzic?
+Jeden dispatcher czy wielu???
+
+1. szukanie handlera dla komunikatu -> tak samo dla wszystkich (interfejsy, typy bazowe etc)
+   rozni sie tylko interfejs
+2. znalazles? sprawdz czy saga. Jesli tak to wyciagnij j¹ z bazy
+3. deliver message to handlers. break jesli handlecurrentmessagelater
+4. zapisz sage jesli saga
+

@@ -1,0 +1,220 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{00547C7F-AB8E-49E6-84C6-6B21AA156DF2}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>NGinnBPM.MessageBus</RootNamespace>
+    <AssemblyName>NGinnBPM.MessageBus</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=4.0.2.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\extlib\net-3.5\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NLog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\extlib\net-3.5\NLog.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Messaging" />
+    <Reference Include="System.Net">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="IMessage.cs" />
+    <Compile Include="IMessageBus.cs" />
+    <Compile Include="IMessageConsumer.cs" />
+    <Compile Include="IMessageHandlerService.cs" />
+    <Compile Include="Impl\BinaryMessageSerializer.cs" />
+    <Compile Include="Impl\DelegateFactory.cs" />
+    <Compile Include="Impl\HttpService\HttpHandlerInfoServlet.cs" />
+    <Compile Include="Impl\HttpService\HealthCheckServlet.cs" />
+    <Compile Include="Impl\HttpService\MasterDispatcherServlet.cs" />
+    <Compile Include="Impl\IMessageDb.cs" />
+    <Compile Include="Impl\ServiceCallContext.cs" />
+    <Compile Include="Impl\IHealthCheck.cs" />
+    <Compile Include="Impl\Sagas\ISagaRepository.cs" />
+    <Compile Include="Impl\Sagas\SagaStateHelper.cs" />
+    <Compile Include="Impl\Sagas\SagaStateSqlRepository.cs" />
+    <Compile Include="Impl\SqlBatchingMessageTransport.cs" />
+    <Compile Include="Impl\SqlMessageTransport2.cs" />
+    <Compile Include="Impl\HttpService\HttpListenerRequestContext.cs" />
+    <Compile Include="Impl\HttpService\JsonServiceCallHandler.cs" />
+    <Compile Include="Impl\HttpService\ServiceCallServlet.cs" />
+    <Compile Include="Impl\HttpService\ServletBase.cs" />
+    <Compile Include="Impl\ServiceMessageDipatcher.cs" />
+    <Compile Include="Impl\DbInitialize.cs" />
+    <Compile Include="Impl\DummySubscriptionService.cs" />
+    <Compile Include="Impl\FileQueueTransport.cs" />
+    <Compile Include="Impl\HttpService\HttpServer.cs" />
+    <Compile Include="Impl\HttpService\IServlet.cs" />
+    <Compile Include="Impl\HttpService\NLogLastDiagnosticMessagesServlet.cs" />
+    <Compile Include="Impl\ICache.cs" />
+    <Compile Include="Impl\ICustomMessageHandler.cs" />
+    <Compile Include="Impl\IMessageContainerSerializer.cs" />
+    <Compile Include="Impl\IMessageTransport.cs" />
+    <Compile Include="Impl\ISequenceMessages.cs" />
+    <Compile Include="Impl\ISerializeMessages.cs" />
+    <Compile Include="Impl\IStartableService.cs" />
+    <Compile Include="Impl\ISubscriptionService.cs" />
+    <Compile Include="Impl\JsonMessageContainerSerializer.cs" />
+    <Compile Include="Impl\MSMQ\MSMQTransport.cs" />
+    <Compile Include="Impl\PingService.cs" />
+    <Compile Include="Impl\SqlSequenceManager.cs" />
+    <Compile Include="Impl\SqlUtil.cs" />
+    <Compile Include="Impl\StaticMessageRouting.cs" />
+    <Compile Include="MessageBusContext.cs" />
+    <Compile Include="MessageBusException.cs" />
+    <Compile Include="Messages\ControlMessages.cs" />
+    <Compile Include="Impl\HttpMessageTransport.cs" />
+    <Compile Include="Impl\JsonMessageSerializer.cs" />
+    <Compile Include="Impl\MessageBatchingRM.cs" />
+    <Compile Include="Impl\MessageDispatcher.cs" />
+    <Compile Include="Messages\MessageFailure.cs" />
+    <Compile Include="Impl\MessageForwarder.cs" />
+    <Compile Include="Messages\Ping.cs" />
+    <Compile Include="Messages\SubscribeRequest.cs" />
+    <Compile Include="Messages\SubscriptionExpiring.cs" />
+    <Compile Include="Messages\SubscriptionTimeout.cs" />
+    <Compile Include="Messages\UnsubscribeRequest.cs" />
+    <Compile Include="Perf\AvgCalculator.cs" />
+    <Compile Include="Perf\CountCalculator.cs" />
+    <Compile Include="Perf\FreqCalculator.cs" />
+    <Compile Include="Perf\DefaultCounters.cs" />
+    <Compile Include="Perf\IPerfCounterSet.cs" />
+    <Compile Include="Perf\LastValueCalculator.cs" />
+    <Compile Include="Perf\NGPerfStatTarget.cs" />
+    <Compile Include="Perf\PercentileCalculator.cs" />
+    <Compile Include="Perf\PerfCounterBase.cs" />
+    <Compile Include="Perf\PerfCounterSet.cs" />
+    <Compile Include="Perf\PerfServlet.cs" />
+    <Compile Include="Perf\XmlPerfCounterSetBuilder.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Impl\SqlSubscriptionService.cs" />
+    <Compile Include="Messages\TestMessage.cs" />
+    <Compile Include="Sagas\InitiatedBy.cs" />
+    <Compile Include="Sagas\Saga.cs" />
+    <Compile Include="ServiceClient.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="createmqueue.mssql.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="create_subscribertable.mssql.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Impl\HttpMessageGateway.cs" />
+    <Compile Include="Impl\HttpService\FSDirectoryServlet.cs" />
+    <Compile Include="Impl\HttpService\MimeTypes.cs" />
+    <Compile Include="Impl\HttpService\NotFoundException.cs" />
+    <Compile Include="Impl\HttpService\RequestContext.cs" />
+    <Compile Include="Impl\HttpService\StaticResourceServlet.cs" />
+    <Compile Include="Impl\HttpService\UrlPatternAttribute.cs" />
+    <Compile Include="Impl\IReceivedMessageRegistry.cs" />
+    <Compile Include="Impl\MessageBus.cs" />
+    <Compile Include="Impl\MessageBusInfoServlet.cs" />
+    <Compile Include="Impl\MessageReceiverServlet.cs" />
+    <Compile Include="Impl\SqlReceivedMessageRegistry.cs" />
+    <Compile Include="Impl\SubscriptionMsgHandler.cs" />
+    <Compile Include="IServiceResolver.cs" />
+    <Compile Include="Perf\IPerfCounter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="StaticRC\index.htm" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="create_seqtable.mssql.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="create_sagatable.sql" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
