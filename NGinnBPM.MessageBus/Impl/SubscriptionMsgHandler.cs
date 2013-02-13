@@ -47,7 +47,7 @@ namespace NGinnBPM.MessageBus.Impl
             {
                 //set expiration to 2xlifetime so we have time to handle renewal
                 MessageBus.SendAt(askRenew.Value, subscriber, new SubscriptionExpiring { MessageType = message.MessageType });
-                MessageBus.NotifyAt(expiration.Value, new SubscriptionTimeout { Subscriber = subscriber, MessageType = message.MessageType, Expiration = expiration.Value });
+                MessageBus.SendAt(expiration.Value, MessageBus.Endpoint, new SubscriptionTimeout { Subscriber = subscriber, MessageType = message.MessageType, Expiration = expiration.Value });
             }
         }
 
@@ -64,9 +64,12 @@ namespace NGinnBPM.MessageBus.Impl
 
         public void Handle(SubscriptionExpiring message)
         {
+            //SubscriptionExpiring message came from our publisher.
+            //Renew the subscription by replying with subscribe request
             MessageBus.Reply(new SubscribeRequest
             {
                 MessageType = message.MessageType,
+                SubscriberEndpoint = MessageBus.Endpoint,
                 SubscriptionTime = DefaultSubscriptionLifetime
             });
         }
