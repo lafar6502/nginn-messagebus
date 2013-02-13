@@ -1,0 +1,11 @@
+<nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <variable name="logDir" value="${basedir}/../logs"/>
+    <targets>
+        <target name="all" xsi:type="File" fileName="${logDir}/pub-all.${shortdate}.log"  layout="${longdate}|${level}|${logger}|T${threadid}|${message}"/>
+    </targets>
+    <rules>
+		<logger name="STATSQLMT*" minlevel="Error" writeTo="all" final="true" />
+        <logger name="*" minlevel="Debug" writeTo="all" />
+    </rules>
+</nlog>
