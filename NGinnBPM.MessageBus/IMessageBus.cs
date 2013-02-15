@@ -171,12 +171,6 @@ namespace NGinnBPM.MessageBus
         ISendMessage NewMessage(object body);
     }
 
-    /// <summary>
-    /// A message
-    /// </summary>
-    public interface IMessage
-    {
-    }
 
     
     
