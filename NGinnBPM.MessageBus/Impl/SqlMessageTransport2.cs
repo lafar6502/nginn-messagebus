@@ -366,6 +366,7 @@ namespace NGinnBPM.MessageBus.Impl
             }
         }
 
+        
         /// <summary>
         /// Create the message queue table
         /// </summary>

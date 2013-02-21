@@ -1048,6 +1048,43 @@ namespace NGinnBPM.MessageBus.Windsor
             var s = ConfigurationManager.AppSettings[key];
             return s == null ? defval : s;
         }
+
+        /// <summary>
+        /// Create a queue table in SQL server database.
+        /// Currently this will fail for other db types.
+        /// Be sure to configure your connection strings before calling this function.
+        /// </summary>
+        /// <param name="endpoint"></param>
+        /// <returns></returns>
+        public MessageBusConfigurator CreateQueueTable(string endpoint)
+        {
+            string cs, table;
+            if (!SqlUtil.ParseSqlEndpoint(endpoint, out cs, out table)) throw new Exception("Invalid sql endpoint");
+            using (var con = OpenConnection(cs))
+            {
+                con.Open();
+                DbInitialize.RunResourceDbScript(con, "NGinnBPM.MessageBus.createmqueue.mssql.sql", new object[] { table });
+            }
+            return this;
+        }
+
+        protected System.Data.IDbConnection OpenConnection(string cstring)
+        {
+            string cstr = cstring;
+            string drv = "System.Data.SqlClient";
+            var cs = System.Configuration.ConfigurationManager.ConnectionStrings[cstring];
+            if (cs != null)
+            {
+                cstr = cs.ConnectionString;
+                if (!string.IsNullOrEmpty(cs.ProviderName)) drv = cs.ProviderName;
+            }
+            else if (_connStrings.ContainsKey(cstring))
+            {
+                cstr = _connStrings[cstring];
+            }
+            var fact = System.Data.Common.DbProviderFactories.GetFactory(drv);
+            return fact.CreateConnection();
+        }
         /// <summary>
         /// Read the configuration from app config file
         /// </summary>
