@@ -50,6 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EventDistributor.cs" />
     <Compile Include="PublishHost.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

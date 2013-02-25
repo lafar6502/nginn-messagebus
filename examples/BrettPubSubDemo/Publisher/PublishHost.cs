@@ -31,6 +31,7 @@ namespace Publisher
                 .AutoCreateDatabase(true) //queue tables will be created if they don't exist. Warning: you have to have 'create table' db permissions to do that!
                 .SetEnableSagas(false) //disable saga for now
                 .SetAlwaysPublishLocal(false)
+                .AddMessageHandlersFromAssembly(typeof(EventDistributor).Assembly)
                 .FinishConfiguration()
                 .StartMessageBus(); //run the queue
             return mc;

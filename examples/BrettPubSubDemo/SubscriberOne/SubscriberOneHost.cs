@@ -12,6 +12,8 @@ namespace SubscriberOne
             var bus = mc.GetMessageBus();
             bus.SubscribeAt("sql://MessageBus/MQ_Events",typeof(Object));
             Console.WriteLine("Listening, press enter to exit...");
+            //this sends a message to the publisher (and it will re-send it to us using pub-sub)
+            bus.Send("sql://MessageBus/MQ_Events", new Messages.GreetingMessage {Text = "Hi, this is subscriber one speaking" });
             Console.ReadLine();
             mc.StopMessageBus();
         }

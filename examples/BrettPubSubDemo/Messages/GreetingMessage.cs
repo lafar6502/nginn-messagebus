@@ -7,7 +7,7 @@ using NGinnBPM.MessageBus;
 
 namespace Messages
 {
-    public class GreetingMessage : IMessage
+    public class GreetingMessage 
     {
         public Guid Id { get; set; }
         public string Text { get; set; }
