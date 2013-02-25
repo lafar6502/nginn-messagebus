@@ -5,27 +5,11 @@ using System.Text;
 
 namespace NGinnBPM.MessageBus.Messages
 {
-    [Serializable]
+    /// <summary>
+    /// Common base class for control messages in nginn-messagebus
+    /// </summary>
     public class ControlMessage
     {
     }
 
-    [Serializable]
-    public class PauseMessageProcessing : ControlMessage
-    {
-    }
-
-    [Serializable]
-    public class ResumeMessageProcessing : ControlMessage
-    {
-    }
-
-    /// <summary>
-    /// Inform message bus that message handler configuration
-    /// has changed. 
-    /// </summary>
-    [Serializable]
-    public class MessageHandlersModified : ControlMessage
-    {
-    }
-}
+ }

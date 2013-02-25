@@ -133,7 +133,6 @@
     <Compile Include="Impl\JsonMessageSerializer.cs" />
     <Compile Include="Impl\MessageBatchingRM.cs" />
     <Compile Include="Impl\MessageDispatcher.cs" />
-    <Compile Include="Messages\MessageFailure.cs" />
     <Compile Include="Impl\MessageForwarder.cs" />
     <Compile Include="Messages\Ping.cs" />
     <Compile Include="Messages\SubscribeRequest.cs" />

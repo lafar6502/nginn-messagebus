@@ -134,7 +134,7 @@ namespace NGinnBPM.MessageBus.Impl
                 }
             }
 
-            while (tp.BaseType != null) //dispatch based on message type
+            while (tp != null) //dispatch based on message type
             {
                 MsgHandlerInfo mhi = GetHandlersFor(tp);
                 if (mhi != null)

@@ -8,7 +8,7 @@ namespace NGinnBPM.MessageBus.Messages
     /// <summary>
     /// Message subscription request sent to publisher endpoint
     /// </summary>
-    public class SubscribeRequest 
+    public class SubscribeRequest : ControlMessage
     {
         /// <summary>
         /// Endpoint of the subscriber. If not filled, sender's endpoint will be used.

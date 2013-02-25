@@ -9,7 +9,7 @@ namespace NGinnBPM.MessageBus.Messages
     /// This message will be sent to you when your subscription is about to expire.
     /// When handling this message you should re-subscribe or unsubscribe.
     /// </summary>
-    public class SubscriptionExpiring
+    public class SubscriptionExpiring : ControlMessage
     {
         public string MessageType { get; set; }
     }

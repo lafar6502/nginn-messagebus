@@ -5,7 +5,7 @@ using System.Text;
 
 namespace NGinnBPM.MessageBus.Messages
 {
-    public class UnsubscribeRequest 
+    public class UnsubscribeRequest : ControlMessage
     {
         public string SubscriberEndpoint { get; set; }
         public string MessageType { get; set; }
