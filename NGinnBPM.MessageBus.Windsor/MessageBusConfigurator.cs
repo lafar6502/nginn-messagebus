@@ -1083,7 +1083,9 @@ namespace NGinnBPM.MessageBus.Windsor
                 cstr = _connStrings[cstring];
             }
             var fact = System.Data.Common.DbProviderFactories.GetFactory(drv);
-            return fact.CreateConnection();
+            var con = fact.CreateConnection();
+            con.ConnectionString = cstr;
+            return con;
         }
         /// <summary>
         /// Read the configuration from app config file
