@@ -22,6 +22,7 @@ namespace NGinnBPM.MessageBus.Impl
         {
             SubscriptionTableName = "NGinnMessageBus_Subscriptions";
             AutoCreateSubscriptionTable = true;
+            CacheExpiration = TimeSpan.FromMinutes(60); //1-hour expiration
         }
 
         public string ConnectionString { get; set; }
@@ -29,8 +30,10 @@ namespace NGinnBPM.MessageBus.Impl
         public string SubscriptionTableName { get; set; }
         public string Endpoint { get; set; }
         public bool AutoCreateSubscriptionTable { get; set; }
+        public TimeSpan CacheExpiration { get; set; }
         
-        private Dictionary<string, List<string>> _cache = new Dictionary<string, List<string>>();
+        private Dictionary<string, List<string>> _cache = null;
+        private DateTime _lastCacheLoad = DateTime.Now;
 
         private IDbConnection OpenConnection()
         {
@@ -61,32 +64,41 @@ namespace NGinnBPM.MessageBus.Impl
 
         public ICollection<string> GetTargetEndpoints(string messageType)
         {
-            List<string> lst;
-            if (_cache.TryGetValue(messageType, out lst))
-                return lst;
+            List<string> lst = null;
             InitializeIfNeeded();
-            lst = new List<string>();
-            AccessDb(delegate(IDbConnection con)
+            if (_lastCacheLoad + CacheExpiration < DateTime.Now)
             {
-                using (IDbCommand cmd = con.CreateCommand())
+                _cache = null;
+            }
+            var c = _cache;
+            if (c == null)
+            {
+                AccessDb(delegate(IDbConnection con)
                 {
-                    cmd.CommandText = string.Format("select subscriber_endpoint from {0} where message_type=@mtype and publisher_endpoint=@pub and (expiration_date is null or expiration_date >= getdate())", SubscriptionTableName);
-                    SqlUtil.AddParameter(cmd, "@mtype", messageType);
-                    SqlUtil.AddParameter(cmd, "@pub", Endpoint);
+                    c = new Dictionary<string, List<string>>();
+                    using (IDbCommand cmd = con.CreateCommand())
+                    {
+                        cmd.CommandText = string.Format("select subscriber_endpoint, message_type from {0} where publisher_endpoint=@pub and (expiration_date is null or expiration_date >= getdate())", SubscriptionTableName);
+                        SqlUtil.AddParameter(cmd, "@pub", Endpoint);
 
-                    using (IDataReader dr = cmd.ExecuteReader())
-                    {
-                        while (dr.Read())
-                            lst.Add(dr.GetString(0));
+                        using (IDataReader dr = cmd.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                string mtype = dr.GetString(1), sub = dr.GetString(0);
+                                if (!c.TryGetValue(mtype, out lst)) { lst = new List<string>(); c[mtype] = lst; }
+                                if (!lst.Contains(sub)) lst.Add(sub);
+                            }
+                        }
                     }
-                    lock (_cache)
-                    {
-                        if (!_cache.ContainsKey(messageType))
-                            _cache[messageType] = lst;
-                    }
+                });
+                lock (this)
+                {
+                    _cache = c;
+                    _lastCacheLoad = DateTime.Now;
                 }
-            });
-
+            }
+            if (!c.TryGetValue(messageType, out lst)) lst = new List<string>();
             return lst;
         }
 
@@ -117,7 +129,7 @@ namespace NGinnBPM.MessageBus.Impl
                     }
                 }
             });
-            _cache = new Dictionary<string, List<string>>();
+            _cache = null;
         }
 
         public void Unsubscribe(string subscriberEndpoint, string messageType)
@@ -134,7 +146,7 @@ namespace NGinnBPM.MessageBus.Impl
                     cmd.ExecuteNonQuery();
                 }
             });
-            _cache = new Dictionary<string, List<string>>();
+            _cache = null;
         }
 
         #endregion
@@ -197,7 +209,7 @@ namespace NGinnBPM.MessageBus.Impl
                     var rows = cmd.ExecuteNonQuery();
                     if (rows == 0) return;
                     log.Warn("Subscription expired: {0} {1}", subscriberEndpoint, messageType);
-                    _cache = new Dictionary<string, List<string>>();
+                    _cache = null;
                 }
 
             });

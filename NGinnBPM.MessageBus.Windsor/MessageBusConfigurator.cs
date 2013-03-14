@@ -277,6 +277,8 @@ namespace NGinnBPM.MessageBus.Windsor
 
         /// <summary>
         /// Configure SQL subscription database
+        /// Warning: configure subscription parameters (lifetime, cache expiration time)
+        /// before calling this function.
         /// </summary>
         /// <returns></returns>
         public MessageBusConfigurator UseSqlSubscriptions()
@@ -288,7 +290,8 @@ namespace NGinnBPM.MessageBus.Windsor
                 {
                     ConnectionString = connstr,
                     AutoCreateSubscriptionTable = true,
-                    Endpoint = Endpoint
+                    Endpoint = Endpoint,
+                    CacheExpiration = _subscriptionCacheTime
                 })
                 .LifeStyle.Singleton);
             return this;
@@ -580,6 +583,20 @@ namespace NGinnBPM.MessageBus.Windsor
         public MessageBusConfigurator SetDefaultSubscriptionLifetime(TimeSpan ts)
         {
             SubscriptionLifetime = ts;
+            return this;
+        }
+
+        private TimeSpan _subscriptionCacheTime = TimeSpan.FromMinutes(60);
+
+        /// <summary>
+        /// Configure subscription cache expiration time.
+        /// By default it's 1 hour.
+        /// </summary>
+        /// <param name="ts"></param>
+        /// <returns></returns>
+        public MessageBusConfigurator SetSubscriptionCacheTime(TimeSpan ts)
+        {
+            _subscriptionCacheTime = ts;
             return this;
         }
         /// <summary>
