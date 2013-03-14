@@ -160,14 +160,17 @@ namespace NGinnBPM.MessageBus.Impl
 
         public void SetHeader(string name, string value)
         {
-            if (Headers == null) Headers = new Dictionary<string, string>();
-            if (Headers.ContainsKey(name)) Headers.Remove(name);
-            if (value != null) Headers[name] = value;
+            if (Headers != null && Headers.ContainsKey(name)) Headers.Remove(name);
+            if (value != null)
+            {
+                if (Headers == null) Headers = new Dictionary<string, string>();
+                Headers[name] = value;
+            }
         }
 
         public bool HasHeader(string hdr)
         {
-            return Headers.ContainsKey(hdr);
+            return Headers != null && Headers.ContainsKey(hdr);
         }
 
         /// <summary>
@@ -183,6 +186,22 @@ namespace NGinnBPM.MessageBus.Impl
             set
             {
                 SetHeader(HDR_RetryCount, value.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Message type
+        /// </summary>
+        [IgnoreDataMember]
+        public string MessageTypeName
+        {
+            get
+            {
+                return GetStringHeader(HDR_MessageType, null);
+            }
+            set
+            {
+                SetHeader(HDR_MessageType, value);
             }
         }
 
@@ -293,6 +312,7 @@ namespace NGinnBPM.MessageBus.Impl
                 mc.Cc = new List<string>(this.Cc);
             if (this.Headers != null) mc.Headers = new Dictionary<string, string>(this.Headers);
             mc.Body = this.Body;
+            mc.BodyStr = this.BodyStr;
             return mc;
         }
 

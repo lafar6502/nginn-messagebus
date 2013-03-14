@@ -10,7 +10,7 @@ namespace SubscriberTwo
 
         public void Handle(GreetingMessage message)
         {
-            Console.WriteLine("Message Received: " + message.Text);
+            Console.WriteLine("SUB2: Message Received: " + message.Text);
         }
     }
 }

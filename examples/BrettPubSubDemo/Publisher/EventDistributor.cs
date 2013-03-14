@@ -4,7 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NGinnBPM.MessageBus;
+using NGinnBPM.MessageBus.Impl;
+using Newtonsoft.Json;
 using NLog;
+using System.Text.RegularExpressions;
+using System.IO;
+
 namespace Publisher
 {
     /// <summary>
@@ -21,4 +26,5 @@ namespace Publisher
             MessageBusContext.CurrentMessageBus.Notify(message);
         }
     }
+
 }

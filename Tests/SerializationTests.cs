@@ -173,6 +173,7 @@ namespace Tests
 
             MemoryStream ms = new MemoryStream();
             StreamWriter sw = new StreamWriter(ms);
+            string mtype;
             ser.Serialize(sm, sw);
             sw.Flush();
             log.Info("SomeMessage size: {0}", ms.Length);

@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubscriberTwo", "Subscriber
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubscriberOne", "SubscriberOne\SubscriberOne.csproj", "{FCE486E0-3714-452E-82C9-340318138188}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDistributor", "EventDistributor\EventDistributor.csproj", "{EE4244B1-41A7-4B60-871B-AB7C6DF3B4B2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,10 @@ Global
 		{FCE486E0-3714-452E-82C9-340318138188}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FCE486E0-3714-452E-82C9-340318138188}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FCE486E0-3714-452E-82C9-340318138188}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE4244B1-41A7-4B60-871B-AB7C6DF3B4B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE4244B1-41A7-4B60-871B-AB7C6DF3B4B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE4244B1-41A7-4B60-871B-AB7C6DF3B4B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE4244B1-41A7-4B60-871B-AB7C6DF3B4B2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -70,6 +70,11 @@ namespace NGinnBPM.MessageBus.Impl
         void _transport_OnMessageArrived(MessageContainer message, IMessageTransport transport)
         {
             Debug.Assert(message.BodyStr != null && message.Body == null);
+            MessagePreprocessResult disp = PreprocessIncomingMessage(message, transport);
+            if (disp == MessagePreprocessResult.CancelFurtherProcessing)
+            {
+                return; 
+            }
             DeserializeMessage(message);
             Debug.Assert(message.Body != null);
             DispatchIncomingMessage(message);
@@ -92,6 +97,17 @@ namespace NGinnBPM.MessageBus.Impl
         /// </summary>
         [ThreadStatic]
         private static CurMsg _currentMessage;
+
+        protected virtual MessagePreprocessResult PreprocessIncomingMessage(MessageContainer mc, IMessageTransport t)
+        {
+            //todo: allow for ordering of message preprocessors
+            foreach (IPreprocessMessages pm in this.ServiceLocator.GetAllInstances<IPreprocessMessages>())
+            {
+                var res = pm.HandleIncomingMessage(mc, t);
+                if (res != MessagePreprocessResult.ContinueProcessing) return res;
+            }
+            return MessagePreprocessResult.ContinueProcessing;
+        }
         /// <summary>
         /// Deliver the message to handlers
         /// </summary>
@@ -322,6 +338,7 @@ namespace NGinnBPM.MessageBus.Impl
                     prevbody = mc.Body;
                     StringWriter sw = new StringWriter();
                     MessageSerializer.Serialize(mc.Body, sw);
+                    //MessageSerializer.Serialize(mc.Body, sw);
                     mc.BodyStr = sw.ToString();
                     prevstr = mc.BodyStr;
                 }
