@@ -269,6 +269,7 @@ namespace NGinnBPM.MessageBus.Impl
             foreach (MessageContainer msg in msgs)
             {
                 msg.From = Endpoint;
+                if (msg.Body == null) throw new NullReferenceException("Message body is null");
                 string[] targets = GetTargetQueuesForMessageType(msg.Body.GetType());
                 if (targets == null || targets.Length == 0)
                 {
@@ -323,8 +324,8 @@ namespace NGinnBPM.MessageBus.Impl
             string prevstr = null;
             foreach (MessageContainer mc in lst)
             {
-                Debug.Assert(mc.To != null && mc.To.Length > 0);
-                Debug.Assert(mc.Body != null);
+                if (string.IsNullOrEmpty(mc.To)) throw new Exception("Message destination missing");
+                if (mc.Body == null) throw new NullReferenceException("Message body is null");
                 if (mc.From == null)
                     mc.From = MessageTransport.Endpoint;
                 if (mc.UniqueId == null || mc.UniqueId.Length == 0)
