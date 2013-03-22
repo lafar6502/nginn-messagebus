@@ -25,7 +25,7 @@ namespace NGinnBPM.MessageBus.Mongo.Windsor
 
             cfg.CustomizeContainer(wc =>
             {
-                if (wc.GetService<MongoDatabase>() == null)
+                if (!MessageBusConfigurator.IsServiceRegistered(wc, typeof(MongoDatabase)))
                 {
                     wc.Register(Component.For<MongoDatabase>()
                         .Instance(MongoDatabase.Create(cstr)));
@@ -38,7 +38,7 @@ namespace NGinnBPM.MessageBus.Mongo.Windsor
             ConfigureDefaultMongoDbIfNecessary(cfg);
             cfg.CustomizeContainer(wc =>
             {
-                if (wc.GetService<ISubscriptionService>() == null)
+                if (!MessageBusConfigurator.IsServiceRegistered(wc, typeof(ISubscriptionService)))
                 {
                     wc.Register(Component.For<ISubscriptionService>().ImplementedBy<MongoDbSubscriptionService>()
                         .DependsOn(new

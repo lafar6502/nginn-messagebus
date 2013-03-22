@@ -81,7 +81,7 @@ namespace NGinnBPM.MessageBus.Windsor
         protected void BeginConfig()
         {
             if (_wc == null) _wc = new WindsorContainer();
-            if (_wc.Kernel.GetService<IServiceResolver>() == null)
+            if (!IsServiceRegistered<IServiceResolver>())
             {
                 _wc.Register(Component.For<IServiceResolver>().ImplementedBy<WindsorServiceResolver>().LifeStyle.Singleton);
             }
@@ -417,9 +417,24 @@ namespace NGinnBPM.MessageBus.Windsor
             return this;
         }
 
+        protected bool IsServiceRegistered<T>()
+        {
+            return IsServiceRegistered(typeof(T));
+        }
+
+        protected bool IsServiceRegistered(Type t)
+        {
+            return IsServiceRegistered(_wc, t);
+        }
+
+        public static bool IsServiceRegistered(IWindsorContainer wc, Type t)
+        {
+            return wc.Kernel.HasComponent(t);
+        }
+
         protected MessageBusConfigurator ConfigureSqlMessageBus()
         {
-            if (_wc.GetService<DbInitialize>() == null)
+            if (!IsServiceRegistered<DbInitialize>())
             {
                 _wc.Register(Component.For<DbInitialize>()
                     .ImplementedBy<DbInitialize>().LifeStyle.Singleton
@@ -453,7 +468,8 @@ namespace NGinnBPM.MessageBus.Windsor
             
 
             _wc.Kernel.ComponentRegistered += new Castle.MicroKernel.ComponentDataDelegate(Kernel_ComponentRegistered);
-            _wc.Kernel.ComponentUnregistered += new Castle.MicroKernel.ComponentDataDelegate(Kernel_ComponentUnregistered);
+            
+            //_wc.Kernel.ComponentUnregistered += new Castle.MicroKernel.ComponentDataDelegate(Kernel_ComponentUnregistered);
             _wc.Register(Component.For<IMessageBus>()
                 .ImplementedBy<MessageBus.Impl.MessageBus>()
                 .DependsOn(new
@@ -516,7 +532,7 @@ namespace NGinnBPM.MessageBus.Windsor
                 .Named(transName)
                 .LifeStyle.Singleton);
 
-            if (_wc.GetService<MessageDispatcher>() == null) throw new Exception("no message dispatcher");
+            if (!IsServiceRegistered<MessageDispatcher>()) throw new Exception("no message dispatcher");
 
             _wc.Register(Component.For<IMessageBus>()
                 .ImplementedBy<MessageBus.Impl.MessageBus>()
@@ -535,7 +551,8 @@ namespace NGinnBPM.MessageBus.Windsor
 
         private void MessageConsumerAddedOrRemoved()
         {
-            MessageDispatcher md = _wc.GetService<MessageDispatcher>();
+            if (!IsServiceRegistered<MessageDispatcher>()) return;
+            MessageDispatcher md = _wc.Resolve<MessageDispatcher>();
             if (md != null)
             {
                 md.HandlerConfigurationChanged();
@@ -544,7 +561,7 @@ namespace NGinnBPM.MessageBus.Windsor
 
         void Kernel_ComponentUnregistered(string key, Castle.MicroKernel.IHandler handler)
         {
-            if (typeof(NGMessageConsumer).IsAssignableFrom(handler.Service))
+            if (handler.ComponentModel.Services.Any(x => typeof(NGMessageConsumer).IsAssignableFrom(x)))
             {
                 MessageConsumerAddedOrRemoved();
             }
@@ -552,7 +569,7 @@ namespace NGinnBPM.MessageBus.Windsor
 
         void Kernel_ComponentRegistered(string key, Castle.MicroKernel.IHandler handler)
         {
-            if (typeof(NGMessageConsumer).IsAssignableFrom(handler.Service))
+            if (handler.ComponentModel.Services.Any(x => typeof(NGMessageConsumer).IsAssignableFrom(x)))
             {
                 MessageConsumerAddedOrRemoved();
             }
@@ -622,7 +639,7 @@ namespace NGinnBPM.MessageBus.Windsor
         {
             if (typeof(SagaBase).IsAssignableFrom(handlerType))
             {
-                if (_wc.GetService(handlerType) == null)
+                if (!IsServiceRegistered(handlerType))
                 {
                     RegisterSagaType(handlerType);
                 }
@@ -651,7 +668,7 @@ namespace NGinnBPM.MessageBus.Windsor
                 throw new Exception("Is not a saga");
             }
 
-            if (wc.GetService(sagaType) != null)
+            if (IsServiceRegistered(wc, sagaType))
             {
                 throw new Exception("Saga type already registered: " + sagaType);
             }
@@ -704,7 +721,7 @@ namespace NGinnBPM.MessageBus.Windsor
         {
             if (typeof(SagaBase).IsAssignableFrom(t))
             {
-                if (wc.GetService(t) == null)
+                if (!IsServiceRegistered(wc, t))
                 {
                     RegisterSagaType(t, wc);
                 }
@@ -817,7 +834,7 @@ namespace NGinnBPM.MessageBus.Windsor
 
             _wc.Register(Component.For<IStartableService>().ImplementedBy<NGinnBPM.MessageBus.Impl.HttpService.HttpServer>()
                 .DependsOn(new { ListenAddress = listenAddress }).LifeStyle.Singleton);
-            if (_wc.GetService<MasterDispatcherServlet>() == null)
+            if (!IsServiceRegistered<MasterDispatcherServlet>())
             {
                 _wc.Register(Component.For<MasterDispatcherServlet>().ImplementedBy<MasterDispatcherServlet>().LifeStyle.Singleton);
             }
@@ -924,7 +941,7 @@ namespace NGinnBPM.MessageBus.Windsor
         {
             if (typeof(SagaBase).IsAssignableFrom(t))
             {
-                if (_wc.GetService(t) == null)
+                if (!IsServiceRegistered(t))
                 {
                     RegisterSagaType(t);
                 }
@@ -959,24 +976,24 @@ namespace NGinnBPM.MessageBus.Windsor
         /// <returns></returns>
         public MessageBusConfigurator FinishConfiguration()
         {
-            if (_wc.GetService<MessageDispatcher>() == null)
+            if (!IsServiceRegistered<MessageDispatcher>())
             {
                 _wc.Register(Component.For<MessageDispatcher>()
                     .ImplementedBy<MessageDispatcher>()
                     .LifeStyle.Singleton);
             }
 
-            if (_wc.GetService<IServiceMessageDispatcher>() == null)
+            if (!IsServiceRegistered<IServiceMessageDispatcher>())
             {
                 _wc.Register(Component.For<IServiceMessageDispatcher>()
                     .ImplementedBy<ServiceMessageDispatcher>().LifeStyle.Singleton);
             }
             _wc.Register(Component.For<JsonServiceCallHandler>().ImplementedBy<JsonServiceCallHandler>());
-            if (_wc.GetService<IMessageConsumer<Ping>>() == null)
+            if (!IsServiceRegistered<IMessageConsumer<Ping>>())
             {
                 AddMessageHandler(typeof(PingService));
             }
-            if (_wc.GetService<IMessageConsumer<SubscribeRequest>>() == null)
+            if (!IsServiceRegistered<IMessageConsumer<SubscribeRequest>>())
             {
                 _wc.Register(Component.For<IMessageConsumer<SubscribeRequest>, IMessageConsumer<UnsubscribeRequest>, IMessageConsumer<SubscriptionExpiring>, IMessageConsumer<SubscriptionTimeout>>()
                     .ImplementedBy<SubscriptionMsgHandler>()
@@ -985,21 +1002,21 @@ namespace NGinnBPM.MessageBus.Windsor
                         DefaultSubscriptionLifetime = SubscriptionLifetime
                     }));
             }
-            if (_wc.Kernel.GetService<ISerializeMessages>() == null)
+            if (!IsServiceRegistered<ISerializeMessages>())
             {
                 _wc.Register(Component.For<ISerializeMessages>().ImplementedBy<JsonMessageSerializer>().LifeStyle.Singleton);
             }
-            if (_wc.Kernel.GetService<ISubscriptionService>() == null)
+            if (!IsServiceRegistered<ISubscriptionService>())
             {
                 UseSqlSubscriptions();
             }
             if (EnableSagas)
             {
-                if (_wc.Kernel.GetService<SagaStateHelper>() == null)
+                if (!IsServiceRegistered<SagaStateHelper>())
                 {
                     _wc.Register(Component.For<SagaStateHelper>().ImplementedBy<SagaStateHelper>().LifeStyle.Singleton);
                 }
-                if (_wc.Kernel.GetService<ISagaRepository>() == null)
+                if (!IsServiceRegistered<ISagaRepository>())
                 {
                     string calias, tmp;
                     string cs = null;
@@ -1017,7 +1034,7 @@ namespace NGinnBPM.MessageBus.Windsor
                 }
                 
             }
-            if (_wc.Kernel.GetService<IMessageBus>() == null)
+            if (!IsServiceRegistered<IMessageBus>())
             {
                 ConfigureSqlMessageBus();
             }
@@ -1038,8 +1055,7 @@ namespace NGinnBPM.MessageBus.Windsor
                 }
                 StartMessageBus();
             }
-            if (_wc.GetService<HttpMessageGateway>() != null)
-                _wc.Resolve<HttpMessageGateway>();
+            if (IsServiceRegistered<HttpMessageGateway>()) _wc.Resolve<HttpMessageGateway>();
             return this;
         }
 
