@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{F0163AC1-3926-4F2A-8033-9AB2B48B1C77}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NGinnBPM.MessageBus.Windsor", "NGinnBPM.MessageBus.Windsor\NGinnBPM.MessageBus.Windsor.csproj", "{6837107E-5C65-4228-BB86-F8C97334016D}"
@@ -20,6 +20,13 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NGinnBPM.MessageBus.Mongo", "NGinnBPM.MessageBus.Mongo\NGinnBPM.MessageBus.Mongo.csproj", "{26131B9A-9DCB-46FD-BBAC-8EC15109E804}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NGinnBPM.MessageBus.Mongo.Windsor", "NGinnBPM.MessageBus.Mongo.Windsor\NGinnBPM.MessageBus.Mongo.Windsor.csproj", "{4F4877EC-6608-4532-A91A-303DD2A35F39}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{D72F9F55-BDD9-434F-B37A-58772403905D}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\NuGet.Config = .nuget\NuGet.Config
+		.nuget\NuGet.exe = .nuget\NuGet.exe
+		.nuget\NuGet.targets = .nuget\NuGet.targets
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
