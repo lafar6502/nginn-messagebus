@@ -93,12 +93,14 @@ namespace Tests
 
             MongoDB.Bson.Serialization.BsonSerializer.Serialize(bdw, obj);
             bdw.Flush();
+            /*
             bd["_t"] = MongoDB.Bson.Serialization.TypeNameDiscriminator.GetDiscriminator(obj.GetType());
             bd["version"] = "3823424";
             Console.WriteLine(bd.ToJson());
             Type t = TypeNameDiscriminator.GetActualType(bd["_t"].AsString);
             var obj2 = BsonSerializer.Deserialize(bd, t);
             Console.WriteLine("deser: " + obj2);
+             */
         }
     }
 }
