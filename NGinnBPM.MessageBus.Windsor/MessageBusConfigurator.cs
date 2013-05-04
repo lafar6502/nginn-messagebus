@@ -933,6 +933,7 @@ namespace NGinnBPM.MessageBus.Windsor
                     }
                 }
             }
+            if (!l.Contains(typeof(IMessageHandlerServiceBase))) l.Add(typeof(IMessageHandlerServiceBase));
             return l;
         }
 
