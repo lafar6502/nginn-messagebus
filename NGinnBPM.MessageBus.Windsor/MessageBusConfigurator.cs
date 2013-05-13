@@ -654,20 +654,7 @@ namespace NGinnBPM.MessageBus.Windsor
         /// <returns></returns>
         public MessageBusConfigurator AddMessageHandler(Type handlerType)
         {
-            if (typeof(SagaBase).IsAssignableFrom(handlerType))
-            {
-                if (!IsServiceRegistered(handlerType))
-                {
-                    RegisterSagaType(handlerType);
-                }
-                else log.Info("Saga already registered: {0}", handlerType);
-                return this;
-            }
-            IList<Type> l = GetMessageHandlerInterfaces(handlerType);
-            if (l.Count > 0)
-            {
-                _wc.Register(Component.For(l).ImplementedBy(handlerType));
-            }
+            RegisterHandlerType(handlerType, _wc);
             return this;
         }
 
@@ -726,15 +713,16 @@ namespace NGinnBPM.MessageBus.Windsor
         /// <returns></returns>
         public MessageBusConfigurator AddMessageHandlersFromAssembly(System.Reflection.Assembly asm)
         {
-            foreach (Type t in asm.GetTypes())
-            {
-                AddMessageHandler(t);
-            }
+            RegisterMessageHandlersFromAssembly(asm, _wc);
             return this;
         }
 
-
         public static void RegisterHandlerType(Type t, IWindsorContainer wc)
+        {
+            RegisterHandlerType(t, wc, null);
+        }
+
+        public static void RegisterHandlerType(Type t, IWindsorContainer wc, object depends)
         {
             if (typeof(SagaBase).IsAssignableFrom(t))
             {
@@ -746,19 +734,28 @@ namespace NGinnBPM.MessageBus.Windsor
                 return;
             }
 
-            IList<Type> l = GetMessageHandlerInterfaces(t);
-            var l2 = GetMessageHandlerServiceInterfaces(t);
+            List<Type> l = new List<Type>();
+            l.Add(t);
+            var l2 = GetMessageHandlerInterfaces(t);
+            var l3 = GetMessageHandlerServiceInterfaces(t);
+            if (l2.Count + l3.Count == 0) return; 
+            l.AddRange(l2);
+            l.AddRange(l3);
             
-            if (l.Count > 0)
-            {
-                wc.Register(Component.For(l).ImplementedBy(t));
-            }
+            var reg = Component.For(l).ImplementedBy(t);
+            if (depends != null) reg = reg.DependsOn(depends);
+            
+            wc.Register(reg);
         }
+
         public static void RegisterMessageHandlersFromAssembly(Assembly asm, IWindsorContainer wc)
         {
             foreach (Type t in asm.GetTypes())
             {
-                RegisterHandlerType(t, wc);
+                if (!IsServiceRegistered(wc, t))
+                {
+                    RegisterHandlerType(t, wc);
+                }
             }
         }
 
@@ -933,7 +930,7 @@ namespace NGinnBPM.MessageBus.Windsor
                     }
                 }
             }
-            if (!l.Contains(typeof(IMessageHandlerServiceBase))) l.Add(typeof(IMessageHandlerServiceBase));
+            if (l.Count > 0 && !l.Contains(typeof(IMessageHandlerServiceBase))) l.Add(typeof(IMessageHandlerServiceBase));
             return l;
         }
 
@@ -949,8 +946,10 @@ namespace NGinnBPM.MessageBus.Windsor
         {
             foreach (Type t in asm.GetTypes())
             {
-                if (typeof(IMessageHandlerServiceBase).IsAssignableFrom(t))
+                if (typeof(IMessageHandlerServiceBase).IsAssignableFrom(t) && !IsServiceRegistered(_wc, t))
+                {
                     RegisterHttpMessageService(t);
+                }
             }
             return this;
         }
@@ -1009,7 +1008,7 @@ namespace NGinnBPM.MessageBus.Windsor
             _wc.Register(Component.For<JsonServiceCallHandler>().ImplementedBy<JsonServiceCallHandler>());
             if (!IsServiceRegistered<IMessageConsumer<Ping>>())
             {
-                AddMessageHandler(typeof(PingService));
+                RegisterHandlerType(typeof(PingService), _wc);
             }
             if (!IsServiceRegistered<IMessageConsumer<SubscribeRequest>>())
             {

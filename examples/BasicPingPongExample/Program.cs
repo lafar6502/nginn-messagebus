@@ -16,11 +16,12 @@ namespace BasicPingPongExample
         {
             NLog.Config.SimpleConfigurator.ConfigureForConsoleLogging(NLog.LogLevel.Warn);
             //uncomment only one example at a time 
-            //TestSendReply();
+            TestSendReply();
             //TestPubSub(); //run pub-sub example
-            TestStaticRouting(); //static routing example
+            // TestStaticRouting(); //static routing example
         }
 
+        
 
         static void TestSendReply()
         {

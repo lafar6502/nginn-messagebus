@@ -15,8 +15,12 @@ namespace PerfTesting
     {
         static void Main(string[] args)
         {
-            
-            if (args.Length == 0) throw new Exception("Args");
+            NLog.Config.SimpleConfigurator.ConfigureForConsoleLogging();
+            if (args.Length == 0)
+            {
+                TestScheduled();
+                return;
+            }
             var s = args[0];
             if (s == "1")
             {
@@ -60,6 +64,7 @@ namespace PerfTesting
                 .SetEndpoint(endpoint)
                 .SetSendOnly(sendOnly)
                 .AddMessageHandlersFromAssembly(typeof(Program).Assembly)
+                .AutoStartMessageBus(true)
                 .FinishConfiguration();
             return mc.Container;
         }
@@ -78,6 +83,17 @@ namespace PerfTesting
             }
             TimeSpan ts = DateTime.Now - dt;
             Console.WriteLine("Sent {0} messages in {1}, {2} msgs/second", N, ts, N / ts.TotalSeconds);
+        }
+
+        static void TestScheduled()
+        {
+            var mc = Configure("sql://nginn/MQ_PT1", false);
+            var mb = mc.Resolve<IMessageBus>();
+            for (int i = 0; i < 10; i++)
+            {
+                mb.SendAt(DateTime.Now.AddSeconds(5), mb.Endpoint, new TestMessageX { Id = i });
+            }
+            Console.ReadLine();
         }
 
         /// <summary>

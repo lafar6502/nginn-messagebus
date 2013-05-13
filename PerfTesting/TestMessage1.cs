@@ -15,4 +15,9 @@ namespace PerfTesting
         public string Id { get; set; }
         public DateTime Ts { get; set; }
     }
+
+    public class TestMessageX
+    {
+        public int Id { get;set;}
+    }
 }

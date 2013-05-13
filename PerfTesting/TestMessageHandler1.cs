@@ -13,7 +13,7 @@ public class TestMessage1Reply
     public string RequestId { get; set; }
 }
 
-public class TestMessageHandler1 : IMessageConsumer<TestMessage1>
+public class TestMessageHandler1 : IMessageConsumer<TestMessage1>, IMessageConsumer<TestMessageX>
 {
     private static Logger log = LogManager.GetCurrentClassLogger();
     
@@ -25,6 +25,22 @@ public class TestMessageHandler1 : IMessageConsumer<TestMessage1>
         if (!string.IsNullOrEmpty(System.Configuration.ConfigurationSettings.AppSettings["reply"]))
         {
             MessageBus.Send("sql://nginn/MQ_PT2", new TestMessage1Reply { RequestId = message.Id });
+        }
+    }
+
+    public void Handle(TestMessageX message)
+    {
+        Console.WriteLine("Handling message {0}", message.Id);
+        switch (message.Id % 3)
+        {
+            case 0:
+                throw new Exception("Will retry message " + message.Id);
+                break;
+            case 1:
+                MessageBus.HandleCurrentMessageLater(DateTime.Now.AddSeconds(10));
+                break;
+            default:
+                break;
         }
     }
 }
