@@ -781,6 +781,10 @@ namespace NGinnBPM.MessageBus.Impl
                                     MarkMessageForProcessingLater(id, _curMsg.ProcessLater.Value, null, conn);
                                 }
                             }
+                            if (Transaction.Current.TransactionInformation.Status == TransactionStatus.Aborted)
+                            {
+                                throw new Exception("Current transaction has aborted without an exception (probably because inner TransactionScope has aborted)");
+                            }
                             return true;
                         }
                         catch (ThreadAbortException)
@@ -825,14 +829,16 @@ namespace NGinnBPM.MessageBus.Impl
                     }
                     catch (Exception ex)
                     {
-                        log.Error("Error processing message {0}: {1}", id, ex.ToString());
+                        log.Error("Unexpected error processing message {0}: {1}", id, ex.ToString());
                         abort = true;
                         throw new Exception("Unexpected error", ex);
                     }
                     finally
                     {
-                        //log.Trace("ProcessNextMessage {0} transaction ends. Abort: {1}", Thread.CurrentThread.Name, abort);
-                        if (!abort) ts.Complete();
+                        if (!abort)
+                        {
+                            ts.Complete();
+                        }
                     }
                 } //end transaction 1
                 

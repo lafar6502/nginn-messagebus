@@ -33,10 +33,12 @@ namespace BasicPingPongExample
             var recipientBus = ConfigureMessageBus("sql://localdb/MQ_Test2");
             Console.WriteLine("Configured two message buses - sender at '{0}' and recipient at '{1}'.\n Press Enter to continue...", senderBus.Endpoint, recipientBus.Endpoint);
             Console.ReadLine();
-
-            Console.WriteLine("Sending Ping...");
-            senderBus.Send("sql://localdb/MQ_Test2", new PingMessage { Text = "Hi, this is me" });
-
+            for (int i = 0; i < 5; i++)
+            {
+                Console.WriteLine("Sending Ping...");
+                senderBus.Send("sql://localdb/MQ_Test2", new PingMessage { Text = "Hi, this is me" });
+            }
+            
             //and waiting for a response
             Console.WriteLine("Now wait some time until messages are processed. Then hit Enter to exit");
             Console.ReadLine();
@@ -102,6 +104,7 @@ namespace BasicPingPongExample
                 .AutoCreateDatabase(true) //queue tables will be created if they don't exist. Warning: you have to have 'create table' db permissions to do that!
                 .SetEnableSagas(false) //disable saga for now
                 .UseSqlSubscriptions() //use sql subscription storage
+                .SetMaxConcurrentMessages(1)
                 .FinishConfiguration()
                 .StartMessageBus(); //run the queue
             return mc.GetMessageBus();

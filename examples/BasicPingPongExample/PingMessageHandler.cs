@@ -20,7 +20,7 @@ namespace BasicPingPongExample
 
             using (var tran = new TransactionScope())
             {
-                if (message.Generation == 20) return; //lets not have endless loop..
+                if (message.Generation >= 3) return; //lets not have endless loop..
 
                 //production version updates our database here .....
 
