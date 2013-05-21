@@ -55,9 +55,29 @@ namespace NGinnBPM.MessageBus.Impl
 
         public void Prepare(PreparingEnlistment preparingEnlistment)
         {
-            log.Debug("Prepare {0}, Messages {1}. Sending the message batch.", TransactionId, Messages.Count);
-            if (_onprepare != null) _onprepare(this);
-            preparingEnlistment.Prepared();
+            try
+            {
+                log.Debug("Prepare {0}, Messages {1}. Sending the message batch.", TransactionId, Messages.Count);
+                if (_onprepare != null) _onprepare(this);
+                preparingEnlistment.Prepared();
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error preparing transaction {0} ({1} messages): {2}", TransactionId, Messages.Count, ex);
+                preparingEnlistment.ForceRollback(ex);
+                TransactionOpen = false;
+                if (_onrollback != null)
+                {
+                    try
+                    {
+                        _onrollback(this);
+                    }
+                    catch (Exception e2)
+                    {
+                        log.Error("Error performing rollback after a failed prepare: {0}", e2);
+                    }
+                }
+            }
         }
 
         public void Rollback(Enlistment enlistment)
