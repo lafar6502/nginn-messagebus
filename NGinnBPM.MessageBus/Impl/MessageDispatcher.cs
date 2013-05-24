@@ -100,13 +100,14 @@ namespace NGinnBPM.MessageBus.Impl
             handlerInfo = GetHandlersFor(t);
             if (handlerInfo == null) return false;
             handlers = ServiceLocator.GetAllInstances(handlerInfo.MessageHandlerGenericType);
-            if (handlerInfo._numHandlersFound.HasValue)
+            var nh = handlerInfo._numHandlersFound;
+            if (nh.HasValue)
             {
-                if (handlerInfo._numHandlersFound.Value != handlers.Count)
+                //yeah, I know this is not thread safe but it's supposed to be a harmless sanity check
+                if (nh.Value != handlers.Count)
                 {
-                    log.Warn("Number of handlers changed for type {0}. Was {1}, now is {2}", t.FullName, handlerInfo._numHandlersFound.Value, handlers.Count);
+                    log.Warn("Number of handlers changed for type {0}. Was {1}, now is {2}", t.FullName, nh.Value, handlers.Count);
                     handlerInfo._numHandlersFound = handlers.Count;
-                    throw new Exception();
                 }
             }
             else handlerInfo._numHandlersFound = handlers.Count;
