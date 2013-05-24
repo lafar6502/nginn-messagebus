@@ -89,7 +89,7 @@ namespace PerfTesting
         {
             var mc = Configure("sql://nginn/MQ_PT1", false);
             var mb = mc.Resolve<IMessageBus>();
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 100; i++)
             {
                 mb.SendAt(DateTime.Now.AddSeconds(5), mb.Endpoint, new TestMessageX { Id = i });
             }

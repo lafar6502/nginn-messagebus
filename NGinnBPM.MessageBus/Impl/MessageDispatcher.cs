@@ -106,6 +106,7 @@ namespace NGinnBPM.MessageBus.Impl
                 {
                     log.Warn("Number of handlers changed for type {0}. Was {1}, now is {2}", t.FullName, handlerInfo._numHandlersFound.Value, handlers.Count);
                     handlerInfo._numHandlersFound = handlers.Count;
+                    throw new Exception();
                 }
             }
             else handlerInfo._numHandlersFound = handlers.Count;

@@ -30,7 +30,7 @@ public class TestMessageHandler1 : IMessageConsumer<TestMessage1>, IMessageConsu
 
     public void Handle(TestMessageX message)
     {
-        Console.WriteLine("Handling message {0}", message.Id);
+        log.Info("Handling message {0}", message.Id);
         switch (message.Id % 3)
         {
             case 0:
