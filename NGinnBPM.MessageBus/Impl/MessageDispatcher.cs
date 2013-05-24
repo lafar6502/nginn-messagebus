@@ -31,6 +31,7 @@ namespace NGinnBPM.MessageBus.Impl
             public Type InitiatedByGenericType;
             public Type MessageType;
             public MessageHandlerMethodDelegate HandleMethod;
+            public int? _numHandlersFound;
         }
 
         private Dictionary<Type, MsgHandlerInfo> _handlers = new Dictionary<Type, MsgHandlerInfo>();
@@ -59,7 +60,8 @@ namespace NGinnBPM.MessageBus.Impl
         /// </summary>
         public void HandlerConfigurationChanged()
         {
-            this._handlers = new Dictionary<Type, MsgHandlerInfo>();
+            //not necessary as we don't cache handler instances
+            //this._handlers = new Dictionary<Type, MsgHandlerInfo>();
         }
 
 
@@ -92,6 +94,23 @@ namespace NGinnBPM.MessageBus.Impl
             }
         }
 
+        protected virtual bool GetAllHandlersForMessageType(Type t, out ICollection<object> handlers, out MsgHandlerInfo handlerInfo)
+        {
+            handlers = null; 
+            handlerInfo = GetHandlersFor(t);
+            if (handlerInfo == null) return false;
+            handlers = ServiceLocator.GetAllInstances(handlerInfo.MessageHandlerGenericType);
+            if (handlerInfo._numHandlersFound.HasValue)
+            {
+                if (handlerInfo._numHandlersFound.Value != handlers.Count)
+                {
+                    log.Warn("Number of handlers changed for type {0}. Was {1}, now is {2}", t.FullName, handlerInfo._numHandlersFound.Value, handlers.Count);
+                    handlerInfo._numHandlersFound = handlers.Count;
+                }
+            }
+            else handlerInfo._numHandlersFound = handlers.Count;
+            return true;
+        }
 
         public virtual void DispatchMessage(object message, IMessageBus bus)
         {
@@ -114,10 +133,11 @@ namespace NGinnBPM.MessageBus.Impl
             {
                 if (typeof(IMessageInterface).IsAssignableFrom(interfType))
                 {
-                    MsgHandlerInfo mhi = GetHandlersFor(interfType);
-                    if (mhi != null)
+                    MsgHandlerInfo mhi;
+                    ICollection<object> handlers;
+                    if (GetAllHandlersForMessageType(interfType, out handlers, out mhi))
                     {
-                        foreach (object hnd in ServiceLocator.GetAllInstances(mhi.MessageHandlerGenericType))
+                        foreach (object hnd in handlers)
                         {
                             try
                             {
@@ -136,8 +156,9 @@ namespace NGinnBPM.MessageBus.Impl
 
             while (tp != null) //dispatch based on message type
             {
-                MsgHandlerInfo mhi = GetHandlersFor(tp);
-                if (mhi != null)
+                MsgHandlerInfo mhi;
+                ICollection<object> handlers;
+                if (GetAllHandlersForMessageType(tp, out handlers, out mhi))
                 {
                     foreach (object hnd in ServiceLocator.GetAllInstances(mhi.MessageHandlerGenericType))
                     {

@@ -470,9 +470,9 @@ namespace NGinnBPM.MessageBus.Windsor
 
             
 
-            _wc.Kernel.ComponentRegistered += new Castle.MicroKernel.ComponentDataDelegate(Kernel_ComponentRegistered);
-            
+            //_wc.Kernel.ComponentRegistered += new Castle.MicroKernel.ComponentDataDelegate(Kernel_ComponentRegistered);
             //_wc.Kernel.ComponentUnregistered += new Castle.MicroKernel.ComponentDataDelegate(Kernel_ComponentUnregistered);
+
             _wc.Register(Component.For<IMessageBus>()
                 .ImplementedBy<MessageBus.Impl.MessageBus>()
                 .DependsOn(new
