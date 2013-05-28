@@ -33,7 +33,7 @@ namespace BasicPingPongExample
             var recipientBus = ConfigureMessageBus("sql://localdb/MQ_Test2");
             Console.WriteLine("Configured two message buses - sender at '{0}' and recipient at '{1}'.\n Press Enter to continue...", senderBus.Endpoint, recipientBus.Endpoint);
             Console.ReadLine();
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 50; i++)
             {
                 Console.WriteLine("Sending Ping...");
                 senderBus.Send("sql://localdb/MQ_Test2", new PingMessage { Text = "Hi, this is me" });
