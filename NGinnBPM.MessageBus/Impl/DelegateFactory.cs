@@ -79,6 +79,7 @@ namespace NGinnBPM.MessageBus.Impl
         /// <returns></returns>
         public static MessageHandlerMethodDelegate CreateMessageHandlerDelegate(MethodInfo method)
         {
+ 
             ParameterExpression instanceParameter = Expression.Parameter(typeof(object), "target");
             ParameterExpression argumentsParameter = Expression.Parameter(typeof(object), "message");
 

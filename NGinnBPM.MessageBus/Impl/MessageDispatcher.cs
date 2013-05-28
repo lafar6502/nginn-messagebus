@@ -67,6 +67,7 @@ namespace NGinnBPM.MessageBus.Impl
 
         protected virtual bool CallHandler(object message, object handler, MsgHandlerInfo mhi, IMessageBus bus)
         {
+            log.Debug("Call Handler");
             if (handler is SagaBase)
             {
                 string id = null;
@@ -89,6 +90,7 @@ namespace NGinnBPM.MessageBus.Impl
             }
             else
             {
+                log.Debug("Calling mhi.HandleMethod");
                 mhi.HandleMethod(handler, message);
                 return true;
             }
@@ -116,6 +118,7 @@ namespace NGinnBPM.MessageBus.Impl
 
         public virtual void DispatchMessage(object message, IMessageBus bus)
         {
+            RequireHandler = true;
             bool found = false;
 
             foreach (ICustomMessageHandler mh in ServiceLocator.GetAllInstances<ICustomMessageHandler>())
@@ -130,6 +133,7 @@ namespace NGinnBPM.MessageBus.Impl
             }
 
             Type tp = message.GetType();
+            log.Debug("Message type is " + tp.Name);
             Type[] interfs = tp.GetInterfaces(); 
             foreach (Type interfType in interfs) //dispatch based on message interfaces
             {
@@ -158,14 +162,22 @@ namespace NGinnBPM.MessageBus.Impl
 
             while (tp != null) //dispatch based on message type
             {
+            	log.Debug("Calling GetHandlersFor(tp)");
                 MsgHandlerInfo mhi;
                 ICollection<object> handlers;
                 if (GetAllHandlersForMessageType(tp, out handlers, out mhi))
                 {
-                    foreach (object hnd in ServiceLocator.GetAllInstances(mhi.MessageHandlerGenericType))
+                    
+                    log.Debug("Found Handler " + mhi.MessageHandlerGenericType.Name);
+                    var allInstances = ServiceLocator.GetAllInstances(mhi.MessageHandlerGenericType);
+                    log.Debug(string.Format("found {0} handlers with {1} instances",handlers.Count,allInstances.Count));
+                    if (handlers.Count != allInstances.Count) log.Error("Handler Mismatch!");
+                    foreach (object hnd in allInstances)
                     {
+                        log.Debug("found instance");
                         try
                         {
+                            log.Debug("calling handler");
                             CallHandler(message, hnd, mhi, bus);
                             found = true;
                         }
@@ -175,6 +187,10 @@ namespace NGinnBPM.MessageBus.Impl
                             throw;
                         }
                     }
+                }
+                else
+                {
+                    log.Debug("No Handler");
                 }
                 tp = tp.BaseType;
             }
