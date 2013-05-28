@@ -14,7 +14,7 @@ namespace BasicPingPongExample
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-            NLog.Config.SimpleConfigurator.ConfigureForConsoleLogging(NLog.LogLevel.Warn);
+            //NLog.Config.SimpleConfigurator.ConfigureForConsoleLogging(NLog.LogLevel.Warn);
             //uncomment only one example at a time 
             TestSendReply();
             //TestPubSub(); //run pub-sub example
