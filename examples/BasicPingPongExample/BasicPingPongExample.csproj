@@ -69,6 +69,7 @@
     </None>
     <None Include="NLog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </None>
     <None Include="routing.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

@@ -19,11 +19,16 @@ namespace NGinnBPM.MessageBus.Impl
 
         public bool RequireHandler { get; set; }
         public IServiceResolver ServiceLocator { get; set; }
-        private Logger log = LogManager.GetCurrentClassLogger();
+        private Logger log;
         /// <summary>
         /// for delivering messages to sagas...
         /// </summary>
         public Sagas.SagaStateHelper SagaHandler { get; set; }
+
+        public MessageDispatcher()
+        {
+            log = LogManager.GetLogger("MessageDispatcher_" + this.GetHashCode());
+        }
 
         public class MsgHandlerInfo
         {
