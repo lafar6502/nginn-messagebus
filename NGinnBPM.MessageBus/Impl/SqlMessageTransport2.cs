@@ -11,14 +11,14 @@ using System.IO;
 using System.Transactions;
 using System.Collections;
 using System.Diagnostics;
-
+using NGinnBPM.MessageBus.Queues;
 namespace NGinnBPM.MessageBus.Impl
 {
     /// <summary>
     /// New version of sql message transport
     /// Makes propert use of transaction scopes
     /// </summary>
-    public class SqlMessageTransport2 : IStartableService, IMessageTransport, IHealthCheck
+    public class SqlMessageTransport2 : IStartableService, IMessageTransport, IHealthCheck, IQueueOperations
     {
         #region IMessageTransport Members
 
@@ -1388,6 +1388,53 @@ namespace NGinnBPM.MessageBus.Impl
             {
                 return TimeSpan.FromMilliseconds(this.AverageLatencyMs);
             }
+        }
+
+        protected void AccessLocalDb(Action<IDbConnection> act)
+        {
+            if (CurrentConnection != null)
+            {
+                act(CurrentConnection);
+            }
+            else
+            {
+                using (var conn = OpenConnection())
+                {
+                    act(conn);
+                }
+            }
+        }
+
+        public void MarkMessageCompleted(string busMessageId)
+        {
+            AccessLocalDb(con =>
+            {
+                using (var cmd = con.CreateCommand())
+                {
+                    cmd.CommandText = string.Format("update {0} set subqueue='X' where id={1}", _queueTable, busMessageId);
+                    cmd.ExecuteNonQuery();
+                }
+            });
+        }
+
+        public void MoveToInputQueue(string busMessageId)
+        {
+            AccessLocalDb(con =>
+            {
+                using (var cmd = con.CreateCommand())
+                {
+                    cmd.CommandText = string.Format("update {0} set subqueue='I' where id={1}", _queueTable, busMessageId);
+                    cmd.ExecuteNonQuery();
+                }
+            });
+        }
+
+        public void ScheduleMessage(string busMessageId, DateTime deliveryDate)
+        {
+            AccessLocalDb(con =>
+            {
+                MarkMessageForProcessingLater(busMessageId, deliveryDate, null, con);
+            });
         }
     }
 }
