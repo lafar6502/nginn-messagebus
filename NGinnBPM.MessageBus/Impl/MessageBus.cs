@@ -696,6 +696,11 @@ namespace NGinnBPM.MessageBus.Impl
 
         public string MessageId
         {
+            get { return Message.BusMessageId; }
+        }
+
+        public string MessageUniqueId
+        {
             get { return Message.UniqueId; }
         }
 
