@@ -1176,7 +1176,7 @@ namespace NGinnBPM.MessageBus.Impl
                             SqlUtil.AddParameter(cmd, "@from_endpoint" + cnt, mw.From);
                             SqlUtil.AddParameter(cmd, "@to_endpoint" + cnt, mw.To == null ? "" : mw.To);
                             SqlUtil.AddParameter(cmd, "@subqueue" + cnt, mw.IsScheduled ? "R" : "I");
-                            SqlUtil.AddParameter(cmd, "@retry_time" + cnt, mw.IsScheduled ? mw.DeliverAt : DateTime.Now);
+                            SqlUtil.AddParameter(cmd, "@retry_time" + cnt, mw.IsScheduled ? mw.DeliverAt : (mw.HiPriority ? DateTime.Now.AddHours(-24) : DateTime.Now));
                             if (!reuseBody)
                             {
                                 SqlUtil.AddParameter(cmd, bodyParam, mw.BodyStr);

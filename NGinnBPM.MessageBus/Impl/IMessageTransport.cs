@@ -50,7 +50,11 @@ namespace NGinnBPM.MessageBus.Impl
         /// </summary>
         [IgnoreDataMember]
         public object Body { get; set; }
-
+        /// <summary>
+        /// High priority message.
+        /// </summary>
+        [IgnoreDataMember]
+        public bool HiPriority { get; set; }
         /// <summary>
         /// Message content serialized into a string
         /// </summary>

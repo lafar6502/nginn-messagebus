@@ -110,6 +110,14 @@ namespace NGinnBPM.MessageBus
         /// <returns></returns>
         ISendMessage UseConnection(object conn);
         /// <summary>
+        /// Mark message as high priority
+        /// such message will be, if possible, processed before
+        /// messages not marked as high priority
+        /// Warning: marking all messages high priority will change nothing ;)
+        /// </summary>
+        /// <returns></returns>
+        ISendMessage MarkHighPriority();
+        /// <summary>
         /// Send message to specified endpoint
         /// </summary>
         /// <param name="endpoint"></param>

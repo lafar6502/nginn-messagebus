@@ -665,6 +665,13 @@ namespace NGinnBPM.MessageBus.Impl
             _dbTran = tran;
             return this;
         }
+
+
+        public ISendMessage MarkHighPriority()
+        {
+            this.mc.HiPriority = true;
+            return this;
+        }
     }
 
     /// <summary>
