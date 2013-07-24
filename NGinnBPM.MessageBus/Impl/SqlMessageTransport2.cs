@@ -159,7 +159,16 @@ namespace NGinnBPM.MessageBus.Impl
 
         public event MessageContainerFailureHandler MessageFailedAllRetries;
         public event MessageContainerFailureHandler MessageFailed;
-        
+
+        public TimeSpan[] RetryTimes
+        {
+            get { return _retryTimes; }
+            set
+            {
+                if (value == null) throw new ArgumentNullException();
+                _retryTimes = value;
+            }
+        }
         /// <summary>
         /// Array of retry times - this defines what will be the
         /// delay between subsequent message retries

@@ -36,6 +36,15 @@ namespace NGinnBPM.MessageBus.Windsor
         public TimeSpan TransactionTimeout { get; set; }
         public bool AlwaysPublishLocal { get; set; }
         public bool EnableSagas { get; set; }
+        private TimeSpan[] _retryTimes = new TimeSpan[] {
+            TimeSpan.FromSeconds(30),
+            TimeSpan.FromMinutes(3),
+            TimeSpan.FromMinutes(20),
+            TimeSpan.FromHours(2),
+            TimeSpan.FromHours(8),
+            TimeSpan.FromHours(24),
+            TimeSpan.FromDays(3)
+        };
 
         protected MessageBusConfigurator()
         {
@@ -530,7 +539,8 @@ namespace NGinnBPM.MessageBus.Windsor
                     AllowUseOfApplicationDbConnectionForSending = UseAppManagedConnectionForSending,
                     ExposeReceiveConnection = ExposeReceiveConnectionToApplication,
                     DefaultTransactionTimeout = TransactionTimeout,
-                    UseSqlOutputClause = _useSqlOutputClause
+                    UseSqlOutputClause = _useSqlOutputClause,
+                    RetryTimes = _retryTimes
                 })
                 .Named(transName)
                 .LifeStyle.Singleton);
@@ -971,6 +981,12 @@ namespace NGinnBPM.MessageBus.Windsor
             {
                 _wc.Register(Component.For(l.ToArray()).ImplementedBy(t).LifeStyle.Singleton);
             }
+            return this;
+        }
+
+        public MessageBusConfigurator SetRetryTimes(TimeSpan[] retries)
+        {
+            _retryTimes = retries;
             return this;
         }
 
