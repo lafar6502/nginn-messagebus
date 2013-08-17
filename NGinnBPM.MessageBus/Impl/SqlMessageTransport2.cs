@@ -1199,10 +1199,20 @@ namespace NGinnBPM.MessageBus.Impl
                             SqlUtil.AddParameter(cmd, "@headers" + cnt, HeadersToString(headers));
                             SqlUtil.AddParameter(cmd, "@unique_id" + cnt, mw.UniqueId);
                             cnt++;
+                            if (cmd.Parameters.Count >= 300)
+                            {
+                                cmd.CommandText += "select @@IDENTITY\n";
+                                id = Convert.ToString(cmd.ExecuteScalar());
+                                cmd.CommandText = "";
+                                cmd.Parameters.Clear();
+                            }
                         }
                     }
-                    cmd.CommandText += "select @@IDENTITY\n";
-                    id = Convert.ToString(cmd.ExecuteScalar());
+                    if (cmd.CommandText.Length > 0)
+                    {
+                        cmd.CommandText += "select @@IDENTITY\n";
+                        id = Convert.ToString(cmd.ExecuteScalar());
+                    }
                 }
 
                 tm.Stop();

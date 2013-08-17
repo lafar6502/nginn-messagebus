@@ -18,7 +18,8 @@ namespace PerfTesting
             NLog.Config.SimpleConfigurator.ConfigureForConsoleLogging();
             if (args.Length == 0)
             {
-                TestScheduled();
+                //TestScheduled();
+                TestLotsa();
                 return;
             }
             var s = args[0];
@@ -65,6 +66,8 @@ namespace PerfTesting
                 .SetSendOnly(sendOnly)
                 .AddMessageHandlersFromAssembly(typeof(Program).Assembly)
                 .AutoStartMessageBus(true)
+                .BatchOutgoingMessages(true
+                )
                 .FinishConfiguration();
             return mc.Container;
         }
@@ -83,6 +86,25 @@ namespace PerfTesting
             }
             TimeSpan ts = DateTime.Now - dt;
             Console.WriteLine("Sent {0} messages in {1}, {2} msgs/second", N, ts, N / ts.TotalSeconds);
+        }
+
+        static void TestLotsa()
+        {
+            var mc = Configure("sql://nginn/MQ_PT1", false);
+            var mb = mc.Resolve<IMessageBus>();
+            var st = new System.Diagnostics.Stopwatch();
+            st.Start();
+            using (var ts = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                for (int i = 0; i < 5000; i++)
+                {
+                    mb.Send("sql://nginn/MQ_PT2", new TestMessage1 { Id = i.ToString() });
+                }
+                ts.Complete();
+            }
+            st.Stop();
+            Console.WriteLine("************************************************************* Inserted all in {0}", st.ElapsedMilliseconds);
+            Console.ReadLine();
         }
 
         static void TestScheduled()
