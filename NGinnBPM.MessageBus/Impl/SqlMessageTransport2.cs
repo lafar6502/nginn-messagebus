@@ -108,6 +108,10 @@ namespace NGinnBPM.MessageBus.Impl
         /// </summary>
         public TimeSpan DefaultTransactionTimeout { get; set; }
         /// <summary>
+        /// Maximum number of parameters in SQL insert query
+        /// </summary>
+        public int MaxSqlParamsInBatch { get; set; }
+        /// <summary>
         /// Map alias->connection string used for mapping endpoint name to a database
         /// </summary>
         public IDictionary<string, string> ConnectionStrings
@@ -196,6 +200,7 @@ namespace NGinnBPM.MessageBus.Impl
             ExposeReceiveConnection = true;
             SendOnly = false;
             MaxMessagesPerSingleConnection = 50;
+            MaxSqlParamsInBatch = 200;
         }
 
         static SqlMessageTransport2()
@@ -1199,7 +1204,7 @@ namespace NGinnBPM.MessageBus.Impl
                             SqlUtil.AddParameter(cmd, "@headers" + cnt, HeadersToString(headers));
                             SqlUtil.AddParameter(cmd, "@unique_id" + cnt, mw.UniqueId);
                             cnt++;
-                            if (cmd.Parameters.Count >= 300)
+                            if (cmd.Parameters.Count >= MaxSqlParamsInBatch)
                             {
                                 cmd.CommandText += "select @@IDENTITY\n";
                                 id = Convert.ToString(cmd.ExecuteScalar());
