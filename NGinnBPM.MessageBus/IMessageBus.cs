@@ -89,7 +89,7 @@ namespace NGinnBPM.MessageBus
         /// bypassing NGinn Messagebus queue. Message will
         /// not be persisted and will not be retried in case
         /// of failure. It will also not be a part of transaction
-        /// so you can't rollback. This is not for normal use.
+        /// so you can't rollback. This is for fire and forget messages
         /// </summary>
         /// <returns></returns>
         ISendMessage SetNonPersistentLocal(bool b);

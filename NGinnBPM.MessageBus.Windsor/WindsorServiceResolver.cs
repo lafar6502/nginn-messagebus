@@ -55,5 +55,11 @@ namespace NGinnBPM.MessageBus.Windsor
         }
 
         #endregion
+
+
+        public bool HasService(Type t)
+        {
+            return _krnl.HasComponent(t);
+        }
     }
 }

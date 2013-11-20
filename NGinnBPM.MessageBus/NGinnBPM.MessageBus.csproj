@@ -94,6 +94,7 @@
     <Compile Include="Impl\HttpService\HealthCheckServlet.cs" />
     <Compile Include="Impl\HttpService\MasterDispatcherServlet.cs" />
     <Compile Include="Impl\IMessageDb.cs" />
+    <Compile Include="Impl\IMessageDispatcher.cs" />
     <Compile Include="Impl\IPreprocessMessages.cs" />
     <Compile Include="Impl\ServiceCallContext.cs" />
     <Compile Include="Impl\IHealthCheck.cs" />

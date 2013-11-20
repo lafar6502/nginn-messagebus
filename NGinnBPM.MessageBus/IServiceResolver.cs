@@ -21,5 +21,11 @@ namespace NGinnBPM.MessageBus
         object GetInstance(Type t, string name);
         T GetInstance<T>();
         T GetInstance<T>(string name);
+        /// <summary>
+        /// Check if a service of specified type is registered
+        /// </summary>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        bool HasService(Type t);
     }
 }

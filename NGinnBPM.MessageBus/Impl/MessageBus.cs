@@ -25,7 +25,7 @@ namespace NGinnBPM.MessageBus.Impl
         /// <summary>
         /// Message dispatcher used for delivering messages to their handlers
         /// </summary>
-        public MessageDispatcher Dispatcher { get; set; }
+        public IMessageDispatcher Dispatcher { get; set; }
 		
 		///Handle messages inside Microsoft.Transactions.TransactionScope
 		public bool UseTransactionScope { get; set; }
@@ -211,7 +211,7 @@ namespace NGinnBPM.MessageBus.Impl
         {
             Type tp = msgType;
             HashSet<string> set = new HashSet<string>();
-            if (PublishLocalByDefault) set.Add(Endpoint);
+            if (PublishLocalByDefault || Dispatcher.HasHandlerFor(msgType)) set.Add(Endpoint);
             while (tp != null)
             {
                 ICollection<string> ends = SubscriptionService.GetTargetEndpoints(tp.FullName);

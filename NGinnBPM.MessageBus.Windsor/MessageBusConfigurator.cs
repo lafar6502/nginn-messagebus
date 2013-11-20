@@ -545,7 +545,7 @@ namespace NGinnBPM.MessageBus.Windsor
                 .Named(transName)
                 .LifeStyle.Singleton);
 
-            if (!IsServiceRegistered<MessageDispatcher>()) throw new Exception("no message dispatcher");
+            if (!IsServiceRegistered<IMessageDispatcher>()) throw new Exception("no message dispatcher");
 
             _wc.Register(Component.For<IMessageBus>()
                 .ImplementedBy<MessageBus.Impl.MessageBus>()
@@ -1009,9 +1009,9 @@ namespace NGinnBPM.MessageBus.Windsor
         /// <returns></returns>
         public MessageBusConfigurator FinishConfiguration()
         {
-            if (!IsServiceRegistered<MessageDispatcher>())
+            if (!IsServiceRegistered<IMessageDispatcher>())
             {
-                _wc.Register(Component.For<MessageDispatcher>()
+                _wc.Register(Component.For<IMessageDispatcher, MessageDispatcher>()
                     .ImplementedBy<MessageDispatcher>()
                     .LifeStyle.Singleton);
             }
@@ -1095,7 +1095,12 @@ namespace NGinnBPM.MessageBus.Windsor
         private string GetAppConfigString(string key, string defval)
         {
             var s = ConfigurationManager.AppSettings[key];
-            return s == null ? defval : s;
+            if (s == null) s = defval;
+            if (s == null) return defval;
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            s = s.Replace("${basedir}", baseDir);
+            s = s.Replace("${machineName}", Environment.MachineName);
+            return s;
         }
 
         /// <summary>

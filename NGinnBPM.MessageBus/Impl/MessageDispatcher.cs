@@ -14,7 +14,7 @@ namespace NGinnBPM.MessageBus.Impl
     /// PROBLEM: it caches message handler information so any
     /// modifications of handlers in runtime will not be noticed.
     /// </summary>
-    public class MessageDispatcher
+    public class MessageDispatcher : IMessageDispatcher
     {
 
         public bool RequireHandler { get; set; }
@@ -99,13 +99,36 @@ namespace NGinnBPM.MessageBus.Impl
             }
         }
 
-        protected virtual bool GetAllHandlersForMessageType(Type t, out ICollection<object> handlers, out MsgHandlerInfo handlerInfo)
+        public virtual bool HasHandlerFor(Type messageType)
+        {
+            var tp = messageType;
+            while (tp != null) //dispatch based on message type
+            {
+                var ht = GetHandlersFor(tp).MessageHandlerGenericType;
+                if (ServiceLocator.HasService(ht)) return true;
+                tp = tp.BaseType;
+            }
+
+            Type[] interfs = messageType.GetInterfaces();
+            foreach (Type interfType in interfs) //dispatch based on message interfaces
+            {
+                if (typeof(IMessageInterface).IsAssignableFrom(interfType))
+                {
+                    var ht = GetHandlersFor(interfType).MessageHandlerGenericType;
+                    if (ServiceLocator.HasService(ht)) return true;
+                }
+            }
+            return false;
+        }
+
+        protected virtual bool GetAllHandlersForMessageType(Type t, out ICollection<object> handlers, out MsgHandlerInfo handlerInfo, bool checkOnly = false)
         {
             handlers = null; 
             handlerInfo = GetHandlersFor(t);
             if (handlerInfo == null) return false;
-            handlers = ServiceLocator.GetAllInstances(handlerInfo.MessageHandlerGenericType);
             var nh = handlerInfo._numHandlersFound;
+            if (nh.HasValue && checkOnly) return nh.Value > 0;
+            handlers = ServiceLocator.GetAllInstances(handlerInfo.MessageHandlerGenericType);
             if (nh.HasValue)
             {
                 //yeah, I know this is not thread safe but it's supposed to be a harmless sanity check
