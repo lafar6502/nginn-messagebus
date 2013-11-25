@@ -189,6 +189,11 @@ namespace NGinnBPM.MessageBus.Impl
 
         public void Notify(object[] msgs)
         {
+            Notify(msgs, DeliveryMode.DurableAsync);
+        }
+
+        private void Notify(object[] msgs, DeliveryMode mode)
+        {
             List<MessageContainer> lst = new List<MessageContainer>();
             foreach (Object obj in msgs)
             {
@@ -199,7 +204,14 @@ namespace NGinnBPM.MessageBus.Impl
                 mc.UniqueId = CreateNewMessageUniqueId();
                 lst.Add(mc);
             }
-            NotifyAndDistributeMessages(lst, null);
+            if (mode == DeliveryMode.DurableAsync)
+            {
+                NotifyAndDistributeMessages(lst, null);
+            }
+            else
+            {
+                lst.ForEach(mc => this.DispatchLocalNonPersistentMessage(mc, mode));
+            }
         }
 
         /// <summary>
@@ -232,7 +244,7 @@ namespace NGinnBPM.MessageBus.Impl
         /// Effectively bypasses NGinn MessageBus, just forwards the message to handler components
         /// </summary>
         /// <param name="mc"></param>
-        internal void DispatchLocalNonPersistentMessage(MessageContainer mc)
+        internal void DispatchLocalNonPersistentMessage(MessageContainer mc, DeliveryMode mode)
         {
             if (mc.To != Endpoint) throw new Exception("Local only please");
             if (mc.From != Endpoint) throw new Exception("Local only please");
@@ -241,22 +253,43 @@ namespace NGinnBPM.MessageBus.Impl
             {
                 foreach (string s in mc.Cc) if (s != Endpoint) throw new Exception("Non-local endpoint on cc");
             }
-            System.Threading.ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(delegate (object v) {
-                try
+            if (mode == DeliveryMode.LocalAsync)
+            {
+                System.Threading.ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(delegate(object v)
                 {
-                    _currentMessage = new CurMsg(mc);
-                    _currentMessage.NonPersistentLocal = true;
-                    Dispatcher.DispatchMessage(mc.Body, this);
-                }
-                catch (Exception ex)
+                    DispatchLocal(mc, mode);
+                }));
+            }
+            else
+            {
+                DispatchLocal(mc, mode);
+            }
+        }
+
+        private void DispatchLocal(MessageContainer mc, DeliveryMode dm)
+        {
+            var pm = _currentMessage;
+            var mb = MessageBusContext.CurrentMessageBus;
+            try
+            {
+                _currentMessage = new CurMsg(mc);
+                MessageBusContext.CurrentMessageBus = this;
+                _currentMessage.DeliveryMode = dm;
+                Dispatcher.DispatchMessage(mc.Body, this);
+            }
+            catch (Exception ex)
+            {
+                log.Warn("Error async processing message {0}: {1}", mc.BusMessageId, ex.ToString());
+                if (dm != DeliveryMode.LocalAsync)
                 {
-                    log.Error("Error handling non-persistent local message {0}: {1}", mc.Body, ex);
+                    throw;
                 }
-                finally
-                {
-                    _currentMessage = null;
-                }
-            }));
+            }
+            finally
+            {
+                _currentMessage = pm;
+                MessageBusContext.CurrentMessageBus = mb;
+            }
         }
         /// <summary>
         /// Distribute messages in the list to their destination subscriber endpoints
@@ -371,11 +404,11 @@ namespace NGinnBPM.MessageBus.Impl
 
         public void Reply(object msg)
         {
-            if (_currentMessage.NonPersistentLocal)
+            if (_currentMessage.DeliveryMode != DeliveryMode.DurableAsync)
             {
                 NewMessage(msg)
                     .SetCorrelationId(CurrentMessageInfo.CorrelationId)
-                    .SetNonPersistentLocal(true)
+                    .SetDeliveryMode(_currentMessage.DeliveryMode)
                     .Publish();
             }
             else
@@ -485,6 +518,12 @@ namespace NGinnBPM.MessageBus.Impl
             get { return _appCon; }
             set { _appCon = value; }
         }
+
+
+        public void Notify(object msg, DeliveryMode mode)
+        {
+            Notify(new object[] {msg}, mode);
+        }
     }
 
     /// <summary>
@@ -559,12 +598,13 @@ namespace NGinnBPM.MessageBus.Impl
 
         public void Send(string endpoint)
         {
-            if (_nonPersistentLocal)
+            if (_deliveryMode != DeliveryMode.DurableAsync)
             {
+                if (endpoint != mbus.Endpoint) throw new Exception("Only local endpoint allowed with this delivery mode");
                 foreach (object body in _bodies)
                 {
                     mc.Body = body;
-                    mbus.DispatchLocalNonPersistentMessage(mc);
+                    mbus.DispatchLocalNonPersistentMessage(mc, _deliveryMode);
                 }
             }
             else
@@ -585,12 +625,12 @@ namespace NGinnBPM.MessageBus.Impl
         {
             
             mc.To = mbus.Endpoint;
-            if (_nonPersistentLocal)
+            if (_deliveryMode != DeliveryMode.DurableAsync)
             {
                 foreach (object body in _bodies)
                 {
                     mc.Body = body;
-                    mbus.DispatchLocalNonPersistentMessage(mc);
+                    mbus.DispatchLocalNonPersistentMessage(mc, _deliveryMode);
                 }
             }
             else
@@ -641,13 +681,8 @@ namespace NGinnBPM.MessageBus.Impl
             return this;
         }
 
-        private bool _nonPersistentLocal = false;
+        private DeliveryMode _deliveryMode = DeliveryMode.DurableAsync;
         
-        public ISendMessage SetNonPersistentLocal(bool b)
-        {
-            _nonPersistentLocal = b;
-            return this;
-        }
 
         #endregion
 
@@ -672,6 +707,13 @@ namespace NGinnBPM.MessageBus.Impl
             this.mc.HiPriority = true;
             return this;
         }
+
+
+        public ISendMessage SetDeliveryMode(DeliveryMode b)
+        {
+            this._deliveryMode = b;
+            return this;
+        }
     }
 
     /// <summary>
@@ -682,7 +724,7 @@ namespace NGinnBPM.MessageBus.Impl
         internal CurMsg(MessageContainer mc)
         {
             Message = mc;
-            NonPersistentLocal = false;
+            DeliveryMode = DeliveryMode.DurableAsync;
         }
 
 
@@ -723,7 +765,10 @@ namespace NGinnBPM.MessageBus.Impl
 
         public MessageContainer Message { get; set; }
 
-        internal bool NonPersistentLocal { get; set; }
+        /// <summary>
+        /// current message's delivery mode
+        /// </summary>
+        public DeliveryMode DeliveryMode { get; set; }
 
         public bool IsFinalRetry
         {

@@ -16,6 +16,16 @@ namespace NGinnBPM.MessageBus
     }
 
     /// <summary>
+    /// Message publication mode
+    /// </summary>
+    public enum DeliveryMode
+    {
+        DurableAsync,
+        LocalAsync,
+        LocalSync
+    }
+
+    /// <summary>
     /// Fluent interface for providing message information.
     /// You can use it to set message headers, delivery date, ttl etc.
     /// </summary>
@@ -92,7 +102,7 @@ namespace NGinnBPM.MessageBus
         /// so you can't rollback. This is for fire and forget messages
         /// </summary>
         /// <returns></returns>
-        ISendMessage SetNonPersistentLocal(bool b);
+        ISendMessage SetDeliveryMode(DeliveryMode b);
         /// <summary>
         /// Specify where the reply should be sent.
         /// Optional, by default reply will be sent to sender's endpoint.
@@ -137,6 +147,7 @@ namespace NGinnBPM.MessageBus
     {
         void Notify(object msg);
         void Notify(object[] msgs);
+        void Notify(object msg, DeliveryMode mode);
         void Send(string destination, object msg);
         void Send(string destination, object[] msgs);
         void NotifyAt(DateTime deliverAt, object msg);
