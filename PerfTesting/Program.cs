@@ -29,7 +29,9 @@ namespace PerfTesting
             }
             else if (s == "2")
             {
-                TestSending1();
+                //TestSending1();
+                TestSendPrehandler();
+                Console.ReadLine();
             }
             else if (s == "3")
             {
@@ -74,7 +76,7 @@ namespace PerfTesting
 
         static void TestSending1()
         {
-            var mc = Configure("sql://nginn/MQ_PT1", true);
+            var mc = Configure("sql://nginn/MQ_PT1", false);
             IMessageBus mb = mc.Resolve<IMessageBus>();
             Thread.Sleep(1000);
             Console.WriteLine("Starting TestSending1");
@@ -87,6 +89,22 @@ namespace PerfTesting
             TimeSpan ts = DateTime.Now - dt;
             Console.WriteLine("Sent {0} messages in {1}, {2} msgs/second", N, ts, N / ts.TotalSeconds);
         }
+
+        static void TestSendPrehandler()
+        {
+            var mc = Configure("sql://nginn/MQ_PT1", false);
+            IMessageBus mb = mc.Resolve<IMessageBus>();
+            Thread.Sleep(1000);
+            Console.WriteLine("Starting TestSending1");
+            DateTime dt = DateTime.Now;
+            for (int i = 0; i < 3; i++)
+            {
+                mb.Send("sql://nginn/MQ_PT1", new TestMessage1 { Id = i.ToString() });
+            }
+            TimeSpan ts = DateTime.Now - dt;
+            Console.WriteLine("Sent {0} messages in {1}, {2} msgs/second", N, ts, N / ts.TotalSeconds);
+        }
+
 
         static void TestLotsa()
         {

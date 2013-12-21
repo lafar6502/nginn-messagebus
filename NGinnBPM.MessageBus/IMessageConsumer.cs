@@ -32,7 +32,7 @@ namespace NGinnBPM.MessageBus
     /// <typeparam name="T"></typeparam>
     public interface IOutgoingMessageHandler<T> : NGMessageConsumer
     {
-        void Handle(T message);
+        void OnMessageSend(T message);
     }
 
    

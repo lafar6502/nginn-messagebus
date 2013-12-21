@@ -639,22 +639,6 @@ namespace NGinnBPM.MessageBus.Windsor
 
         public int MaxConcurrentReceivers { get; set; }
 
-        protected static IList<Type> GetMessageHandlerInterfaces(Type t)
-        {
-            List<Type> l = new List<Type>();
-            foreach (Type itf in t.GetInterfaces())
-            {
-                if (itf.IsGenericType)
-                {
-                    if (itf.GetGenericTypeDefinition() == typeof(IMessageConsumer<>))
-                    {
-                        l.Add(itf);
-                    }
-                }
-            }
-            return l;
-        }
-
         /// <summary>
         /// Add message handler information
         /// If the handler requires any custom configuration, use the CustomizeContainer method
@@ -677,7 +661,7 @@ namespace NGinnBPM.MessageBus.Windsor
         /// <returns></returns>
         protected static void RegisterSagaType(Type sagaType, IWindsorContainer wc)
         {
-            if (!typeof(SagaBase).IsAssignableFrom(sagaType))
+            if (!TypeUtil.IsSagaType(sagaType))
             {
                 throw new Exception("Is not a saga");
             }
@@ -690,8 +674,8 @@ namespace NGinnBPM.MessageBus.Windsor
             var l = new List<Type>();
             l.Add(sagaType);
             l.Add(typeof(SagaBase));
-            l.AddRange(GetMessageHandlerInterfaces(sagaType));
-            l.AddRange(GetMessageHandlerServiceInterfaces(sagaType));
+            l.AddRange(TypeUtil.GetMessageHandlerInterfaces(sagaType));
+            l.AddRange(TypeUtil.GetMessageHandlerServiceInterfaces(sagaType));
             wc.Register(Component.For(l).ImplementedBy(sagaType).LifeStyle.Transient);
         }
 
@@ -708,7 +692,7 @@ namespace NGinnBPM.MessageBus.Windsor
         /// <returns></returns>
         public MessageBusConfigurator AddMessageHandlerInstance(object instance)
         {
-            IList<Type> l = GetMessageHandlerInterfaces(instance.GetType());
+            IList<Type> l = TypeUtil.GetMessageHandlerInterfaces(instance.GetType());
             if (l.Count > 0)
             {
                 _wc.Register(Component.For(l).Instance(instance));
@@ -734,20 +718,16 @@ namespace NGinnBPM.MessageBus.Windsor
 
         public static void RegisterHandlerType(Type t, IWindsorContainer wc, object depends)
         {
-            if (typeof(SagaBase).IsAssignableFrom(t))
+            if (TypeUtil.IsSagaType(t))
             {
-                if (!IsServiceRegistered(wc, t))
-                {
-                    RegisterSagaType(t, wc);
-                }
-                else log.Info("Saga already registered: {0}", t);
+                if (!IsServiceRegistered(wc, t)) RegisterSagaType(t, wc);
                 return;
             }
 
             List<Type> l = new List<Type>();
             l.Add(t);
-            var l2 = GetMessageHandlerInterfaces(t);
-            var l3 = GetMessageHandlerServiceInterfaces(t);
+            var l2 = TypeUtil.GetMessageHandlerInterfaces(t);
+            var l3 = TypeUtil.GetMessageHandlerServiceInterfaces(t);
             if (l2.Count + l3.Count == 0) return; 
             l.AddRange(l2);
             l.AddRange(l3);
@@ -927,23 +907,6 @@ namespace NGinnBPM.MessageBus.Windsor
             return this;
         }
 
-        protected static IList<Type> GetMessageHandlerServiceInterfaces(Type t)
-        {
-            List<Type> l = new List<Type>();
-            foreach (Type itf in t.GetInterfaces())
-            {
-                if (itf.IsGenericType)
-                {
-                    if (itf.GetGenericTypeDefinition() == typeof(IMessageHandlerService<>))
-                    {
-                        l.Add(itf);
-                    }
-                }
-            }
-            if (l.Count > 0 && !l.Contains(typeof(IMessageHandlerServiceBase))) l.Add(typeof(IMessageHandlerServiceBase));
-            return l;
-        }
-
         /// <summary>
         /// Registers all types that implement the IMessageHandlerService interface.
         /// If the registered type is a saga all of its message handling interfaces will be 
@@ -966,17 +929,14 @@ namespace NGinnBPM.MessageBus.Windsor
 
         public MessageBusConfigurator RegisterHttpMessageService(Type t)
         {
-            if (typeof(SagaBase).IsAssignableFrom(t))
+            if (TypeUtil.IsSagaType(t))
             {
-                if (!IsServiceRegistered(t))
-                {
-                    RegisterSagaType(t);
-                }
-                else log.Info("Saga type already registered: {0}", t);
+                if (!IsServiceRegistered(t)) RegisterSagaType(t);
                 return this;
             }
-            var l = GetMessageHandlerServiceInterfaces(t);
-            var l2 = GetMessageHandlerInterfaces(t);
+
+            var l = TypeUtil.GetMessageHandlerServiceInterfaces(t);
+            var l2 = TypeUtil.GetMessageHandlerInterfaces(t);
             if (l.Count > 0)
             {
                 _wc.Register(Component.For(l.ToArray()).ImplementedBy(t).LifeStyle.Singleton);

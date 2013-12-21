@@ -13,7 +13,10 @@ public class TestMessage1Reply
     public string RequestId { get; set; }
 }
 
-public class TestMessageHandler1 : IMessageConsumer<TestMessage1>, IMessageConsumer<TestMessageX>
+public class TestMessageHandler1 : 
+    IMessageConsumer<TestMessage1>, 
+    IMessageConsumer<TestMessageX>,
+    IOutgoingMessageHandler<TestMessage1>
 {
     private static Logger log = LogManager.GetCurrentClassLogger();
     
@@ -42,6 +45,12 @@ public class TestMessageHandler1 : IMessageConsumer<TestMessage1>, IMessageConsu
             default:
                 break;
         }
+    }
+
+    public void OnMessageSend(TestMessage1 message)
+    {
+        log.Warn("**** OUT {0}", message.Id);
+        MessageBus.Notify(new TestMessageX { Id = int.Parse(message.Id)});
     }
 }
 

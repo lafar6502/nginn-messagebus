@@ -28,6 +28,7 @@ namespace NGinnBPM.MessageBus.Impl
         public MessageDispatcher()
         {
             log = LogManager.GetLogger("MessageDispatcher_" + this.GetHashCode());
+            RequireHandler = false;
         }
 
         public class MsgHandlerInfo
@@ -74,7 +75,7 @@ namespace NGinnBPM.MessageBus.Impl
                 mi.MessageType = msgType;
                 mi.MessageHandlerGenericType = typeof(IOutgoingMessageHandler<>).MakeGenericType(msgType);
                 mi.InitiatedByGenericType = typeof(IOutgoingMessageHandler<>).MakeGenericType(msgType);
-                mi.HandleMethod = DelegateFactory.CreateMessageHandlerDelegate(mi.MessageHandlerGenericType.GetMethod("Handle"));
+                mi.HandleMethod = DelegateFactory.CreateMessageHandlerDelegate(mi.MessageHandlerGenericType.GetMethod("OnMessageSend"));
                 _handlers[msgType] = mi;
                 return mi;
             }
@@ -174,7 +175,6 @@ namespace NGinnBPM.MessageBus.Impl
 
         public virtual void DispatchMessage(object message, IMessageBus bus)
         {
-            RequireHandler = true;
             bool found = false;
 
             foreach (ICustomMessageHandler mh in ServiceLocator.GetAllInstances<ICustomMessageHandler>())
@@ -276,6 +276,30 @@ namespace NGinnBPM.MessageBus.Impl
                     }
                 }
                 tp = tp.BaseType;
+            }
+            Type[] interfs = message.GetType().GetInterfaces();
+            foreach (Type interfType in interfs) //dispatch based on message interfaces
+            {
+                if (typeof(IMessageInterface).IsAssignableFrom(interfType))
+                {
+                    MsgHandlerInfo mhi;   
+                    ICollection<object> handlers;
+                    if (GetOutgoingHandlersForMessageType(interfType, out handlers, out mhi))
+                    {
+                        foreach (object hnd in handlers)
+                        {
+                            try
+                            {
+                                mhi.HandleMethod(hnd, message);
+                            }
+                            catch (TargetInvocationException ti)
+                            {
+                                log.Error("Error invoking message handler {0} for message {1}: {2}", hnd.GetType(), message.GetType(), ti.InnerException);
+                                throw;
+                            }
+                        }
+                    }
+                }
             }
         }
     }
