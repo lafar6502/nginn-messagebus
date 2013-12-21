@@ -194,6 +194,10 @@ namespace NGinnBPM.MessageBus.Impl
 
         private void Notify(object[] msgs, DeliveryMode mode)
         {
+            foreach (var msg in msgs)
+            {
+                Dispatcher.DispatchMessageToOutgoingMessageHandlers(msg, this);
+            }
             List<MessageContainer> lst = new List<MessageContainer>();
             foreach (Object obj in msgs)
             {
@@ -330,6 +334,10 @@ namespace NGinnBPM.MessageBus.Impl
 
         public void Send(string destination, object[] msgs)
         {
+            foreach (var msg in msgs)
+            {
+                Dispatcher.DispatchMessageToOutgoingMessageHandlers(msg, this);
+            }
             if (destination == null)
                 destination = Endpoint;
             List<MessageContainer> lst = new List<MessageContainer>();

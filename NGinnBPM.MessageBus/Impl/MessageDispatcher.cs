@@ -40,6 +40,7 @@ namespace NGinnBPM.MessageBus.Impl
         }
 
         private Dictionary<Type, MsgHandlerInfo> _handlers = new Dictionary<Type, MsgHandlerInfo>();
+        private Dictionary<Type, MsgHandlerInfo> _outHandlers = new Dictionary<Type, MsgHandlerInfo>();
 
         protected MsgHandlerInfo GetHandlersFor(Type msgType)
         {
@@ -60,6 +61,25 @@ namespace NGinnBPM.MessageBus.Impl
             }
         }
 
+        protected MsgHandlerInfo GetOutHandlersFor(Type msgType)
+        {
+            MsgHandlerInfo mi;
+            if (_outHandlers.TryGetValue(msgType, out mi))
+                return mi;
+            lock (this)
+            {
+                if (_outHandlers.TryGetValue(msgType, out mi))
+                    return mi;
+                mi = new MsgHandlerInfo();
+                mi.MessageType = msgType;
+                mi.MessageHandlerGenericType = typeof(IOutgoingMessageHandler<>).MakeGenericType(msgType);
+                mi.InitiatedByGenericType = typeof(IOutgoingMessageHandler<>).MakeGenericType(msgType);
+                mi.HandleMethod = DelegateFactory.CreateMessageHandlerDelegate(mi.MessageHandlerGenericType.GetMethod("Handle"));
+                _handlers[msgType] = mi;
+                return mi;
+            }
+        }
+
         /// <summary>
         /// Call this method when message handlers have been modified
         /// </summary>
@@ -74,6 +94,7 @@ namespace NGinnBPM.MessageBus.Impl
         {
             if (handler is SagaBase)
             {
+                if (SagaHandler == null) throw new PermanentMessageProcessingException("Saga support has not been enabled");
                 string id = null;
                 if (bus != null && bus.CurrentMessageInfo != null)
                 {
@@ -139,6 +160,15 @@ namespace NGinnBPM.MessageBus.Impl
                 }
             }
             else handlerInfo._numHandlersFound = handlers.Count;
+            return true;
+        }
+
+        protected virtual bool GetOutgoingHandlersForMessageType(Type t, out ICollection<object> handlers, out MsgHandlerInfo handlerInfo)
+        {
+            handlers = null;
+            handlerInfo = GetOutHandlersFor(t);
+            if (handlerInfo == null) return false;
+            handlers = ServiceLocator.GetAllInstances(handlerInfo.MessageHandlerGenericType);
             return true;
         }
 
@@ -219,6 +249,33 @@ namespace NGinnBPM.MessageBus.Impl
                 //log.Error("No handler for message: {0}", message.ToString());
                 if (RequireHandler)
                     throw new Exception("No message handler for " + message.GetType().FullName);
+            }
+        }
+
+
+        public void DispatchMessageToOutgoingMessageHandlers(object message, IMessageBus bus)
+        {
+            Type tp = message.GetType();
+            while (tp != null) //dispatch based on message type
+            {
+                MsgHandlerInfo mhi;
+                ICollection<object> handlers;
+                if (GetOutgoingHandlersForMessageType(tp, out handlers, out mhi))
+                {
+                    foreach (object hnd in handlers)
+                    {
+                        try
+                        {
+                            mhi.HandleMethod(hnd, message);
+                        }
+                        catch (TargetInvocationException ti)
+                        {
+                            log.Error("Error invoking message handler {0} for message {1}: {2}", hnd.GetType(), message.GetType(), ti.InnerException);
+                            throw;
+                        }
+                    }
+                }
+                tp = tp.BaseType;
             }
         }
     }

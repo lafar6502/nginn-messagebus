@@ -17,5 +17,13 @@ namespace NGinnBPM.MessageBus.Impl
         /// <param name="messageType"></param>
         /// <returns></returns>
         bool HasHandlerFor(Type messageType);
+
+        /// <summary>
+        /// Delivers message synchronously 
+        /// to IOutgoingMessageHandlers
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="bus"></param>
+        void DispatchMessageToOutgoingMessageHandlers(object message, IMessageBus bus);
     }
 }

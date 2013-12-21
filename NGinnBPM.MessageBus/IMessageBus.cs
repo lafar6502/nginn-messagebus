@@ -20,8 +20,17 @@ namespace NGinnBPM.MessageBus
     /// </summary>
     public enum DeliveryMode
     {
+        /// <summary>
+        /// Default message delivery mode - durable, transactional and asynchronous
+        /// </summary>
         DurableAsync,
+        /// <summary>
+        /// Local messages delivered asynchronously, without persistence
+        /// </summary>
         LocalAsync,
+        /// <summary>
+        /// Messages delivered immediately (synchronously) to their handlers, without persistence
+        /// </summary>
         LocalSync
     }
 
