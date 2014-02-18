@@ -15,7 +15,7 @@ namespace PerfTesting
     {
         static void Main(string[] args)
         {
-            NLog.Config.SimpleConfigurator.ConfigureForConsoleLogging();
+            NLog.Config.SimpleConfigurator.ConfigureForConsoleLogging(LogLevel.Debug);
             if (args.Length == 0)
             {
                 //TestScheduled();

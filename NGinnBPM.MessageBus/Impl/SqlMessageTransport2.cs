@@ -112,6 +112,10 @@ namespace NGinnBPM.MessageBus.Impl
         /// </summary>
         public int MaxSqlParamsInBatch { get; set; }
         /// <summary>
+        /// Throttling. Maximum message receiving frequency.
+        /// </summary>
+        public double? MaxReceiveFrequency { get; set; }
+        /// <summary>
         /// Map alias->connection string used for mapping endpoint name to a database
         /// </summary>
         public IDictionary<string, string> ConnectionStrings
@@ -201,6 +205,7 @@ namespace NGinnBPM.MessageBus.Impl
             SendOnly = false;
             MaxMessagesPerSingleConnection = 50;
             MaxSqlParamsInBatch = 200;
+            //MaxReceiveFrequency = 1000;
         }
 
         static SqlMessageTransport2()
@@ -559,6 +564,7 @@ namespace NGinnBPM.MessageBus.Impl
         /// </summary>
         protected virtual void MessageProcessingThreadLoop()
         {
+#warning TODO add frequency throttling
             log.Info("Processing thread {0} started", Thread.CurrentThread.ManagedThreadId);
             NLog.MappedDiagnosticsContext.Set("nmbendpoint", Endpoint.Replace('/', '_').Replace(':', '_'));
             Thread.Sleep(2000);
@@ -568,6 +574,7 @@ namespace NGinnBPM.MessageBus.Impl
                 {
                     SqlConnection cn = OpenConnection();
                     bool pause = true;
+                    int delayMs = 0;
                     try
                     {
                         CurrentConnection = cn;
@@ -580,6 +587,26 @@ namespace NGinnBPM.MessageBus.Impl
                                 pause = false;
                                 break;
                             }
+                            if (MaxReceiveFrequency.HasValue)
+                            {
+                                double curFreq = 0;
+                                double window = 0;
+                                lock (_nowProcessing)
+                                {
+                                    int fcnt = _frequency.Count;
+                                    if (fcnt == 0) continue;
+                                    long st = _frequency.Peek();
+                                    window = _freqSw.ElapsedTicks - st;
+                                    curFreq = ((double)fcnt * Stopwatch.Frequency) / window;
+                                }
+                                log.Info("Current frequency is {0}", curFreq);
+                                if (curFreq > MaxReceiveFrequency.Value)
+                                {
+                                    //calculate delay time so that maximum frequency is not exceeded
+                                    pause = true;
+                                    delayMs = 1;
+                                }
+                            }
                         }
                     }
                     finally
@@ -591,7 +618,8 @@ namespace NGinnBPM.MessageBus.Impl
                     
                     if (pause && !_stop)
                     {
-                        bool b = _waiter.WaitOne(TimeSpan.FromSeconds(5 + _rand.Next(1, 10)));
+                        TimeSpan tt = delayMs > 0 ? TimeSpan.FromMilliseconds(delayMs) : TimeSpan.FromSeconds(5 + _rand.Next(1, 10));
+                        bool b = _waiter.WaitOne(tt);
                     }
                 }
                 catch (ThreadInterruptedException)
@@ -681,6 +709,7 @@ namespace NGinnBPM.MessageBus.Impl
                     log.Warn("Updated 0 rows when trying to lock message {0}. Skipping", mc.BusMessageId);
                     moreMessages = true;
                     return null;
+                    
                 }
                 return mc;
             }
@@ -689,7 +718,22 @@ namespace NGinnBPM.MessageBus.Impl
         public bool UseSqlOutputClause { get; set; }
 
         private Dictionary<string, DateTime> _nowProcessing = new Dictionary<string, DateTime>();
+        private Queue<long> _frequency = new Queue<long>();
+        private Stopwatch _freqSw = Stopwatch.StartNew();
 
+        /// <summary>
+        /// Process next message from the queue
+        /// </summary>
+        /// <param name="conn">database connection (open)</param>
+        /// <param name="pauseMs">
+        /// returns number of milliseconds to pause before handling next message.
+        /// This is used for message throttling.
+        /// </param>
+        /// <returns>
+        /// true if there are more messages to process
+        /// false if there are no more messages to process and the receiving thread
+        /// should pause for some time.
+        /// </returns>
         protected virtual bool ProcessNextMessage(SqlConnection conn)
         {
             var sw = Stopwatch.StartNew();
@@ -719,7 +763,10 @@ namespace NGinnBPM.MessageBus.Impl
                         lock (_nowProcessing)
                         {
                             _nowProcessing[id] = DateTime.Now;
+                            _frequency.Enqueue(_freqSw.ElapsedTicks);
+                            while (_frequency.Count > MaxConcurrentMessages) _frequency.Dequeue();
                         }
+
                         retryCount = mc.RetryCount;
                         
                         doRetry = retryCount < _retryTimes.Length ? FailureDisposition.RetryIncrementRetryCount : FailureDisposition.Fail;
@@ -1005,6 +1052,7 @@ namespace NGinnBPM.MessageBus.Impl
         {
             internal MessageContainer Message { get; set; }
             internal DateTime? ProcessLater { get; set; }
+            internal int? ThrottleDelayMs { get; set; }
 
             internal CurMsgInfo(MessageContainer mc)
             {

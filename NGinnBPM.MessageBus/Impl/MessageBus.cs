@@ -227,8 +227,7 @@ namespace NGinnBPM.MessageBus.Impl
         {
             Type tp = msgType;
             HashSet<string> set = new HashSet<string>();
-            if (PublishLocalByDefault || Dispatcher.HasHandlerFor(msgType)) set.Add(Endpoint);
-            while (tp != null)
+            while (tp != null && tp.BaseType != null)
             {
                 ICollection<string> ends = SubscriptionService.GetTargetEndpoints(tp.FullName);
                 foreach (string endp in ends)
@@ -238,6 +237,13 @@ namespace NGinnBPM.MessageBus.Impl
                     if (!set.Contains(s)) set.Add(s);
                 }
                 tp = tp.BaseType;
+            }
+            if (!set.Contains(Endpoint))
+            {
+                if (PublishLocalByDefault) 
+                    set.Add(Endpoint);
+                else if (set.Count == 0 && Dispatcher.HasHandlerFor(msgType))
+                    set.Add(Endpoint);
             }
             return set.ToArray();
         }

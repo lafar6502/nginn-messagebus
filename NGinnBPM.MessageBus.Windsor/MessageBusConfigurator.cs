@@ -502,7 +502,14 @@ namespace NGinnBPM.MessageBus.Windsor
         {
             public string BusName { get; set; }
             public string Endpoint { get; set; }
+            /// <summary>
+            /// max number of concurrently processed messages
+            /// </summary>
             public int? MaxConcurrentMessages { get; set; }
+            /// <summary>
+            /// max messages received/second. Unlimited by default.
+            /// </summary>
+            public double? MaxReceiveFrequency { get; set; }
         }
         private List<AdditionalSqlBusConfig> _additionalBuses = new List<AdditionalSqlBusConfig>();
 

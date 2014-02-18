@@ -143,13 +143,12 @@ namespace NGinnBPM.MessageBus.Impl
             return false;
         }
 
-        protected virtual bool GetAllHandlersForMessageType(Type t, out ICollection<object> handlers, out MsgHandlerInfo handlerInfo, bool checkOnly = false)
+        protected virtual bool GetAllHandlersForMessageType(Type t, out ICollection<object> handlers, out MsgHandlerInfo handlerInfo)
         {
             handlers = null; 
             handlerInfo = GetHandlersFor(t);
             if (handlerInfo == null) return false;
             var nh = handlerInfo._numHandlersFound;
-            if (nh.HasValue && checkOnly) return nh.Value > 0;
             handlers = ServiceLocator.GetAllInstances(handlerInfo.MessageHandlerGenericType);
             if (nh.HasValue)
             {
@@ -246,7 +245,7 @@ namespace NGinnBPM.MessageBus.Impl
 
             if (!found)
             {
-                //log.Error("No handler for message: {0}", message.ToString());
+                log.Debug("No handler for message: {0}", message.ToString());
                 if (RequireHandler)
                     throw new Exception("No message handler for " + message.GetType().FullName);
             }
