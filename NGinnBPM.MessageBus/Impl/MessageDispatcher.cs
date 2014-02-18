@@ -76,7 +76,7 @@ namespace NGinnBPM.MessageBus.Impl
                 mi.MessageHandlerGenericType = typeof(IOutgoingMessageHandler<>).MakeGenericType(msgType);
                 mi.InitiatedByGenericType = typeof(IOutgoingMessageHandler<>).MakeGenericType(msgType);
                 mi.HandleMethod = DelegateFactory.CreateMessageHandlerDelegate(mi.MessageHandlerGenericType.GetMethod("OnMessageSend"));
-                _handlers[msgType] = mi;
+                _outHandlers[msgType] = mi;
                 return mi;
             }
         }

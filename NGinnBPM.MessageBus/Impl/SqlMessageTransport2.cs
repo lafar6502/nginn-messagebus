@@ -12,6 +12,8 @@ using System.Transactions;
 using System.Collections;
 using System.Diagnostics;
 using NGinnBPM.MessageBus.Queues;
+using System.Reflection;
+
 namespace NGinnBPM.MessageBus.Impl
 {
     /// <summary>
@@ -412,6 +414,10 @@ namespace NGinnBPM.MessageBus.Impl
         /// </summary>
         public virtual void Start()
         {
+            var assembly = Assembly.GetExecutingAssembly();
+            var attr = Attribute.GetCustomAttribute(assembly, typeof(AssemblyFileVersionAttribute)) as AssemblyFileVersionAttribute;
+            log.Info("NGinn MessageBus v {0} starting SQL transport for endpoint {1}", attr == null ? "---" : attr.Version, Endpoint);
+
             lock (this)
             {
                 if (OnMessageArrived == null) 
@@ -459,7 +465,6 @@ namespace NGinnBPM.MessageBus.Impl
                 }
             
             }
-            log.Info("Started sql transport {0}", Endpoint);
         }
 
         public virtual void Stop()

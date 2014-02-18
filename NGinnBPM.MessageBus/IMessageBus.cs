@@ -4,6 +4,7 @@ using System.Text;
 
 namespace NGinnBPM.MessageBus
 {
+    
     public interface CurrentMessageInfo
     {
         object Body { get; }
