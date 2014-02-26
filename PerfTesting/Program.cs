@@ -8,6 +8,7 @@ using NGinnBPM.MessageBus;
 using Castle.Windsor;
 using System.Threading;
 using System.Transactions;
+using NGinnBPM.MessageBus.Impl;
 
 namespace PerfTesting
 {
@@ -16,6 +17,8 @@ namespace PerfTesting
         static void Main(string[] args)
         {
             NLog.Config.SimpleConfigurator.ConfigureForConsoleLogging(LogLevel.Debug);
+            //var mb1 = NinjectTest.ConfigureMessageBus();
+            //return;
             if (args.Length == 0)
             {
                 //TestScheduled();
@@ -57,6 +60,10 @@ namespace PerfTesting
             {
                 TestMTSending2(10, 8);
             }
+            else if (s == "9")
+            {
+                TestDispatchTargets();
+            }
             else throw new NotImplementedException();
         }
 
@@ -72,6 +79,14 @@ namespace PerfTesting
                 )
                 .FinishConfiguration();
             return mc.Container;
+        }
+
+        static void TestDispatchTargets()
+        {
+            var mc = Configure("sql://nginn/MQ_PT1", false);
+            var mb = mc.Resolve<IMessageBus>() as MessageBus;
+            var dests = mb.GetTargetQueuesForMessageType(typeof(TestMessage1));
+
         }
 
         static void TestSending1()

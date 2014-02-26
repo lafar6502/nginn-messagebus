@@ -123,6 +123,7 @@ namespace NGinnBPM.MessageBus.Perf
                 foreach (IPerfCounter pc in ServiceLocator.GetAllInstances<IPerfCounter>())
                 {
                     AddCounter(pc);
+                    ServiceLocator.ReleaseInstance(pc);
                 }
             }
         }

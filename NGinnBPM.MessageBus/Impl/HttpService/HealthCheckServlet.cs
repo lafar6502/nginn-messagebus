@@ -24,7 +24,7 @@ namespace NGinnBPM.MessageBus.Impl.HttpService
                     ctx.Output.WriteLine("alert.{0}={1}", h.Name, h.AlertText);
                     ctx.Output.WriteLine("lastSuccessfulRun.{0}={1}", h.Name, h.FailingSince.ToString("yyyy-MM-ddTHH:mm:ss"));
                     ctx.Output.WriteLine();
-
+                    ServiceResolver.ReleaseInstance(h);
                     if (b && !h.IsEverythingOK)
                     {
                         ctx.ResponseStatus = 500;

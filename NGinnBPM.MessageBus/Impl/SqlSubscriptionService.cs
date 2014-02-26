@@ -34,6 +34,7 @@ namespace NGinnBPM.MessageBus.Impl
         
         private Dictionary<string, List<string>> _cache = null;
         private DateTime _lastCacheLoad = DateTime.Now;
+        private static string[] empty = new string[0];
 
         private IDbConnection OpenConnection()
         {
@@ -62,7 +63,7 @@ namespace NGinnBPM.MessageBus.Impl
             }
         }
 
-        public ICollection<string> GetTargetEndpoints(string messageType)
+        public IEnumerable<string> GetTargetEndpoints(string messageType)
         {
             List<string> lst = null;
             InitializeIfNeeded();
@@ -98,8 +99,7 @@ namespace NGinnBPM.MessageBus.Impl
                     _lastCacheLoad = DateTime.Now;
                 }
             }
-            if (!c.TryGetValue(messageType, out lst)) lst = new List<string>();
-            return lst;
+            return c.TryGetValue(messageType, out lst) ? lst : (IEnumerable<string>) empty;
         }
 
         public void Subscribe(string subscriberEndpoint, string messageType, DateTime? expiration)

@@ -27,5 +27,10 @@ namespace NGinnBPM.MessageBus
         /// <param name="t"></param>
         /// <returns></returns>
         bool HasService(Type t);
+        /// <summary>
+        /// for releasing service instances.
+        /// </summary>
+        /// <param name="inst"></param>
+        void ReleaseInstance(object inst);
     }
 }

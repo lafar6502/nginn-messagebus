@@ -10,7 +10,12 @@ namespace NGinnBPM.MessageBus.Impl.HttpService
     {
         public string RootUrl {get;set;}
 
-        public IServiceResolver ServiceResolver { get; set; }
+        public MasterDispatcherServlet(IServiceResolver resolver)
+        {
+            _resolver = resolver;
+        }
+
+        private IServiceResolver _resolver;
 
         public virtual bool HandleRequest(IRequestContext ctx)
         {
@@ -24,13 +29,15 @@ namespace NGinnBPM.MessageBus.Impl.HttpService
                 }
                 ctx.DispatchUrl = ctx.RawUrl.Substring(idx);
             }
-            foreach (IServlet srvlet in ServiceResolver.GetAllInstances<IServlet>())
+            foreach (IServlet srvlet in _resolver.GetAllInstances<IServlet>())
             {
                 if (CanHandleRequest(ctx, srvlet.MatchUrl))
                 {
                     srvlet.HandleRequest(ctx);
+                    _resolver.ReleaseInstance(srvlet);
                     return true;
                 }
+                _resolver.ReleaseInstance(srvlet);
             }
             return false;
         }

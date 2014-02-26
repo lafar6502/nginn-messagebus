@@ -12,7 +12,7 @@ namespace NGinnBPM.MessageBus.Impl
     {
         #region ISubscriptionService Members
 
-        public ICollection<string> GetTargetEndpoints(string messageType)
+        public IEnumerable<string> GetTargetEndpoints(string messageType)
         {
             return new List<string>(new string[] {"local"});
         }

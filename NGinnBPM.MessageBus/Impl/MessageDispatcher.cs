@@ -18,15 +18,16 @@ namespace NGinnBPM.MessageBus.Impl
     {
 
         public bool RequireHandler { get; set; }
-        public IServiceResolver ServiceLocator { get; set; }
+        protected IServiceResolver ServiceLocator { get; set; }
         private Logger log;
         /// <summary>
         /// for delivering messages to sagas...
         /// </summary>
         public Sagas.SagaStateHelper SagaHandler { get; set; }
 
-        public MessageDispatcher()
+        public MessageDispatcher(IServiceResolver resolver)
         {
+            ServiceLocator = resolver;
             log = LogManager.GetLogger("MessageDispatcher_" + this.GetHashCode());
             RequireHandler = false;
         }
@@ -178,9 +179,10 @@ namespace NGinnBPM.MessageBus.Impl
 
             foreach (ICustomMessageHandler mh in ServiceLocator.GetAllInstances<ICustomMessageHandler>())
             {
-                if (!mh.PreHandle(message))
+                var b = mh.PreHandle(message);
+                ServiceLocator.ReleaseInstance(mh);
+                if (!b)
                 {
-                    //stop processing
                     log.Debug("Message dispatch cancelled by custom handler: {0}", mh.GetType());
                     return;
                 }
@@ -210,6 +212,7 @@ namespace NGinnBPM.MessageBus.Impl
                                 log.Error("Error invoking message handler {0} for message {1}: {2}", hnd.GetType(), message.GetType(), ti.InnerException);
                                 throw;
                             }
+                            ServiceLocator.ReleaseInstance(hnd);
                         }
                     }
                 }
@@ -233,6 +236,7 @@ namespace NGinnBPM.MessageBus.Impl
                             log.Error("Error invoking message handler {0} for message {1}: {2}", hnd.GetType(), message.GetType(), ti.InnerException);
                             throw;
                         }
+                        ServiceLocator.ReleaseInstance(hnd);
                     }
                 }
                 tp = tp.BaseType;
@@ -241,6 +245,7 @@ namespace NGinnBPM.MessageBus.Impl
             foreach (ICustomMessageHandler mh in ServiceLocator.GetAllInstances<ICustomMessageHandler>())
             {
                 mh.PostHandle(message);
+                ServiceLocator.ReleaseInstance(mh);
             }
 
             if (!found)
@@ -272,6 +277,7 @@ namespace NGinnBPM.MessageBus.Impl
                             log.Error("Error invoking message handler {0} for message {1}: {2}", hnd.GetType(), message.GetType(), ti.InnerException);
                             throw;
                         }
+                        ServiceLocator.ReleaseInstance(hnd);
                     }
                 }
                 tp = tp.BaseType;
@@ -296,6 +302,7 @@ namespace NGinnBPM.MessageBus.Impl
                                 log.Error("Error invoking message handler {0} for message {1}: {2}", hnd.GetType(), message.GetType(), ti.InnerException);
                                 throw;
                             }
+                            ServiceLocator.ReleaseInstance(hnd);
                         }
                     }
                 }

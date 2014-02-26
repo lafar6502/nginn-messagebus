@@ -10,7 +10,12 @@ namespace NGinnBPM.MessageBus.Impl.HttpService
 {
     public class JsonServiceCallHandler
     {
-        public IServiceMessageDispatcher ServiceDispatcher { get; set; }
+        private IServiceMessageDispatcher _serviceDispatcher;
+
+        public JsonServiceCallHandler(IServiceMessageDispatcher dispatcher)
+        {
+            _serviceDispatcher = dispatcher;
+        }
 
         public void HandleServiceCall(string serviceName, string contentType, TextReader input, TextWriter output)
         {
@@ -20,14 +25,14 @@ namespace NGinnBPM.MessageBus.Impl.HttpService
             object resp = null;
             if (!string.IsNullOrEmpty(serviceName))
             {
-                var si = ServiceDispatcher.GetServiceInfo(serviceName);
+                var si = _serviceDispatcher.GetServiceInfo(serviceName);
                 request = ser.Deserialize(input, si.RequestType);
-                resp = ServiceDispatcher.CallService(serviceName, request);
+                resp = _serviceDispatcher.CallService(serviceName, request);
             }
             else
             {
                 request = ser.Deserialize(new JsonTextReader(input));
-                resp = ServiceDispatcher.CallService(request);
+                resp = _serviceDispatcher.CallService(request);
             }
             ser.Serialize(output, resp);
         }

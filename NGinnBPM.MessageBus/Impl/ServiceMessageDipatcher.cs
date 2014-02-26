@@ -70,6 +70,7 @@ namespace NGinnBPM.MessageBus.Impl
                         });
                     }
                 }
+                ServiceLocator.ReleaseInstance(srv);
             }
             return l;
         }
@@ -104,17 +105,18 @@ namespace NGinnBPM.MessageBus.Impl
             if (shi == null) throw new Exception("Service not found");
             var h = shi.HandlerName == null ? ServiceLocator.GetInstance(shi.MessageHandlerGenericType) : ServiceLocator.GetInstance(shi.MessageHandlerGenericType, shi.HandlerName);
             if (h == null) throw new Exception("Service not found: " + name);
-            
+
             try
             {
                 if (h is SagaBase)
                 {
                     object ret = null;
                     var helper = ServiceLocator.GetInstance<Sagas.SagaStateHelper>();
-                    var b = helper.DispatchToSaga(null, inputMessage, true, true, (SagaBase) h, delegate(SagaBase saga)
+                    var b = helper.DispatchToSaga(null, inputMessage, true, true, (SagaBase)h, delegate(SagaBase saga)
                     {
                         ret = shi.HandleMethod(saga, inputMessage);
                     });
+                    ServiceLocator.ReleaseInstance(helper);
                     if (b != Sagas.SagaStateHelper.SagaDispatchResult.MessageHandled) throw new Exception();
                     return ret;
                 }
@@ -127,6 +129,13 @@ namespace NGinnBPM.MessageBus.Impl
             {
                 if (ex.InnerException != null) throw ex.InnerException;
                 throw;
+            }
+            finally
+            {
+                if (h != null)
+                {
+                    ServiceLocator.ReleaseInstance(h);
+                }
             }
         }
 

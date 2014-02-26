@@ -15,6 +15,7 @@ namespace NGinnBPM.MessageBus.Impl.HttpService
             foreach (var s in ServiceResolver.GetAllInstances<IServlet>())
             {
                 ctx.Output.WriteLine("{0} :: {1}", s.MatchUrl, s.GetType().Name);
+                ServiceResolver.ReleaseInstance(s);
             }
         }
     }

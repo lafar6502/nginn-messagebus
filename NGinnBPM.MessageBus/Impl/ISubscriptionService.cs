@@ -14,10 +14,12 @@ namespace NGinnBPM.MessageBus.Impl
         /// Get list of endpoints where the message type should be forwarded.
         /// If the list contains "local" the message will be forwarded
         /// to local endpoint.
+        /// Warning: this function checks only subscriptions for specified type name and doesn't
+        /// look into its inheritance hierarchy or anything
         /// </summary>
         /// <param name="messageType"></param>
         /// <returns></returns>
-        ICollection<string> GetTargetEndpoints(string messageType);
+        IEnumerable<string> GetTargetEndpoints(string messageType);
         /// <summary>
         /// Subscribe an endpoint for messages of specified type
         /// </summary>

@@ -21,11 +21,11 @@ namespace NGinnBPM.MessageBus.Impl
         /// <summary>
         /// Serializer used for serializing message body
         /// </summary>
-        public ISerializeMessages MessageSerializer { get; set; }
+        protected ISerializeMessages MessageSerializer { get; set; }
         /// <summary>
         /// Message dispatcher used for delivering messages to their handlers
         /// </summary>
-        public IMessageDispatcher Dispatcher { get; set; }
+        protected IMessageDispatcher Dispatcher { get; set; }
 		
 		///Handle messages inside Microsoft.Transactions.TransactionScope
 		public bool UseTransactionScope { get; set; }
@@ -35,16 +35,19 @@ namespace NGinnBPM.MessageBus.Impl
         /// currently used for locating message transports when
         /// forwarding messages to remote endpoint
         /// </summary>
-        public IServiceResolver ServiceLocator { get; set; }
+        protected IServiceResolver ServiceLocator { get; set; }
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="transport">Message transport used as a backend for this message bus</param>
-        public MessageBus(IMessageTransport transport)
+        public MessageBus(IMessageTransport transport, IMessageDispatcher dispatcher, ISerializeMessages serializer, IServiceResolver serviceResolver)
         {
             log = LogManager.GetLogger("BUS_" + transport.Endpoint);
             log.Info("Message Bus {0} created", transport.Endpoint);
+            MessageSerializer = serializer;
+            Dispatcher = dispatcher;
+            ServiceLocator = serviceResolver;
             _transport = transport;
             _transport.OnMessageArrived += new MessageArrived(_transport_OnMessageArrived);
             _transport.OnMessageToUnknownDestination += new MessageArrived(_transport_OnMessageToUnknownDestination);
@@ -104,6 +107,7 @@ namespace NGinnBPM.MessageBus.Impl
             foreach (IPreprocessMessages pm in this.ServiceLocator.GetAllInstances<IPreprocessMessages>())
             {
                 var res = pm.HandleIncomingMessage(mc, t);
+                ServiceLocator.ReleaseInstance(pm);
                 if (res != MessagePreprocessResult.ContinueProcessing) return res;
             }
             return MessagePreprocessResult.ContinueProcessing;
@@ -220,16 +224,18 @@ namespace NGinnBPM.MessageBus.Impl
 
         /// <summary>
         /// Return list of queue names where message of specified type should be published
+        /// this selects all remote subscribers of specified message type (or its base classes)
+        /// and a local endpoint if there is any subscriber for specified message type.
         /// </summary>
         /// <param name="msgType"></param>
         /// <returns></returns>
-        protected virtual string[] GetTargetQueuesForMessageType(Type msgType)
+        public virtual string[] GetTargetQueuesForMessageType(Type msgType)
         {
             Type tp = msgType;
             HashSet<string> set = new HashSet<string>();
-            while (tp != null && tp.BaseType != null)
+            while (tp != null)
             {
-                ICollection<string> ends = SubscriptionService.GetTargetEndpoints(tp.FullName);
+                IEnumerable<string> ends = SubscriptionService.GetTargetEndpoints(tp.FullName);
                 foreach (string endp in ends)
                 {
                     var s = endp;
@@ -242,7 +248,7 @@ namespace NGinnBPM.MessageBus.Impl
             {
                 if (PublishLocalByDefault) 
                     set.Add(Endpoint);
-                else if (set.Count == 0 && Dispatcher.HasHandlerFor(msgType))
+                else if (Dispatcher.HasHandlerFor(msgType))
                     set.Add(Endpoint);
             }
             return set.ToArray();

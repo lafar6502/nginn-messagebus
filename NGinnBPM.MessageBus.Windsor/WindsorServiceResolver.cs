@@ -61,5 +61,10 @@ namespace NGinnBPM.MessageBus.Windsor
         {
             return _krnl.HasComponent(t);
         }
+
+        public void ReleaseInstance(object instance)
+        {
+            _krnl.ReleaseComponent(instance);
+        }
     }
 }

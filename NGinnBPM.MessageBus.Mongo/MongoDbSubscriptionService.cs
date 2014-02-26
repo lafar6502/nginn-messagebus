@@ -25,7 +25,7 @@ namespace NGinnBPM.MessageBus.Mongo
         public MongoDatabase Db { get; set; }   
         public string CollectionName { get; set; }
 
-        public ICollection<string> GetTargetEndpoints(string messageType)
+        public IEnumerable<string> GetTargetEndpoints(string messageType)
         {
             var t = Db.GetCollection<Subscription>(CollectionName).FindOneById(messageType);
             if (t == null) return new string[] { };

@@ -13,15 +13,15 @@ namespace NGinnBPM.MessageBus.Impl
         public string ConfigFile { get; set; }
         private Dictionary<string, List<string>> _routes = null;
         private Logger log = LogManager.GetCurrentClassLogger();
+        private static string[] empty = new string[0];
 
-        public ICollection<string> GetTargetEndpoints(string messageType)
+        public IEnumerable<string> GetTargetEndpoints(string messageType)
         {
             if (_routes == null) LoadConfig();
             var r = _routes;
             List<string> l;
             if (r.TryGetValue(messageType, out l)) return l;
-            if (r.TryGetValue("*", out l)) return l;
-            return new List<string>();
+            return empty;
         }
 
         private void LoadConfig()

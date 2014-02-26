@@ -12,12 +12,13 @@ namespace NGinnBPM.MessageBus.Impl.HttpService
     [UrlPattern(@"^/call/(?<name>\w+)?")]
     public class ServiceCallServlet : ServletBase
     {
-        public IServiceMessageDispatcher ServiceDispatcher { get; set; }
-        public JsonServiceCallHandler CallHandler { get; set; }
+        protected IServiceMessageDispatcher ServiceDispatcher { get; set; }
+        protected JsonServiceCallHandler CallHandler { get; set; }
 
-        public ServiceCallServlet()
+        public ServiceCallServlet(IServiceMessageDispatcher dispatcher, JsonServiceCallHandler jsonCallHandler)
         {
-           
+            ServiceDispatcher = dispatcher;
+            CallHandler = jsonCallHandler;
         }
 
         public override  void HandleRequest(IRequestContext ctx)
