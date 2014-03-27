@@ -39,13 +39,21 @@ namespace Tests
         {
             log.Info("Configuring saga");
             SagaId<SagaMessage1>(x => x.Id);
-            SagaId<SagaMessage2>(x => x.Num.ToString());
+            //Example: tell nginn-messagebus to ignore a saga message if Num is zero 
+            //(for handling a case where a message is not always handled by saga)
+            SagaId<SagaMessage2>(x => x.Num == 0 ? IGNORE_MESSAGE : x.Num.ToString());
         }
 
 
 
         public void Handle(SagaMessage1 message)
         {
+            if (IsNew && message.Num == 0 && string.IsNullOrEmpty(MessageBusContext.CurrentMessage.CorrelationId))
+            {
+                log.Info("This is an example how to handle a message without creating a new saga");
+                SetCompleted();
+                return;
+            }
             log.Info("SagaMessage1 arrived to saga {0}", Id);
             Data.Last = DateTime.Now;
             Data.Collected.Add(message.Num);

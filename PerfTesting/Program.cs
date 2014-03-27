@@ -16,6 +16,7 @@ namespace PerfTesting
     {
         static void Main(string[] args)
         {
+
             NLog.Config.SimpleConfigurator.ConfigureForConsoleLogging(LogLevel.Debug);
             //var mb1 = NinjectTest.ConfigureMessageBus();
             //return;
@@ -77,6 +78,7 @@ namespace PerfTesting
                 .AutoStartMessageBus(true)
                 .BatchOutgoingMessages(true
                 )
+                //.UseExternalHandlerContainer(new WindsorServiceResolver(null))
                 .FinishConfiguration();
             return mc.Container;
         }
@@ -85,6 +87,7 @@ namespace PerfTesting
         {
             var mc = Configure("sql://nginn/MQ_PT1", false);
             var mb = mc.Resolve<IMessageBus>() as MessageBus;
+            
             var dests = mb.GetTargetQueuesForMessageType(typeof(TestMessage1));
 
         }

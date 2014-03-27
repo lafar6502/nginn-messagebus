@@ -21,6 +21,22 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
         private HashSet<string> _currentlyProcessed = new HashSet<string>();
         private NLog.Logger log = NLog.LogManager.GetCurrentClassLogger();
         private static Logger statLog = LogManager.GetLogger("STAT.Saga");
+        /// <summary>
+        /// Resort to database-level record locking and don't put 
+        /// an application level lock around saga operation.
+        /// </summary>
+        public bool UseDbRecordLocking { get; set; }
+        /// <summary>
+        /// if true, messages that have no saga id will be ignored
+        /// if false, this will cause an error
+        /// </summary>
+        public bool IgnoreMessagesWithoutSagaId { get; set; }
+
+        public SagaStateHelper()
+        {
+            UseDbRecordLocking = true;
+            IgnoreMessagesWithoutSagaId = true;
+        }
 
         public enum SagaDispatchResult
         {
@@ -32,13 +48,10 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
 
         private bool ExclusiveLock(string lockId, bool wait, Action act)
         {
-            if (string.IsNullOrEmpty(lockId)) //dont lock anything
-            {
-                act();
-                return true;
-            }
+            bool doLock = !(UseDbRecordLocking || string.IsNullOrEmpty(lockId));
+            
 
-            while (true)
+            while (doLock)
             {
                 lock (_waiter)
                 {
@@ -61,10 +74,13 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
             }
             finally
             {
-                lock (_waiter)
+                if (doLock)
                 {
-                    _currentlyProcessed.Remove(lockId);
-                    Monitor.PulseAll(_waiter);
+                    lock (_waiter)
+                    {
+                        _currentlyProcessed.Remove(lockId);
+                        Monitor.PulseAll(_waiter);
+                    }
                 }
                 NLog.MappedDiagnosticsContext.Remove("nmbsaga");
             }
@@ -73,10 +89,27 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
 
         public SagaDispatchResult DispatchToSaga(string correlationId, object message, bool createNew, bool wait, SagaBase sagaHandler, Action<SagaBase> callback)
         {
-            string sagaId = sagaHandler.GetSagaIdFromMessage(message);
-            if (string.IsNullOrEmpty(sagaId)) sagaId = correlationId;
-            
-            if (!createNew && string.IsNullOrEmpty(sagaId)) throw new Exception("Saga Id could not be determined");
+            string sagaId = null;
+            if (!sagaHandler.TryGetSagaIdFromMessage(message, out sagaId))
+            {
+                sagaId = correlationId;
+            }
+            else
+            {
+                if (SagaBase.IGNORE_MESSAGE == sagaId)
+                {
+                    return SagaDispatchResult.MessageHandled;
+                }
+            }
+
+            if (!createNew && string.IsNullOrEmpty(sagaId))
+            {
+                if (IgnoreMessagesWithoutSagaId)
+                {
+                    return SagaDispatchResult.MessageHandled;
+                }
+                else throw new Exception("Saga Id could not be determined");
+            }
 
             bool b = ExclusiveLock(sagaId, wait, delegate()
             {

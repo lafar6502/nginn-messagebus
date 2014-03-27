@@ -108,9 +108,29 @@ namespace NGinnBPM.MessageBus.Windsor
             return this;
         }
 
+
         public IDictionary<string, string> GetConnectionStrings()
         {
             return _connStrings;
+        }
+
+        /// <summary>
+        /// Supply an implementation of IServiceResolver that will be used for creating message handlers 
+        /// and sagas. This way you can manage the lifetime of your message handlers in an external container
+        /// and you don't have to register them in nginn-messagebus config.
+        /// You have to implement the following method of your IServiceResolver:
+        /// - HasService
+        /// - GetAllInstances
+        /// - GetInstance
+        /// - ReleaseInstance
+        /// </summary>
+        /// <param name="externalResolver"></param>
+        /// <returns></returns>
+        public MessageBusConfigurator UseExternalHandlerContainer(IServiceResolver externalResolver)
+        {
+            _wc.Register(Component.For<IServiceResolver>().Instance(externalResolver).Named("ExternalServiceResolver"));
+            
+            return this;
         }
 
         /// <summary>
@@ -720,10 +740,15 @@ namespace NGinnBPM.MessageBus.Windsor
 
         public static void RegisterHandlerType(Type t, IWindsorContainer wc)
         {
-            RegisterHandlerType(t, wc, null);
+            RegisterHandlerType(t, wc, null, null);
         }
 
-        public static void RegisterHandlerType(Type t, IWindsorContainer wc, object depends)
+        public static void RegisterHandlerType(Type t, IWindsorContainer wc, bool transient)
+        {
+            RegisterHandlerType(t, wc, transient, null);
+        }
+
+        public static void RegisterHandlerType(Type t, IWindsorContainer wc, bool? transient, object depends)
         {
             if (TypeUtil.IsSagaType(t))
             {
@@ -740,11 +765,20 @@ namespace NGinnBPM.MessageBus.Windsor
             l.AddRange(l3);
             
             var reg = Component.For(l).ImplementedBy(t);
+            if (transient.HasValue)
+            {
+                reg = transient.Value ? reg.LifeStyle.Transient : reg.LifeStyle.Singleton;
+            }
+            else
+            {
+                MessageHandlerConfigAttribute attr = (MessageHandlerConfigAttribute)Attribute.GetCustomAttribute(t, typeof(MessageHandlerConfigAttribute));
+                if (attr != null) reg = attr.Transient ? reg.LifeStyle.Transient : reg.LifeStyle.Singleton;
+            }
             if (depends != null) reg = reg.DependsOn(depends);
-            
             wc.Register(reg);
         }
 
+        
         public static void RegisterMessageHandlersFromAssembly(Assembly asm, IWindsorContainer wc)
         {
             foreach (Type t in asm.GetTypes())
@@ -978,9 +1012,15 @@ namespace NGinnBPM.MessageBus.Windsor
         {
             if (!IsServiceRegistered<IMessageDispatcher>())
             {
-                _wc.Register(Component.For<IMessageDispatcher, MessageDispatcher>()
+                var c = _wc.Kernel.ConfigurationStore.GetComponentConfiguration("ExternalServiceResolver");
+                var reg = Component.For<IMessageDispatcher, MessageDispatcher>()
                     .ImplementedBy<MessageDispatcher>()
-                    .LifeStyle.Singleton);
+                    .LifeStyle.Singleton;
+                if (c != null)
+                {
+                    reg = reg.Parameters(Parameter.ForKey("resolver").Eq("${ExternalServiceResolver}"));
+                }
+                _wc.Register(reg);
             }
 
             if (!IsServiceRegistered<IServiceMessageDispatcher>())

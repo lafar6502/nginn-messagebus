@@ -11,7 +11,11 @@ namespace NGinnBPM.MessageBus.Sagas
         public string Id { get; set; }
         public string StateVersion { get; set; }
         internal bool Completed { get; set; }
-        
+
+        /// <summary>
+        /// Return this as saga id and the message will be ignored.
+        /// </summary>
+        public static readonly string IGNORE_MESSAGE = "nginn __ignore__";
         
         public IMessageBus MessageBus { get; set; }
         internal Dictionary<Type, Func<object, string>> MessageIds = null;
@@ -24,16 +28,33 @@ namespace NGinnBPM.MessageBus.Sagas
         /// </summary>
         public bool IsNew { get; set; }
 
-        internal string GetSagaIdFromMessage(object message)
+        /// <summary>
+        /// Returns false if there was no saga id delegate for given message type
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="sagaId"></param>
+        /// <returns></returns>
+        internal bool TryGetSagaIdFromMessage(object message, out string sagaId)
         {
+            sagaId = null;
             if (MessageIds == null)
             {
                 MessageIds = new Dictionary<Type, Func<object, string>>();
                 Configure();
             }
-            if (MessageIds.ContainsKey(message.GetType())) return MessageIds[message.GetType()](message);
-            return null;
+            Func<object, string> f;
+            Type ct = message.GetType();
+            while (ct.BaseType != null && ct.BaseType != typeof(Object))
+            {
+                if (MessageIds.TryGetValue(ct, out f))
+                {
+                    sagaId = f(message);
+                    return true;
+                }
+            }
+            return false;
         }
+        
 
         internal abstract void InitializeSagaState(string id, string version, object state);
         internal abstract object GetState();

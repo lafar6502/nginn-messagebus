@@ -1039,7 +1039,8 @@ namespace NGinnBPM.MessageBus.Impl
                 {
                     using (IDbCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = string.Format("delete top(10000) {0} with(READPAST) where retry_time <= '{1}' and subqueue='X'", _queueTable, lmt.ToString("yyyy-MM-dd HH:mm:ss"));
+                        cmd.CommandText = string.Format("delete top(10000) {0} with(READPAST) where retry_time <= @lmt and subqueue='X'", _queueTable);
+                        SqlUtil.AddParameter(cmd, "@lmt", lmt);
                         int n = cmd.ExecuteNonQuery();
                         log.Info("Deleted {0} messages", n);
                     }

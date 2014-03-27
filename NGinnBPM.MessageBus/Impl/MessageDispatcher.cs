@@ -18,7 +18,7 @@ namespace NGinnBPM.MessageBus.Impl
     {
 
         public bool RequireHandler { get; set; }
-        protected IServiceResolver ServiceLocator { get; set; }
+        protected IServiceResolver ServiceLocator { get; private set; }
         private Logger log;
         /// <summary>
         /// for delivering messages to sagas...

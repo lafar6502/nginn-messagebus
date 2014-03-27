@@ -13,6 +13,7 @@ public class TestMessage1Reply
     public string RequestId { get; set; }
 }
 
+[MessageHandlerConfig(Transient=true)]
 public class TestMessageHandler1 : 
     IMessageConsumer<TestMessage1>, 
     IMessageConsumer<TestMessageX>,
