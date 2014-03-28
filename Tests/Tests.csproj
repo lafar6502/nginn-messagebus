@@ -98,6 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigExample.cs" />
+    <Compile Include="CorrelationIdSaga.cs" />
     <Compile Include="HelloWorldServlet.cs" />
     <Compile Include="MongoQueue.cs" />
     <Compile Include="PerfTest.cs" />

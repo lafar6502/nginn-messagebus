@@ -36,8 +36,8 @@ namespace Tests
                 //MongoQueue.Test1();
                 //MongoQueue.TestSer();
                 //MongoQueue.Test2();
-                MongoQueue.TestSagas();
-                return;
+                //MongoQueue.TestSagas();
+                //return;
                 //DelegateTest();
                 //PerfTest.SendTest();
                 //Console.ReadLine();
@@ -52,7 +52,7 @@ namespace Tests
 
                 //return;
                 ///configure perf counters - just to see the stats in log
-                NGinnBPM.MessageBus.Perf.DefaultCounters.ConfigureFromFile("PerfCounters.xml");
+                //NGinnBPM.MessageBus.Perf.DefaultCounters.ConfigureFromFile("PerfCounters.xml");
                 ///Map database alias to database connection string, so then you can use 
                 ///the alias when referring to a queue: e.g. sql://testdb1/Queue1
                 Dictionary<string, string> connStrings = new Dictionary<string,string>();
@@ -64,14 +64,16 @@ namespace Tests
                 //IWindsorContainer wc2 = ConfigureMessageBus("sql://testdb2/MQueue2", connStrings, null);
 
                 IMessageBus mb1 = wc1.Resolve<IMessageBus>();
-                IMessageBus mb2 = wc1.Resolve<IMessageBus>("bus2");
+                mb1.Notify(new TestMessage3 { KK = "KK" });
+                return;
+                //IMessageBus mb2 = wc1.Resolve<IMessageBus>("bus2");
                 //SagaTest(wc1);
                 
                 //IMessageBus mb2 = wc2.Resolve<IMessageBus>();
                 //mb1.SubscribeAt("sql://testdb2/MQueue2", typeof(TestMessage1));
 
 
-                mb1.NewMessage(new TestMessage1 { Id = 2 }).Send(mb2.Endpoint);
+                //mb1.NewMessage(new TestMessage1 { Id = 2 }).Send(mb2.Endpoint);
                 
                 //using (var ts = new System.Transactions.TransactionScope())
                 //{
@@ -165,13 +167,14 @@ namespace Tests
                 .SetEndpoint(endpointName)
                 //.UseSqlSubscriptions()
                 .UseStaticMessageRouting("Routing.json")
-                .RegisterHttpMessageServicesFromAssembly(typeof(Program).Assembly)
+                //.RegisterHttpMessageServicesFromAssembly(typeof(Program).Assembly)
                 .AddMessageHandlersFromAssembly(typeof(Program).Assembly)
                 //.UseSqlSequenceManager()
                 .SetEnableSagas(true)
                 .SetSendOnly(false)
-                .SetMaxConcurrentMessages(5)
+                .SetMaxConcurrentMessages(1)
                 .SetUseTransactionScope(true)
+                .SetAlwaysPublishLocal(false)
                 .SetReuseReceiveConnectionForSending(true)
                 .SetExposeReceiveConnectionToApplication(true)
                 .SetDefaultSubscriptionLifetime(TimeSpan.FromHours(8))
@@ -273,7 +276,7 @@ namespace Tests
                 mb.Notify(new SagaMessage1 { Id = id2, Num = 1 });
                 mb.Notify(new SagaMessage1 { Id = id1, Num = 2 });
                 mb.Notify(new SagaMessage1 { Id = id2, Num = 2 });
-                for (int i = 0; i < 10; i++)
+                /*for (int i = 0; i < 10; i++)
                 {
                     mb.NewMessage(new SagaMessage2 { Num = 100 + i, Text = "message2 " + i })
                         .SetCorrelationId(id1).Publish();
@@ -281,7 +284,7 @@ namespace Tests
                     mb.NewMessage(new SagaMessage2 { Num = 100 + i, Text = "message2 " + i })
                         .SetCorrelationId(id2).Publish();
 
-                }
+                }*/
                 ts.Complete();
             }
 

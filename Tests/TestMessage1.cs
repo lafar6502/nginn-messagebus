@@ -7,6 +7,11 @@ using NLog;
 
 namespace Tests
 {
+    public class TestMessage3
+    {
+        public string KK { get; set; }
+    }
+
     public class TestMessage2
     {
         public string Text { get; set; }

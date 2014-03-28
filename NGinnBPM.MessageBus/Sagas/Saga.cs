@@ -44,13 +44,14 @@ namespace NGinnBPM.MessageBus.Sagas
             }
             Func<object, string> f;
             Type ct = message.GetType();
-            while (ct.BaseType != null && ct.BaseType != typeof(Object))
+            while (ct != null && ct.BaseType != null)
             {
                 if (MessageIds.TryGetValue(ct, out f))
                 {
                     sagaId = f(message);
                     return true;
                 }
+                ct = ct.BaseType;
             }
             return false;
         }

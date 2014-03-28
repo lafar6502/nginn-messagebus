@@ -373,6 +373,7 @@ namespace NGinnBPM.MessageBus.Impl
         /// <param name="dbTran">External transaction to be used for sending messages (optional)</param>
         internal void SendMessages(IList<MessageContainer> lst, object dbTran)
         {
+            if (lst == null || lst.Count == 0) return;
             object prevbody = null;
             string prevstr = null;
             foreach (MessageContainer mc in lst)

@@ -41,14 +41,14 @@ namespace Tests
             SagaId<SagaMessage1>(x => x.Id);
             //Example: tell nginn-messagebus to ignore a saga message if Num is zero 
             //(for handling a case where a message is not always handled by saga)
-            SagaId<SagaMessage2>(x => x.Num == 0 ? IGNORE_MESSAGE : x.Num.ToString());
+            SagaId<SagaMessage2>(x => "SAGA_" + x.Num);
         }
 
 
 
         public void Handle(SagaMessage1 message)
         {
-            if (IsNew && message.Num == 0 && string.IsNullOrEmpty(MessageBusContext.CurrentMessage.CorrelationId))
+            if (message.Num == 0 && string.IsNullOrEmpty(MessageBusContext.CurrentMessage.CorrelationId))
             {
                 log.Info("This is an example how to handle a message without creating a new saga");
                 SetCompleted();

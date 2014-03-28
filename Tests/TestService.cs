@@ -7,7 +7,7 @@ using NGinnBPM.MessageBus;
 namespace Tests
 {
 
-    public class TestService : IMessageHandlerService<TestMessage1>
+    public class TestServiceX : IMessageHandlerService<TestMessage1>
     {
         public object Handle(TestMessage1 message)
         {
