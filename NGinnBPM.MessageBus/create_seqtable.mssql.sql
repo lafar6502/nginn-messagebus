@@ -2,7 +2,7 @@
 BEGIN
 CREATE TABLE [dbo].[{0}](
 	[id] [varchar](100) NOT NULL,
-	[data] [nvarchar] not null,
+	[data] [text] not null,
 	[last_modified] datetime not null
 PRIMARY KEY CLUSTERED 
 (

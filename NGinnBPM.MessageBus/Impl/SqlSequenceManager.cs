@@ -47,7 +47,7 @@ namespace NGinnBPM.MessageBus.Impl
         public int CacheSize { get; set; }
 
         /// <summary>Ids of currently processed sequences</summary>
-        //private HashSet<string> _currentlyProcessed = new HashSet<string>();
+        private HashSet<string> _currentlyProcessed = new HashSet<string>();
 
         //private SimpleCache<string, SequenceInfo> _cache = new SimpleCache<string,SequenceInfo>();
 
@@ -74,7 +74,7 @@ namespace NGinnBPM.MessageBus.Impl
             SequenceInfo si = null;
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText = string.Format("select data from {0} with(updlock) where seq_id=@id", SequenceTable);
+                cmd.CommandText = string.Format("select data from {0} with(updlock) where id=@id", SequenceTable);
                 SqlUtil.AddParameter(cmd, "@id", id);
                 using (var rdr = cmd.ExecuteReader())
                 {
@@ -130,6 +130,8 @@ namespace NGinnBPM.MessageBus.Impl
         /// <param name="act"></param>
         private SequenceMessageDisposition UpdateSequenceInfo(string seqId, int seqNum, int? seqLen, string msgId, IDbConnection con)
         {
+            if (string.IsNullOrEmpty(seqId)) throw new ArgumentException("seqId");
+            if (seqNum < 0) throw new ArgumentException("seqNum");
 
             var md = new SequenceMessageDisposition();
             md.MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.HandleMessage;
@@ -150,7 +152,7 @@ namespace NGinnBPM.MessageBus.Impl
                     else
                     {
                         md.MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.Postpone;
-                        si.RemainingMessages[seqNum] = msgId;
+                        if (!string.IsNullOrEmpty(msgId)) si.RemainingMessages[seqNum] = msgId;
                     }
                 }
                 else
@@ -163,7 +165,7 @@ namespace NGinnBPM.MessageBus.Impl
                     else
                     {
                         md.MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.Postpone;
-                        si.RemainingMessages[seqNum] = msgId;
+                        if (!string.IsNullOrEmpty(msgId)) si.RemainingMessages[seqNum] = msgId;
                     }
                 }
 

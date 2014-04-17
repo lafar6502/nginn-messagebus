@@ -367,7 +367,7 @@ namespace NGinnBPM.MessageBus.Windsor
                 .DependsOn(new
                 {
                     AutoCreateTable = true,
-                    SequenceTable = "NGinnMessageBus_Sequences"
+                    SequenceTable = "NGinnMessageBus_SequenceInfo"
                 }));
             return this;
         }

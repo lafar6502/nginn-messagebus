@@ -16,12 +16,26 @@ namespace BasicPingPongExample
         {
             //NLog.Config.SimpleConfigurator.ConfigureForConsoleLogging(NLog.LogLevel.Warn);
             //uncomment only one example at a time 
-            TestSendReply();
+            //TestSendReply();
+            TestSeq();
             //TestPubSub(); //run pub-sub example
             // TestStaticRouting(); //static routing example
         }
 
-        
+        static void TestSeq()
+        {
+            string seqid = Guid.NewGuid().ToString();
+            int len = 50;
+            var mb = ConfigureMessageBus("sql://localdb/MQ_TestS1");
+            for (int i = len - 1; i >= 0; i--)
+            {
+                mb.NewMessage(new SeqMessage { Order = i }).InSequence(seqid, i, len).Publish();
+            }
+            Console.WriteLine("Sent {0} messages in sequence {1}", len, seqid);
+            Console.ReadLine();
+            
+        }
+
 
         static void TestSendReply()
         {
@@ -103,6 +117,7 @@ namespace BasicPingPongExample
                 .AddMessageHandlersFromAssembly(typeof(Program).Assembly) //register message handlers
                 .AutoCreateDatabase(true) //queue tables will be created if they don't exist. Warning: you have to have 'create table' db permissions to do that!
                 .SetEnableSagas(false) //disable saga for now
+                .UseSqlSequenceManager()
                 .UseSqlSubscriptions() //use sql subscription storage
                 .SetMaxConcurrentMessages(1)
                 .FinishConfiguration()

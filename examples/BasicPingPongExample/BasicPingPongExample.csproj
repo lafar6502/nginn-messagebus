@@ -57,6 +57,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SeqMessage.cs" />
+    <Compile Include="SeqMessageHandler.cs" />
     <Compile Include="PingMessage.cs" />
     <Compile Include="PingMessageHandler.cs" />
     <Compile Include="PongMessageHandler.cs" />
