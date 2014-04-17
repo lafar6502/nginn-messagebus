@@ -13,13 +13,32 @@ namespace NGinnBPM.MessageBus.Impl
     {
         public enum ProcessingDisposition
         {
+            /// <summary>
+            /// Handle message now (it has arrived in order and can be processed)
+            /// </summary>
             HandleMessage,
+            /// <summary>
+            /// Delay message processing until the end of transaction (because another message from this sequence is processed now)
+            /// </summary>
             RetryImmediately,
+            /// <summary>
+            /// Handle the message later (it has arrived out of order and we need to wait until it's time comes)
+            /// </summary>
             Postpone
         }
-
+        /// <summary>
+        /// Further processing disposition
+        /// </summary>
         public ProcessingDisposition MessageDispositon;
+        /// <summary>
+        /// Estimated wait time for a postponed message.
+        /// </summary>
         public DateTime? EstimatedRetry { get; set; }
+        /// <summary>
+        /// Id of next message belonging to same sequence.
+        /// This information is optional and will be returned only if the sequence manager knows 
+        /// next message's ID
+        /// </summary>
         public string NextMessageId { get; set; }
     }
     

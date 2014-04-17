@@ -6,18 +6,31 @@ using System.IO;
 using System.ComponentModel;
 using System.Data;
 using NLog;
+using Newtonsoft.Json;
 
 namespace NGinnBPM.MessageBus.Impl
 {
+    /// <summary>
+    /// This class represents current state of a single sequence of messages.
+    /// </summary>
     public class SequenceInfo
     {
         public string Id { get; set; }
+        /// <summary>
+        /// Number of last handled message in this sequence
+        /// </summary>
         public int? LastProcessedNumber { get; set; }
         /// <summary>
-        /// Map message Id-> message number in sequence
+        /// Map message Id-> message number in sequence, used for tracking remaining sequence messages.
         /// </summary>
         public Dictionary<int, string> RemainingMessages { get; set; }
+        /// <summary>
+        /// Date when last message belonging to this sequence has been 'seen'
+        /// </summary>
         public DateTime LastMessageSeen { get; set; }
+        /// <summary>
+        /// sequence length
+        /// </summary>
         public int? Length { get; set; }
     }
 
@@ -34,8 +47,9 @@ namespace NGinnBPM.MessageBus.Impl
         public int CacheSize { get; set; }
 
         /// <summary>Ids of currently processed sequences</summary>
-        private HashSet<string> _currentlyProcessed = new HashSet<string>();
-        private SimpleCache<string, SequenceInfo> _cache = new SimpleCache<string,SequenceInfo>();
+        //private HashSet<string> _currentlyProcessed = new HashSet<string>();
+
+        //private SimpleCache<string, SequenceInfo> _cache = new SimpleCache<string,SequenceInfo>();
 
         private object _lck = new object();
         private Logger log = LogManager.GetCurrentClassLogger();
@@ -54,190 +68,121 @@ namespace NGinnBPM.MessageBus.Impl
             }
         }
 
-        /// <summary>
-        /// get the sequence info for specified seq
-        /// updates the sequence table only if the sequence message will be processed now
-        /// </summary>
-        /// <param name="seqId"></param>
-        /// <param name="tran"></param>
-        /// <param name="act"></param>
-        private SequenceMessageDisposition UpdateSequenceInfo(string seqId, int seqNum, int? seqLen, string msgId, IDbTransaction tran)
+        protected void UpdateSequence(string id, IDbConnection conn, Action<SequenceInfo> act)
         {
-            var inserted = false;
-            var md = new SequenceMessageDisposition();
-
-            var si =_cache.Get(seqId, delegate(string seq) 
+            bool found = false;
+            SequenceInfo si = null;
+            using (var cmd = conn.CreateCommand())
             {
-                using (IDbCommand cmd = tran.Connection.CreateCommand())
+                cmd.CommandText = string.Format("select data from {0} with(updlock) where seq_id=@id", SequenceTable);
+                SqlUtil.AddParameter(cmd, "@id", id);
+                using (var rdr = cmd.ExecuteReader())
                 {
-                    cmd.Transaction = tran;
-                    cmd.CommandText = string.Format("select cur_num, seq_len, last_seen_date from {0} with(updlock) where seq_id='{1}'", SequenceTable, seqId);
-
-                    SequenceInfo ret = new SequenceInfo { Id = seqId, LastMessageSeen = DateTime.Now, Length = seqLen };
-
-                    using (IDataReader dr = cmd.ExecuteReader())
+                    if (rdr.Read())
                     {
-                        if (dr.Read())
-                        {
-                            ret.LastProcessedNumber = dr.IsDBNull(0) ? (int?)null : dr.GetInt32(0);
-                            ret.Length = dr.IsDBNull(1) ? ret.Length : dr.GetInt32(1);
-                            ret.LastMessageSeen = dr.GetDateTime(2);
-                            return ret;
-                        }
+                        found = true;
+                        si = JsonConvert.DeserializeObject<SequenceInfo>(rdr.GetString(0));
                     }
-                    log.Debug("Inserting sequence {0}", seqId);
-                    cmd.CommandText = string.Format("insert into {0} ([seq_id], [cur_num], [last_seen_date], [seq_len]) values (@seq_id, @cur_num, getdate(), @seq_len)", SequenceTable);
-                    SqlUtil.AddParameter(cmd, "@cur_num", seqNum == 0 ? 0 : (int?)null);
-                    SqlUtil.AddParameter(cmd, "@seq_id", seqId);
-                    SqlUtil.AddParameter(cmd, "@seq_len", seqLen.HasValue ? seqLen.Value : (int?)null);
-                    cmd.ExecuteNonQuery();
-                    ret.LastProcessedNumber = seqNum;
-                    if (seqNum > 0) ret.RemainingMessages.Add(seqNum, msgId);
-                    inserted = true;
-                    return ret;
+                    else
+                    {
+                        si = new SequenceInfo {
+                            Id = id,
+                            RemainingMessages = new Dictionary<int,string>(),
+                            LastMessageSeen = DateTime.Now
+                        };
+                    }
                 }
-            });
-
-            if (inserted)
-            {
-                if (seqNum == 0)
+                act(si);
+                si.LastMessageSeen = DateTime.Now;
+                if (found)
                 {
-                    md.MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.HandleMessage;
+                    cmd.CommandText = string.Format("update {0} set data=@json, last_modified=@mdate where id=@id", SequenceTable);
                 }
                 else
                 {
-                    md.MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.Postpone;
-                    md.EstimatedRetry = DateTime.Now.AddMinutes(1);
+                    cmd.CommandText = string.Format("insert into {0} (id, data, last_modified) values(@id, @json, @mdate)", SequenceTable);
                 }
-                return md;
-            }
-
-            if (si.LastProcessedNumber.HasValue && si.LastProcessedNumber.Value >= seqNum)
-                throw new Exception(string.Format("Duplicated sequence message {0} (msgId={1}). Sequence {2} is currently at position {3}", seqNum, msgId, seqId, si.LastProcessedNumber));
-            if ((!si.LastProcessedNumber.HasValue && seqNum == 0) ||
-                (si.LastProcessedNumber.HasValue && seqNum == si.LastProcessedNumber + 1))
-            {
-                //update the sequence and process message
-                using (IDbCommand cmd = tran.Connection.CreateCommand())
+                if (si.Length.HasValue && si.LastProcessedNumber.HasValue && si.LastProcessedNumber.Value >= si.Length.Value - 1)
                 {
-                    si.LastProcessedNumber = seqNum;
-                    si.LastMessageSeen = DateTime.Now;
-                    si.RemainingMessages.Remove(seqNum);
-
-                    cmd.CommandText = string.Format("update {0} set cur_num=@cur_num, last_seen_date=getdate(), seq_len=@seq_len where seq_id=@seq_id", SequenceTable);
-                    log.Debug("Advancing sequence {0}:{1}", seqId, seqNum);
-                    SqlUtil.AddParameter(cmd, "@cur_num", (int?) seqNum);
-                    SqlUtil.AddParameter(cmd, "@seq_id", seqId);
-                    SqlUtil.AddParameter(cmd, "@seq_len", si.Length.HasValue ? si.Length.Value : (int?)null);
-                    cmd.ExecuteNonQuery();
+                    log.Info("Sequence completed: {0}", si.Id);
+                    if (found)
+                    {
+                        cmd.CommandText = string.Format("delete {0} where id=@id", SequenceTable);
+                    }
+                    else
+                    {
+                        return; //nothing to do
+                    }
                 }
-                md.MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.HandleMessage;
-                string t;
-                if (si.RemainingMessages.TryGetValue(seqNum + 1, out t)) md.NextMessageId = t;
-                return md;
-            }
-            else
-            {
-                //postpone the message and remenber its id
-                si.RemainingMessages.Add(seqNum, msgId);
-                md.MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.Postpone;
-                md.EstimatedRetry = DateTime.Now.Add(DateTime.Now - si.LastMessageSeen).AddSeconds(10);
-                si.LastMessageSeen = DateTime.Now;
-                return md;
+                SqlUtil.AddParameter(cmd, "@json", JsonConvert.SerializeObject(si));
+                SqlUtil.AddParameter(cmd, "@mdate", DateTime.Now);
+                int n = cmd.ExecuteNonQuery();
+                if (n == 0) throw new Exception("Unexpected error - no records were updated");
             }
         }
-
-
         /// <summary>
         /// get the sequence info for specified seq
         /// updates the sequence table only if the sequence message will be processed now
         /// </summary>
         /// <param name="seqId"></param>
+        /// <param name="seqNum">0-based number of message in sequence</param>
         /// <param name="tran"></param>
         /// <param name="act"></param>
         private SequenceMessageDisposition UpdateSequenceInfo(string seqId, int seqNum, int? seqLen, string msgId, IDbConnection con)
         {
-            var inserted = false;
+
             var md = new SequenceMessageDisposition();
-
-            var si = _cache.Get(seqId, delegate(string seq)
-            {
-                using (IDbCommand cmd = con.CreateCommand())
+            md.MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.HandleMessage;
+            UpdateSequence(seqId, con, si => {
+                if (seqLen.HasValue) si.Length = seqLen;
+                if (si.LastProcessedNumber.HasValue)
                 {
-                    cmd.CommandText = string.Format("select cur_num, seq_len, last_seen_date from {0} with(updlock) where seq_id='{1}'", SequenceTable, seqId);
-
-                    SequenceInfo ret = new SequenceInfo { Id = seqId, LastMessageSeen = DateTime.Now, Length = seqLen };
-
-                    using (IDataReader dr = cmd.ExecuteReader())
+                    if (seqNum == si.LastProcessedNumber.Value + 1)
                     {
-                        if (dr.Read())
-                        {
-                            ret.LastProcessedNumber = dr.IsDBNull(0) ? (int?)null : dr.GetInt32(0);
-                            ret.Length = dr.IsDBNull(1) ? ret.Length : dr.GetInt32(1);
-                            ret.LastMessageSeen = dr.GetDateTime(2);
-                            return ret;
-                        }
+                        md.MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.HandleMessage;
+                        si.LastProcessedNumber = seqNum;
                     }
-                    log.Debug("Inserting sequence {0}", seqId);
-                    cmd.CommandText = string.Format("insert into {0} ([seq_id], [cur_num], [last_seen_date], [seq_len]) values (@seq_id, @cur_num, getdate(), @seq_len)", SequenceTable);
-                    SqlUtil.AddParameter(cmd, "@cur_num", seqNum == 0 ? 0 : (int?)null);
-                    SqlUtil.AddParameter(cmd, "@seq_id", seqId);
-                    SqlUtil.AddParameter(cmd, "@seq_len", seqLen.HasValue ? seqLen.Value : (int?)null);
-                    cmd.ExecuteNonQuery();
-                    ret.LastProcessedNumber = seqNum;
-                    if (seqNum > 0) ret.RemainingMessages.Add(seqNum, msgId);
-                    inserted = true;
-                    return ret;
-                }
-            });
-
-            if (inserted)
-            {
-                if (seqNum == 0)
-                {
-                    md.MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.HandleMessage;
+                    else if (seqNum <= si.LastProcessedNumber.Value)
+                    {
+                        log.Warn("Duplicate sequence message {1} in sequence {0}", seqId, msgId);
+                        md.MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.HandleMessage;
+                    }
+                    else
+                    {
+                        md.MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.Postpone;
+                        si.RemainingMessages[seqNum] = msgId;
+                    }
                 }
                 else
                 {
-                    md.MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.Postpone;
-                    md.EstimatedRetry = DateTime.Now.AddMinutes(1);
+                    if (seqNum == 0)
+                    {
+                        md.MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.HandleMessage;
+                        si.LastProcessedNumber = seqNum;
+                    }
+                    else
+                    {
+                        md.MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.Postpone;
+                        si.RemainingMessages[seqNum] = msgId;
+                    }
                 }
-                return md;
-            }
 
-            if (si.LastProcessedNumber.HasValue && si.LastProcessedNumber.Value >= seqNum)
-                throw new Exception(string.Format("Duplicated sequence message {0} (msgId={1}). Sequence {2} is currently at position {3}", seqNum, msgId, seqId, si.LastProcessedNumber));
-            if ((!si.LastProcessedNumber.HasValue && seqNum == 0) ||
-                (si.LastProcessedNumber.HasValue && seqNum == si.LastProcessedNumber + 1))
-            {
-                //update the sequence and process message
-                using (IDbCommand cmd = con.CreateCommand())
+                if (md.MessageDispositon == SequenceMessageDisposition.ProcessingDisposition.HandleMessage)
                 {
-                    si.LastProcessedNumber = seqNum;
-                    si.LastMessageSeen = DateTime.Now;
                     si.RemainingMessages.Remove(seqNum);
-
-                    cmd.CommandText = string.Format("update {0} set cur_num=@cur_num, last_seen_date=getdate(), seq_len=@seq_len where seq_id=@seq_id", SequenceTable);
-                    log.Debug("Advancing sequence {0}:{1}", seqId, seqNum);
-                    SqlUtil.AddParameter(cmd, "@cur_num", (int?)seqNum);
-                    SqlUtil.AddParameter(cmd, "@seq_id", seqId);
-                    SqlUtil.AddParameter(cmd, "@seq_len", si.Length.HasValue ? si.Length.Value : (int?)null);
-                    cmd.ExecuteNonQuery();
+                    if (si.RemainingMessages.ContainsKey(seqNum + 1))
+                    {
+                        md.NextMessageId = si.RemainingMessages[seqNum + 1];
+                    }
                 }
-                md.MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.HandleMessage;
-                string t;
-                if (si.RemainingMessages.TryGetValue(seqNum + 1, out t)) md.NextMessageId = t;
-                return md;
-            }
-            else
-            {
-                //postpone the message and remenber its id
-                si.RemainingMessages.Add(seqNum, msgId);
-                md.MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.Postpone;
-                md.EstimatedRetry = DateTime.Now.Add(DateTime.Now - si.LastMessageSeen).AddSeconds(10);
-                si.LastMessageSeen = DateTime.Now;
-                return md;
-            }
+                else if (md.MessageDispositon == SequenceMessageDisposition.ProcessingDisposition.Postpone)
+                {
+                    TimeSpan ts = si.LastMessageSeen - DateTime.Now;
+                    ts = ts + ts + ts;
+                    md.EstimatedRetry = DateTime.Now + ts;
+                }
+            });
+            return md;
         }
 
         /// <summary>
@@ -261,34 +206,10 @@ namespace NGinnBPM.MessageBus.Impl
         public SequenceMessageDisposition SequenceMessageArrived(string seqId, int seqNumber, int? seqLen, object transactionObj, string messageId)
         {
             log.Debug("Seq message arrived. Seq = {0}:{1}, len: {2}", seqId, seqNumber, seqLen);
-            var ret = new SequenceMessageDisposition { MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.RetryImmediately };
-            SequenceInfo sequence = null;
-            lock (_lck)
-            {
-                if (_currentlyProcessed.Contains(seqId))
-                    return new SequenceMessageDisposition { MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.RetryImmediately };
-                _currentlyProcessed.Add(seqId);
-            }
-            try
-            {
-                if (transactionObj is IDbTransaction)
-                {
-                    ret = UpdateSequenceInfo(seqId, seqNumber, seqLen, messageId, transactionObj as IDbTransaction);
-                }
-                else
-                {
-                    ret = UpdateSequenceInfo(seqId, seqNumber, seqLen, messageId, (IDbConnection) transactionObj);
-                }
-                return ret;
-            }
-            finally
-            {
-                lock (_lck)
-                {
-                    bool b = _currentlyProcessed.Remove(seqId);
-                }
-                log.Debug("Finished processing seq {0}:{1}", seqId, seqNumber);
-            }
+            if (!(transactionObj is IDbConnection)) throw new ArgumentException("DB connection expected", "transactionObj");
+            var conn = transactionObj as IDbConnection;
+            var ret = UpdateSequenceInfo(seqId, seqNumber, seqLen, messageId, conn);
+            return ret;
         }
     }
 }

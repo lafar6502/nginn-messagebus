@@ -65,6 +65,8 @@ namespace Tests
 
                 IMessageBus mb1 = wc1.Resolve<IMessageBus>();
                 mb1.Notify(new TestMessage3 { KK = "KK" });
+
+                
                 return;
                 //IMessageBus mb2 = wc1.Resolve<IMessageBus>("bus2");
                 //SagaTest(wc1);

@@ -804,7 +804,7 @@ namespace NGinnBPM.MessageBus.Impl
                             if (mc.HasHeader(MessageContainer.HDR_SeqId) && SequenceManager != null)
                             {
                                 var seqn = mc.SequenceNumber;
-                                if (seqn < 0) throw new Exception("Invalid sequence number");
+                                if (seqn < 0) throw new Exception("Invalid sequence ordinal number");
 
                                 var md = SequenceManager.SequenceMessageArrived(mc.SequenceId, seqn, mc.SequenceLength, conn, id);
                                 if (md.MessageDispositon == SequenceMessageDisposition.ProcessingDisposition.RetryImmediately)
