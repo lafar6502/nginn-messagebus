@@ -87,17 +87,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="NinjectTest.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestMessage1.cs" />
     <Compile Include="TestMessageHandler1.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NGinnBPM.MessageBus.Ninject\NGinnBPM.MessageBus.NinjectConfig.csproj">
-      <Project>{5adc277e-78fd-4253-b25e-da7b48295b06}</Project>
-      <Name>NGinnBPM.MessageBus.NinjectConfig</Name>
-    </ProjectReference>
     <ProjectReference Include="..\NGinnBPM.MessageBus.Windsor\NGinnBPM.MessageBus.Windsor.csproj">
       <Project>{6837107E-5C65-4228-BB86-F8C97334016D}</Project>
       <Name>NGinnBPM.MessageBus.Windsor</Name>
