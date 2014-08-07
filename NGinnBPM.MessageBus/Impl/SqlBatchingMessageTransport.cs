@@ -79,7 +79,7 @@ namespace NGinnBPM.MessageBus.Impl
                 return b.Id;
             }
         }
-
+/*
         protected override string InsertMessageBatchToLocalDatabaseQueues(System.Data.IDbConnection conn, IDictionary<string, ICollection<MessageContainer>> messages)
         {
             string id = null;
@@ -163,7 +163,7 @@ namespace NGinnBPM.MessageBus.Impl
             }
         }
 
-        
+    */      
         
     }
 }

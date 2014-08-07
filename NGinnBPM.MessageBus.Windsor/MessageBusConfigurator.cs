@@ -476,7 +476,7 @@ namespace NGinnBPM.MessageBus.Windsor
                     }));
             }
 
-            _wc.Register(Component.For<IMessageTransport, IStartableService, IHealthCheck, NGinnBPM.MessageBus.Queues.IQueueOperations, SqlMessageTransport2>()
+            _wc.Register(Component.For<IMessageTransport, IStartableService, IHealthCheck, SqlMessageTransport2>()
                 .ImplementedBy<SqlMessageTransport2>()
                 .DependsOn(new
                 {
@@ -550,7 +550,7 @@ namespace NGinnBPM.MessageBus.Windsor
         {
             string transName = "MessageTransport_sql_" + cfg.BusName;
 
-            _wc.Register(Component.For<IMessageTransport, IStartableService, IHealthCheck, NGinnBPM.MessageBus.Queues.IQueueOperations, SqlMessageTransport2>()
+            _wc.Register(Component.For<IMessageTransport, IStartableService, IHealthCheck, SqlMessageTransport2>()
                 .ImplementedBy<SqlMessageTransport2>()
                 .DependsOn(new
                 {

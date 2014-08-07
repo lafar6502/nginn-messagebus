@@ -303,6 +303,9 @@ namespace NGinnBPM.MessageBus.Impl
             return Body != null ? Body.ToString() : "";
         }
 
+        /// <summary>
+        /// warning: message transport is responsible for setting this property
+        /// </summary>
         [IgnoreDataMember]
         public bool IsFinalRetry { get; set; }
         #region ICloneable Members
