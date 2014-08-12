@@ -9,6 +9,7 @@
 using System;
 using System.Data;
 using System.Collections.Generic;
+using System.Data.Common;
 
 namespace NGinnBPM.MessageBus.Impl.SqlQueue
 {
@@ -18,6 +19,14 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
         RetryIncrementRetryCount,
         RetryDontIncrementRetryCount
     }
+	
+	public enum Subqueue
+	{
+		I,
+		R,
+		F,
+		X
+	}
 
 	/// <summary>
 	/// Abstraction of sql queue operations
@@ -30,7 +39,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		/// </summary>
 		/// <param name="conn">database connection</param>
 		/// <param name="messages">map: table name :: list of messages to insert into that table</param>
-		void InsertMessageBatchToLocalDatabaseQueues(IDbConnection conn, IDictionary<string, ICollection<MessageContainer>> messages);
+		void InsertMessageBatchToLocalDatabaseQueues(DbConnection conn, IDictionary<string, ICollection<MessageContainer>> messages);
 		
 		/// <summary>
 		/// 
@@ -43,14 +52,14 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		/// <param name="retryTime"></param>
 		/// <param name="moreMessages"></param>
 		/// <returns></returns>
-		MessageContainer SelectAndLockNextInputMessage(IDbConnection conn, string queueTable, Func<IEnumerable<string>> skipMessageIds, out DateTime? retryTime, out bool moreMessages);
+		MessageContainer SelectAndLockNextInputMessage(DbConnection conn, string queueTable, Func<IEnumerable<string>> skipMessageIds, out DateTime? retryTime, out bool moreMessages);
 		/// <summary>
 		/// Mark message as handled. TODO (check if needed at all)
 		/// </summary>
 		/// <param name="conn"></param>
 		/// <param name="queueTable"></param>
 		/// <param name="messageId"></param>
-		void MarkMessageHandled(IDbConnection conn, string queueTable, string messageId);
+		void MarkMessageHandled(DbConnection conn, string queueTable, string messageId);
 		
 		/// <summary>
 		/// Move a single message from a retry (R) queue into input.
@@ -59,7 +68,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		/// <param name="queueTable"></param>
 		/// <param name="messageId"></param>
 		/// <returns>true if message was moved, false otherwise</returns>
-		bool MoveMessageFromRetryToInput(IDbConnection conn, string queueTable, string messageId);
+		bool MoveMessageFromRetryToInput(DbConnection conn, string queueTable, string messageId);
 		
 		/// <summary>
 		/// Schedule message for processing later.
@@ -68,7 +77,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		/// <param name="queueTable"></param>
 		/// <param name="messageId"></param>
 		/// <param name="retryTime"></param>
-		void MarkMessageForProcessingLater(IDbConnection conn, string queueTable, string messageId, DateTime? retryTime);
+		void MarkMessageForProcessingLater(DbConnection conn, string queueTable, string messageId, DateTime? retryTime);
 		
 		/// <summary>
 		/// Handle message failure - re-schedule for processing later or mark as permanent failure
@@ -80,14 +89,14 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		/// <param name="disp"></param>
 		/// <param name="retryTime"></param>
 		/// <returns></returns>
-		bool MarkMessageFailed(IDbConnection conn, string queueTable, string messageId, string errorInfo, MessageFailureDisposition disp, DateTime retryTime);
+		bool MarkMessageFailed(DbConnection conn, string queueTable, string messageId, string errorInfo, MessageFailureDisposition disp, DateTime retryTime);
 		
 		/// <summary>
 		/// Periodic cleanup of already processed messages
 		/// </summary>
 		/// <param name="conn"></param>
 		/// <param name="queueTable"></param>
-		void CleanupProcessedMessages(IDbConnection conn, string queueTable, DateTime? olderThan);
+		void CleanupProcessedMessages(DbConnection conn, string queueTable, DateTime? olderThan);
 		
 		/// <summary>
 		/// 
@@ -95,6 +104,38 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		/// <param name="conn"></param>
 		/// <param name="queueTable"></param>
 		/// <returns></returns>
-		bool MoveScheduledMessagesToInputQueue(IDbConnection conn, string queueTable);
+		bool MoveScheduledMessagesToInputQueue(DbConnection conn, string queueTable);
+		
+		/// <summary>
+		/// Calculate average message processing latency (delay)
+		/// for specified table, based on recently processed messages
+		/// </summary>
+		/// <param name="conn"></param>
+		/// <param name="queueTable"></param>
+		/// <returns></returns>
+		long GetAverageLatencyMs(DbConnection conn, string queueTable);
+		/// <summary>
+		/// Input queue size
+		/// </summary>
+		/// <param name="conn"></param>
+		/// <param name="queueTable"></param>
+		/// <returns></returns>
+		int GetSubqeueSize(DbConnection conn, string queueTable, string subqueue);
+		/// <summary>
+		/// F to I
+		/// </summary>
+		/// <param name="conn"></param>
+		/// <param name="queueTable"></param>
+		void RetryAllFailedMessages(DbConnection conn, string queueTable);
+		/// <summary>
+		/// Move single message between subqueues
+		/// </summary>
+		/// <param name="conn"></param>
+		/// <param name="queueTable"></param>
+		/// <param name="messageId"></param>
+		/// <param name="toSubqueue"></param>
+		/// <param name="fromSubqueue"></param>
+		/// <returns></returns>
+		bool MoveMessageToSubqueue(DbConnection conn, string queueTable, string messageId, Subqueue toSubqueue, Subqueue? fromSubqueue);
 	}
 }

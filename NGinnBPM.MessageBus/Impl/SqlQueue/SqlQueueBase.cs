@@ -13,6 +13,7 @@ using NLog;
 using System.IO;
 using System.Diagnostics;
 using System.Text;
+using System.Data.Common;
 
 namespace NGinnBPM.MessageBus.Impl.SqlQueue
 {
@@ -30,14 +31,49 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		
 		public int MaxSqlParamsInBatch { get;set;}
 		
-		public virtual MessageContainer SelectAndLockNextInputMessage(IDbConnection conn, string queueTable, Func<IEnumerable<string>> ignoreMe, out DateTime? retryTime, out bool moreMessages)
+		protected virtual string GetSqlFormatString(string fid)
+		{
+			switch(fid)
+			{
+				case "SelectAndLockNext1":
+					return "select top 1 id, correlation_id, from_endpoint, to_endpoint, retry_count, msg_text, msg_headers, unique_id, retry_time from {0} with (UPDLOCK, READPAST) where subqueue='I' order by retry_time";
+				case "SelectAndLockNext2":
+					return "update {0} with(readpast, rowlock) set subqueue='X', last_processed = getdate() where id=@id and subqueue='I'";
+				case "MarkMessageForProcessingLater":
+					return "update {0} with(rowlock) set retry_time=@retry_time, last_processed=getdate(), subqueue='R' where id=@id";	
+				case "InsertMessageBatch_InsertSql":
+					return @"INSERT INTO {0} with(rowlock) ([from_endpoint], [to_endpoint],[subqueue],[insert_time],[last_processed],[retry_count],[retry_time],[error_info],[msg_text],[correlation_id],[label], [msg_headers], [unique_id])
+                                    VALUES
+                                    (@from_endpoint{1}, @to_endpoint{1}, @subqueue{1}, getdate(), null, 0, @retry_time{1}, null, {2}, @correl_id{1}, @label{1}, @headers{1}, @unique_id{1});";
+				case "MoveMessageFromRetryToInput":
+					return "update {0} with(readpast, rowlock) set subqueue='I' where id=@id and subqueue='R'";
+				case "MarkMessageFailed":
+					return "update {0} with(readpast, rowlock) set retry_count = retry_count + {1}, retry_time=@retry_time, error_info=@error_info, last_processed=getdate(), subqueue=@subq where id=@id";
+				case "CleanupProcessedMessages":
+					return  "delete top(10000) {0} with(READPAST) where retry_time <= @lmt and subqueue='X'";
+				case "MoveScheduledMessagesToInputQueue":
+					return "update top (1000) {0} with(READPAST) set subqueue='I' where subqueue='R' and retry_time <= getdate()";
+				case "GetAverageLatencyMs":
+					return "select coalesce(avg(DATEDIFF(millisecond, retry_time, last_processed)), 0) from {0} with(nolock) where retry_time >= @time_limit and subqueue='X'";
+				case "RetryAllFailedMessages":
+					return "update {0} with(READPAST) set subqueue='I', retry_count=0, error_info=null where subqueue='F'";
+				case "GetSubqueueSize":
+					return "select count(*) from {0} with(nolock) where subqueue='{1}'";
+				case "MoveMessageToSubqueue":
+					return "update {0} with(READPAST) set subqueue=@sq_to, error_info=null where id=@id'";
+				default:
+					throw new ArgumentException("fid invalid: " + fid);
+			}
+		}
+		
+		public virtual MessageContainer SelectAndLockNextInputMessage(DbConnection conn, string queueTable, Func<IEnumerable<string>> ignoreMe, out DateTime? retryTime, out bool moreMessages)
 		{
 			retryTime = null;
             var mc = new MessageContainer();
             moreMessages = false;        
             using (IDbCommand cmd = conn.CreateCommand())
             {
-                string sql = string.Format("select top 1 id, correlation_id, from_endpoint, to_endpoint, retry_count, msg_text, msg_headers, unique_id, retry_time from {0} with (UPDLOCK, READPAST) where subqueue='I' order by retry_time", queueTable);
+            	string sql = string.Format(GetSqlFormatString("SelectAndLockNext1"), queueTable);
                 cmd.CommandText = sql;
 
                 using (IDataReader dr = cmd.ExecuteReader())
@@ -54,7 +90,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
                     retryTime = Convert.ToDateTime(dr["retry_time"]);
                     mc.BodyStr = dr.GetString(dr.GetOrdinal("msg_text"));
                 }
-                cmd.CommandText = string.Format("update {0} with(readpast, rowlock) set subqueue='X', last_processed = getdate() where id=@id and subqueue='I'", queueTable);
+                cmd.CommandText = string.Format(GetSqlFormatString("SelectAndLockNext2"), queueTable);
                 SqlUtil.AddParameter(cmd, "@id", Int64.Parse(mc.BusMessageId));
                 int cnt = cmd.ExecuteNonQuery();
                 if (cnt == 0)
@@ -68,11 +104,10 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             }
 		}
 		
-		public virtual void MarkMessageForProcessingLater(IDbConnection conn, string queueTable, string messageId, DateTime? retryTime)
+		public virtual void MarkMessageForProcessingLater(DbConnection conn, string queueTable, string messageId, DateTime? retryTime)
 		{
 			DateTime t0 = DateTime.Now;
-            string sql = "update {0} with(rowlock) set retry_time=@retry_time, last_processed=getdate(), subqueue='R' where id=@id";
-            sql = string.Format(sql, queueTable);
+            var sql = string.Format(GetSqlFormatString("MarkMessageForProcessingLater"), queueTable);
             using (IDbCommand cmd = conn.CreateCommand())
             {
                 cmd.CommandText = sql;
@@ -88,9 +123,8 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		
 		
 		
-		public virtual void InsertMessageBatchToLocalDatabaseQueues(IDbConnection conn, IDictionary<string, ICollection<MessageContainer>> messages)
+		public virtual void InsertMessageBatchToLocalDatabaseQueues(DbConnection conn, IDictionary<string, ICollection<MessageContainer>> messages)
 		{
-			string id = null;
             if (messages.Count == 0) return;
             var tm = Stopwatch.StartNew();
             var allMessages = new List<MessageContainer>();
@@ -121,9 +155,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
                             Dictionary<string, string> headers = RemoveNGHeaders(mw.Headers);
 
 
-                            string sql = string.Format(@"INSERT INTO {0} with(rowlock) ([from_endpoint], [to_endpoint],[subqueue],[insert_time],[last_processed],[retry_count],[retry_time],[error_info],[msg_text],[correlation_id],[label], [msg_headers], [unique_id])
-                                    VALUES
-                                    (@from_endpoint{1}, @to_endpoint{1}, @subqueue{1}, getdate(), null, 0, @retry_time{1}, null, {2}, @correl_id{1}, @label{1}, @headers{1}, @unique_id{1});", tableName, cnt, bodyParam);
+                            string sql = string.Format(GetSqlFormatString("InsertMessageBatch_InsertSql"), tableName, cnt, bodyParam);
                             cmd.CommandText += sql + "\n";
 
                             SqlUtil.AddParameter(cmd, "@from_endpoint" + cnt, mw.From);
@@ -145,8 +177,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
                             cnt++;
                             if (cmd.Parameters.Count >= MaxSqlParamsInBatch)
                             {
-                                cmd.CommandText += "select @@IDENTITY\n";
-                                id = Convert.ToString(cmd.ExecuteScalar());
+                            	cmd.ExecuteNonQuery();
                                 cmd.CommandText = "";
                                 cmd.Parameters.Clear();
                             }
@@ -154,13 +185,12 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
                     }
                     if (cmd.CommandText.Length > 0)
                     {
-                        cmd.CommandText += "select @@IDENTITY\n";
-                        id = Convert.ToString(cmd.ExecuteScalar());
+                    	cmd.ExecuteNonQuery();
                     }
                 }
 
                 tm.Stop();
-                log.Log(tm.ElapsedMilliseconds > (500 + allMessages.Count * 10) ? LogLevel.Warn : LogLevel.Trace, "Inserted batch of {0} messages ({1}). Time: {2}", allMessages.Count, id, tm.ElapsedMilliseconds);
+                log.Log(tm.ElapsedMilliseconds > (500 + allMessages.Count * 10) ? LogLevel.Warn : LogLevel.Trace, "Inserted batch of {0} messages ({1}). Time: {2}", allMessages.Count, "", tm.ElapsedMilliseconds);
                 statLog.Info("InsertMessageBatchToQueue:{0}", tm.ElapsedMilliseconds);
                 
             }
@@ -179,15 +209,15 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		}
 		
 		
-		public void MarkMessageHandled(IDbConnection conn, string queueTable, string messageId)
+		public void MarkMessageHandled(DbConnection conn, string queueTable, string messageId)
 		{
 			
 		}
 		
-		public bool MoveMessageFromRetryToInput(IDbConnection conn, string queueTable, string messageId)
+		public bool MoveMessageFromRetryToInput(DbConnection conn, string queueTable, string messageId)
 		{
 			DateTime t0 = DateTime.Now;
-            string sql = "update {0} with(readpast, rowlock) set subqueue='I' where id=@id and subqueue='R'";
+			string sql = GetSqlFormatString("MoveMessageFromRetryToInput");
 
             sql = string.Format(sql, queueTable);
             using (IDbCommand cmd = conn.CreateCommand())
@@ -199,11 +229,11 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             }
 		}
 		
-		public bool MarkMessageFailed(IDbConnection conn, string queueTable, string messageId, string errorInfo, MessageFailureDisposition disp, DateTime retryTime)
+		public bool MarkMessageFailed(DbConnection conn, string queueTable, string messageId, string errorInfo, MessageFailureDisposition disp, DateTime retryTime)
 		{
 			DateTime t0 = DateTime.Now;
             bool ret = true;
-            string sql = "update {0} with(readpast, rowlock) set retry_count = retry_count + {1}, retry_time=@retry_time, error_info=@error_info, last_processed=getdate(), subqueue=@subq where id=@id";
+            string sql = GetSqlFormatString("MarkMessageFailed");
             sql = string.Format(sql, queueTable, disp == MessageFailureDisposition.RetryDontIncrementRetryCount ? 0 : 1);
             using (IDbCommand cmd = conn.CreateCommand())
             {
@@ -279,23 +309,23 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             return Headers;
         }
 
-		public void CleanupProcessedMessages(IDbConnection conn, string queueTable, DateTime? olderThan)
+		public void CleanupProcessedMessages(DbConnection conn, string queueTable, DateTime? olderThan)
 		{
 		
 			var lmt = olderThan.HasValue ? olderThan.Value : DateTime.Now.AddDays(-7);
         	using (IDbCommand cmd = conn.CreateCommand())
             {
-                cmd.CommandText = string.Format("delete top(10000) {0} with(READPAST) where retry_time <= @lmt and subqueue='X'", queueTable);
+        		cmd.CommandText = string.Format(GetSqlFormatString("CleanupProcessedMessages"), queueTable);
                 SqlUtil.AddParameter(cmd, "@lmt", lmt);
                 int n = cmd.ExecuteNonQuery();
                 log.Info("Deleted {0} messages from {1}", n, queueTable);
             }
 		}
 		
-		public virtual bool MoveScheduledMessagesToInputQueue(IDbConnection conn, string queueTable)
+		public virtual bool MoveScheduledMessagesToInputQueue(DbConnection conn, string queueTable)
         {
 
-            string sql = string.Format("update top (1000) {0} with(READPAST) set subqueue='I' where subqueue='R' and retry_time <= getdate()", queueTable);
+			string sql = string.Format(GetSqlFormatString("MoveScheduledMessagesToInputQueue"), queueTable);
             
             using (IDbCommand cmd = conn.CreateCommand())
             {
@@ -309,5 +339,75 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             }
             return false;
         }
+		
+		public long GetAverageLatencyMs(DbConnection conn, string queueTable)
+        {
+            
+			string sql = string.Format(GetSqlFormatString("GetAverageLatencyMs"), queueTable);
+            using (IDbCommand cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = sql;
+                SqlUtil.AddParameter(cmd, "@time_limit", DateTime.Now.AddMinutes(-5));
+                return Convert.ToInt64(cmd.ExecuteScalar());
+            }
+        }
+		
+		public int GetInputQueueSize(DbConnection conn, string queueTable)
+		{
+			return GetSubqeueSize(conn, queueTable, "I");
+		}
+		
+		public void RetryAllFailedMessages(DbConnection conn, string queueTable)
+		{
+			using (IDbCommand cmd = conn.CreateCommand())
+            {
+				cmd.CommandText = string.Format(GetSqlFormatString("RetryAllFailedMessages"), queueTable);
+                int rows = cmd.ExecuteNonQuery();
+                log.Info("{0} messages returned to queue {1}", rows, queueTable);
+            }
+		}
+		
+		
+		
+		
+		public int GetSubqeueSize(DbConnection conn, string queueTable, string subqueue)
+		{
+			string sql = string.Format(GetSqlFormatString("GetSubqueueSize"), queueTable, subqueue);
+            using (IDbCommand cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = sql;
+                return Convert.ToInt32(cmd.ExecuteScalar());
+            }
+		}
+
+		public bool MoveMessageToSubqueue(DbConnection conn, string queueTable, string messageId, Subqueue toSubqueue, Subqueue? fromSubqueue)
+		{
+			using (IDbCommand cmd = conn.CreateCommand())
+            {
+				cmd.CommandText = string.Format(GetSqlFormatString("MoveMessageToSubqueue"), queueTable);
+                if (fromSubqueue.HasValue) 
+                {
+                	SqlUtil.AddParameter(cmd, "sq_from", fromSubqueue.Value.ToString());
+                	cmd.CommandText += " and  subqueue=@sq_from";
+                }
+                SqlUtil.AddParameter(cmd, "id", Convert.ToInt64(messageId));
+                SqlUtil.AddParameter(cmd, "sq_to", toSubqueue.ToString());
+                int rows = cmd.ExecuteNonQuery();
+                log.Info("{0} messages returned to queue {1}", rows, queueTable);
+                return rows > 0;
+            }
+		}
+		
+		
+		public static ISqlQueue GetQueue(string dbProviderName)
+		{
+			string s = dbProviderName.ToLowerInvariant();
+			if (s == "oracle" || s.Contains("oracle")) {
+				return new OracleQueue();
+			}
+			return new SqlQueueBase();
+		}
+		
+		
 	}
 }

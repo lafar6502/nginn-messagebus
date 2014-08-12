@@ -14,6 +14,7 @@ using System.Diagnostics;
 using System.Reflection;
 using NGinnBPM.MessageBus.Impl.SqlQueue;
 using System.Collections.Concurrent;
+using System.Data.Common;
 
 namespace NGinnBPM.MessageBus.Impl
 {
@@ -37,10 +38,10 @@ namespace NGinnBPM.MessageBus.Impl
 
         public virtual void SendBatch(IList<MessageContainer> messages, object conn)
         {
-            var sc = conn as IDbConnection;
+            var sc = conn as DbConnection;
             if (sc == null && AllowUseOfApplicationDbConnectionForSending)
             {
-                sc = MessageBusContext.AppManagedConnection as IDbConnection;
+                sc = MessageBusContext.AppManagedConnection as DbConnection;
             }
 
             if (sc != null 
@@ -272,24 +273,18 @@ namespace NGinnBPM.MessageBus.Impl
             set;
         }
 
-        /// <summary>
-        /// Open database connection
-        /// </summary>
-        /// <param name="connString"></param>
-        /// <returns></returns>
-        private static SqlConnection OpenConnection(string connString)
-        {
-            SqlConnection conn = new System.Data.SqlClient.SqlConnection(connString);
-            conn.Open();
-            return conn;
+        private DbConnection OpenConnection(string alias)
+        {	
+            string connstr;
+            return _connStrings.TryGetValue(alias, out connstr) ? SqlUtil.OpenConnection(connstr, null) : SqlUtil.OpenConnection(alias, null);
         }
-
-        private SqlConnection OpenConnection()
-        {
+        
+        private DbConnection OpenConnection()
+        {	
             string connstr;
             if (!_connStrings.TryGetValue(_connAlias, out connstr))
                 throw new Exception("No connection string for alias " + _connAlias);
-            return OpenConnection(connstr);
+            return SqlUtil.OpenConnection(connstr, null);
         }
 
 
@@ -309,14 +304,9 @@ namespace NGinnBPM.MessageBus.Impl
         {
             get 
             {
-                using (IDbConnection con = OpenConnection())
+                using (var con = OpenConnection())
                 {
-                    string sql = string.Format("select count(*) from {0} with(nolock) where subqueue='R'", _queueTable);
-                    using (IDbCommand cmd = con.CreateCommand())
-                    {
-                        cmd.CommandText = sql;
-                        return Convert.ToInt32(cmd.ExecuteScalar());
-                    }
+                	return _queueOps.GetSubqeueSize(con, _queueTable, "R");
                 }
             }
         }
@@ -329,14 +319,9 @@ namespace NGinnBPM.MessageBus.Impl
         {
             get
             {
-                using (IDbConnection con = OpenConnection())
+                using (var con = OpenConnection())
                 {
-                    string sql = string.Format("select count(*) from {0} with(nolock) where subqueue='F'", _queueTable); 
-                    using (IDbCommand cmd = con.CreateCommand())
-                    {
-                        cmd.CommandText = sql;
-                        return Convert.ToInt32(cmd.ExecuteScalar());
-                    }
+                	return _queueOps.GetSubqeueSize(con, _queueTable, "F");
                 }
             }
         }
@@ -345,17 +330,10 @@ namespace NGinnBPM.MessageBus.Impl
         {
             get
             {
-                using (IDbConnection con = OpenConnection())
+                using (var con = OpenConnection())
                 {
-                    string sql = string.Format("select coalesce(avg(DATEDIFF(millisecond, retry_time, last_processed)), 0) from {0} with(nolock) where retry_time >= @time_limit and subqueue='X'", _queueTable);
-                    using (IDbCommand cmd = con.CreateCommand())
-                    {
-                        cmd.CommandText = sql;
-                        SqlUtil.AddParameter(cmd, "@time_limit", DateTime.Now.AddMinutes(-5));
-                        return Convert.ToInt64(cmd.ExecuteScalar());
-                    }
+                	return _queueOps.GetAverageLatencyMs(con, _queueTable);
                 }
-
             }
         }
         /// <summary>
@@ -365,14 +343,9 @@ namespace NGinnBPM.MessageBus.Impl
         {
             get
             {
-                using (IDbConnection con = OpenConnection())
+                using (var con = OpenConnection())
                 {
-                    string sql = string.Format("select count(*) from {0} with(nolock) where subqueue='I'", _queueTable);
-                    using (IDbCommand cmd = con.CreateCommand())
-                    {
-                        cmd.CommandText = sql;
-                        return Convert.ToInt32(cmd.ExecuteScalar());
-                    }
+                	return _queueOps.GetSubqeueSize(con, _queueTable, "I");
                 }
             }
         }
@@ -381,14 +354,9 @@ namespace NGinnBPM.MessageBus.Impl
         /// </summary>
         public void RetryFailedMessages()
         {
-            using (IDbConnection conn = OpenConnection())
+            using (var conn = OpenConnection())
             {
-                using (IDbCommand cmd = conn.CreateCommand())
-                {
-                    cmd.CommandText = string.Format("update {0} with(READPAST) set subqueue='I', retry_count=0, error_info=null where subqueue='F'", _queueTable);
-                    int rows = cmd.ExecuteNonQuery();
-                    log.Info("{0} messages returned to queue {1}", rows, _queueTable);
-                }
+            	_queueOps.RetryAllFailedMessages(conn, _queueTable);
             }
         }
 
@@ -581,7 +549,7 @@ namespace NGinnBPM.MessageBus.Impl
             {
                 try
                 {
-                    SqlConnection cn = OpenConnection();
+                    var cn = OpenConnection();
                     bool pause = true;
                     int delayMs = 0;
                     try
@@ -703,7 +671,7 @@ namespace NGinnBPM.MessageBus.Impl
         /// false if there are no more messages to process and the receiving thread
         /// should pause for some time.
         /// </returns>
-        protected virtual bool ProcessNextMessage(SqlConnection conn)
+        protected virtual bool ProcessNextMessage(DbConnection conn)
         {
             var sw = Stopwatch.StartNew();
             string mtype = null;
@@ -933,7 +901,7 @@ namespace NGinnBPM.MessageBus.Impl
             	
                 DateTime t0 = DateTime.Now;
                 DateTime lmt = DateTime.Now - MessageRetentionPeriod;
-                using (IDbConnection conn = OpenConnection())
+                using (var conn = OpenConnection())
                 {
                 	_queueOps.CleanupProcessedMessages(conn, _queueTable, lmt);
                 }
@@ -997,7 +965,7 @@ namespace NGinnBPM.MessageBus.Impl
             DateTime st = DateTime.Now;
             try
             {
-            	using (IDbConnection conn = OpenConnection())
+            	using (var conn = OpenConnection())
                 {
             		_queueOps.MoveScheduledMessagesToInputQueue(conn, _queueTable);
             	}
@@ -1048,7 +1016,7 @@ namespace NGinnBPM.MessageBus.Impl
         /// </summary>
         /// <param name="conn"></param>
         /// <param name="messages"></param>
-        protected virtual void InsertMessageBatchToLocalQueues(IDbConnection conn, ICollection<MessageContainer> messages)
+        protected virtual void InsertMessageBatchToLocalQueues(DbConnection conn, ICollection<MessageContainer> messages)
         {
             if (!SendLocalMessagesDirectly)
             {
@@ -1106,7 +1074,7 @@ namespace NGinnBPM.MessageBus.Impl
             }
             else
             {
-                using (SqlConnection conn = OpenConnection(connString))
+                using (var conn = OpenConnection(connString))
                 {
                     _queueOps.InsertMessageBatchToLocalDatabaseQueues(conn, messages);
                 }
@@ -1151,11 +1119,11 @@ namespace NGinnBPM.MessageBus.Impl
         #endregion
 
         [ThreadStatic]
-        private static IDbConnection _curCon;
+        private static DbConnection _curCon;
         /// <summary>
         /// Message receiving connection
         /// </summary>
-        public static IDbConnection CurrentConnection
+        public static DbConnection CurrentConnection
         {
             get { return _curCon; }
             private set {_curCon = value;}
@@ -1214,37 +1182,7 @@ namespace NGinnBPM.MessageBus.Impl
                 }
             }
         }
-
-        public void MarkMessageCompleted(string busMessageId)
-        {
-            AccessLocalDb(con =>
-            {
-                using (var cmd = con.CreateCommand())
-                {
-                    cmd.CommandText = string.Format("update {0} set subqueue='X' where id={1}", _queueTable, busMessageId);
-                    cmd.ExecuteNonQuery();
-                }
-            });
-        }
-
-        public void MoveToInputQueue(string busMessageId)
-        {
-            AccessLocalDb(con =>
-            {
-                using (var cmd = con.CreateCommand())
-                {
-                    cmd.CommandText = string.Format("update {0} set subqueue='I' where id={1}", _queueTable, busMessageId);
-                    cmd.ExecuteNonQuery();
-                }
-            });
-        }
-
-        public void ScheduleMessage(string busMessageId, DateTime deliveryDate)
-        {
-            AccessLocalDb(con =>
-            {
-        	    _queueOps.MarkMessageForProcessingLater(con, _queueTable, busMessageId, null);
-            });
-        }
+        
+        
     }
 }

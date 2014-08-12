@@ -90,6 +90,15 @@ namespace NGinnBPM.MessageBus.Impl
 
         public static DbConnection OpenConnection(string connectionString, string provider)
         {
+        	if (string.IsNullOrEmpty(provider))
+        	{
+        		var cs = System.Configuration.ConfigurationManager.ConnectionStrings[connectionString];
+        		if (cs != null) {
+        			provider = cs.ProviderName;
+        			connectionString = cs.ConnectionString;
+        		}
+        	}
+        	
             if (string.IsNullOrEmpty(provider)) provider = "System.Data.SqlClient";
             var con = DbProviderFactories.GetFactory(provider).CreateConnection();
             con.ConnectionString = connectionString;
