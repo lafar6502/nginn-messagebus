@@ -59,14 +59,15 @@ namespace Tests
                 connStrings["testdb1"] = "Data Source=(local);Initial Catalog=NGinn;User Id=nginn;Password=PASS";
                 connStrings["testdb2"] = "Data Source=(local);Initial Catalog=NGinn;User Id=nginn;Password=PASS";
                 ///configure two containers with two message buses
-                IWindsorContainer wc1 = ConfigureMessageBus("sql://testdb1/MQueue1", connStrings, "http://+:9013/");
+                IWindsorContainer wc1 = ConfigureMessageBus("sql://testdb1/MQueue1", connStrings, null);
                 
                 //IWindsorContainer wc2 = ConfigureMessageBus("sql://testdb2/MQueue2", connStrings, null);
 
                 IMessageBus mb1 = wc1.Resolve<IMessageBus>();
+                mb1.Notify(new TestMessage1 { });
                 mb1.Notify(new TestMessage3 { KK = "KK" });
 
-                
+                Console.ReadLine();
                 return;
                 //IMessageBus mb2 = wc1.Resolve<IMessageBus>("bus2");
                 //SagaTest(wc1);

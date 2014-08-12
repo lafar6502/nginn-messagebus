@@ -73,7 +73,9 @@ namespace NGinnBPM.MessageBus.Impl
         private string _connAlias;
         private Dictionary<string, string> _connStrings = new Dictionary<string,string>();
         private string _queueTable = "MessageQueue";
-        private ISqlQueue _queueOps = null;
+        private ISqlQueue _queueOps = new SqlQueueBase {
+        	MaxSqlParamsInBatch = 200
+        };
 
 
         public virtual string Endpoint
