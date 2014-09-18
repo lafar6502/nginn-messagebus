@@ -73,24 +73,34 @@ namespace NGinnBPM.MessageBus.Impl
         private string _connAlias;
         private Dictionary<string, string> _connStrings = new Dictionary<string,string>();
         private string _queueTable = "MessageQueue";
-        private ISqlQueue _queueOps = new SqlQueueBase {
-        	MaxSqlParamsInBatch = 200
-        };
+        private ISqlQueue _queueOps = null;
 
 
         public virtual string Endpoint
         {
-            get { return string.Format("sql://{0}/{1}", _connAlias, _queueTable); }
+            get 
+            {
+            	if (string.IsNullOrEmpty(_connAlias)) return null;
+            	return string.Format("sql://{0}/{1}", _connAlias, _queueTable); 
+            }
             set 
             {
-                string alias, table;
-                if (!SqlUtil.ParseSqlEndpoint(value, out alias, out table))
-                    throw new Exception("Invalid endpoint");
-                _connAlias = alias;
-                _queueTable = table;
-                log = LogManager.GetLogger("SQLMT_" + Endpoint);
-                statLog = LogManager.GetLogger("STATSQLMT_" + Endpoint);
-                if (Name == null) Name = value;
+            	if (value == null)
+            	{
+            		_connAlias = _queueTable = null;
+            		_queueOps = null;
+            	}
+            	else
+            	{
+	                string alias, table;
+	                if (!SqlUtil.ParseSqlEndpoint(value, out alias, out table))
+	                    throw new Exception("Invalid endpoint");
+	                _connAlias = alias;
+	                _queueTable = table;
+	                log = LogManager.GetLogger("SQLMT_" + Endpoint);
+	                statLog = LogManager.GetLogger("STATSQLMT_" + Endpoint);
+	                if (Name == null) Name = value;
+            	}
             }
         }
         /// <summary>
@@ -389,6 +399,8 @@ namespace NGinnBPM.MessageBus.Impl
         /// </summary>
         public virtual void Start()
         {
+        	if (string.IsNullOrEmpty(Endpoint) && !this.SendOnly) throw new Exception("Endpoint not configured");
+        	
             var assembly = Assembly.GetExecutingAssembly();
             var attr = Attribute.GetCustomAttribute(assembly, typeof(AssemblyFileVersionAttribute)) as AssemblyFileVersionAttribute;
             log.Info("NGinn MessageBus v {0} starting SQL transport for endpoint {1}", attr == null ? "---" : attr.Version, Endpoint);

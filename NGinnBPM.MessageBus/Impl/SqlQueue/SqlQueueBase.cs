@@ -408,6 +408,9 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 			return new SqlQueueBase();
 		}
 		
-		
+		public static ISqlQueue GetQueue(DbConnection conn)
+		{
+			return GetQueue(conn.GetType().Name);
+		}
 	}
 }
