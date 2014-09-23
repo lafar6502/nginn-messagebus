@@ -1,6 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
+# SharpDevelop 5.0
+VisualStudioVersion = 12.0.20827.3
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{F0163AC1-3926-4F2A-8033-9AB2B48B1C77}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NGinnBPM.MessageBus.Windsor", "NGinnBPM.MessageBus.Windsor\NGinnBPM.MessageBus.Windsor.csproj", "{6837107E-5C65-4228-BB86-F8C97334016D}"

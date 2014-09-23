@@ -409,7 +409,9 @@ namespace NGinnBPM.MessageBus.Impl
                     throw new Exception("Transaction is not open: " + rm.TransactionId);
 
                 foreach (MessageContainer mw in lst)
+                {
                     rm.Messages.Add(mw);
+                }
             }
         }
 
@@ -491,6 +493,32 @@ namespace NGinnBPM.MessageBus.Impl
         /// </summary>
         private Dictionary<string, MessageBatchingRM> _messageBatches = new Dictionary<string, MessageBatchingRM>();
 
+        
+        public string GetCurrentTransactionState()
+        {
+        	var rm = this.GetCurrentTransactionMessageBatch();
+        	return  Newtonsoft.Json.JsonConvert.SerializeObject(rm.Messages);
+        }
+        
+        public void SetCurrentTransactionState(string state)
+        {
+        	var rm = this.GetCurrentTransactionMessageBatch();
+        	rm.Messages = Newtonsoft.Json.JsonConvert.DeserializeObject<List<MessageContainer>>(state);
+        }
+        
+        internal MessageBatchingRM GetCurrentTransactionMessageBatch()
+        {
+        	if (Transaction.Current == null)
+                throw new Exception("No transaction!");
+            string tid = Transaction.Current.TransactionInformation.LocalIdentifier;
+            MessageBatchingRM rm;
+            lock (this)
+            {
+                if (_messageBatches.TryGetValue(tid, out rm)) return rm;
+            }
+            return null;
+        }
+        
         private MessageBatchingRM GetCreateMessageBatchForCurrentTransaction()
         {
             if (Transaction.Current == null)
@@ -502,7 +530,7 @@ namespace NGinnBPM.MessageBus.Impl
                 if (_messageBatches.TryGetValue(tid, out rm))
                     return rm;
                 log.Debug("Enlisting resource manager for {0}", tid);
-                rm = new MessageBatchingRM(r => MessageTransport.SendBatch(r.Messages, null), r => CommitMessageBatch(r), r => RollbackMessageBatch(r));
+                rm = new MessageBatchingRM(r => MessageTransport.SendBatch(r.Messages, null), CommitMessageBatch, RollbackMessageBatch);
                 rm.TransactionId = tid;
                 _messageBatches[tid] = rm;
             }

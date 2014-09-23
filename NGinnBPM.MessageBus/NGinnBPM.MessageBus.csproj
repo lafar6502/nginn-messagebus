@@ -219,6 +219,7 @@
     <EmbeddedResource Include="create_sagatable.sql" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="createmqueue.oracle.sql" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

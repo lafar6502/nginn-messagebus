@@ -564,6 +564,7 @@ namespace NGinnBPM.MessageBus.Impl
                 try
                 {
                     var cn = OpenConnection();
+                    if (_queueOps == null) _queueOps = SqlQueueBase.GetQueue(cn);
                     bool pause = true;
                     int delayMs = 0;
                     try
@@ -1032,11 +1033,13 @@ namespace NGinnBPM.MessageBus.Impl
         /// <param name="messages"></param>
         protected virtual void InsertMessageBatchToLocalQueues(DbConnection conn, ICollection<MessageContainer> messages)
         {
+        	var qops = _queueOps;
+        	if (qops == null) qops = SqlQueueBase.GetQueue(conn);
             if (!SendLocalMessagesDirectly)
             {
                 Dictionary<string, ICollection<MessageContainer>> dic = new Dictionary<string, ICollection<MessageContainer>>();
                 dic[_queueTable] = messages; //insert all messages to local queue
-                _queueOps.InsertMessageBatchToLocalDatabaseQueues(conn, dic);
+                qops.InsertMessageBatchToLocalDatabaseQueues(conn, dic);
             }
             else
             {
@@ -1064,7 +1067,7 @@ namespace NGinnBPM.MessageBus.Impl
                     }
                     dl.Add(mc); //send to local queue.
                 }
-                _queueOps.InsertMessageBatchToLocalDatabaseQueues(conn, dic);
+                qops.InsertMessageBatchToLocalDatabaseQueues(conn, dic);
             }
         }
 

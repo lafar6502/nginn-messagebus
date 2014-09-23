@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Transactions;
+
 
 namespace NGinnBPM.MessageBus
 {
@@ -75,6 +77,31 @@ namespace NGinnBPM.MessageBus
         {
             get { return _appCon; }
             set { _appCon = value; }
+        }
+        
+        /// <summary>
+        /// Get current transaction's outgoing messages in serialized form
+        /// this is used for persisting state between transactions
+        /// </summary>
+        /// <returns></returns>
+        public static string GetSerializedCurrentTransactionState()
+        {
+        	var t = Transaction.Current;
+        	if (t == null) return null;
+        	var mb = (Impl.MessageBus) CurrentMessageBus;
+        	return mb.GetCurrentTransactionState();
+        }
+        
+        /// <summary>
+        /// Set current transaction state (or exactly, a list of outgoing messages to be sent on commit)
+        /// </summary>
+        /// <param name="state"></param>
+        public static void SetCurrentTransactionState(string state)
+        {
+        	var t = Transaction.Current;
+        	if (t == null) throw new Exception("No transaction");
+        	var mb = (Impl.MessageBus) CurrentMessageBus;
+        	mb.SetCurrentTransactionState(state);
         }
             
     }

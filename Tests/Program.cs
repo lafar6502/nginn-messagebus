@@ -63,10 +63,17 @@ namespace Tests
                 
                 //IWindsorContainer wc2 = ConfigureMessageBus("sql://testdb2/MQueue2", connStrings, null);
 
+                
                 IMessageBus mb1 = wc1.Resolve<IMessageBus>();
-                mb1.Notify(new TestMessage1 { });
-                mb1.Notify(new TestMessage3 { KK = "KK" });
-
+                using (var ts = new TransactionScope())
+                {
+                	mb1.Notify(new TestMessage1 { });
+                	mb1.Notify(new TestMessage1 { Id = 32423 });
+                	var m = mb1 as NGinnBPM.MessageBus.Impl.MessageBus;
+                	Console.WriteLine("STATE");
+                	Console.WriteLine(m.GetCurrentTransactionState());
+                	ts.Complete();
+                }
                 Console.ReadLine();
                 return;
                 //IMessageBus mb2 = wc1.Resolve<IMessageBus>("bus2");

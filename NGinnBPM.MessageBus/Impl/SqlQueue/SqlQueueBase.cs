@@ -143,8 +143,9 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
                         ICollection<MessageContainer> lmc = messages[tableName];
                         foreach (MessageContainer mw in lmc)
                         {
+                        	System.Diagnostics.Debug.Assert(mw.BodyStr != null);
+                        	if (mw.BodyStr == null) throw new Exception("Null message body string");
                             allMessages.Add(mw);
-                            System.Diagnostics.Debug.Assert(mw.BodyStr != null);
                             if (prevBody != mw.BodyStr)
                             {
                                 prevBody = mw.BodyStr;
