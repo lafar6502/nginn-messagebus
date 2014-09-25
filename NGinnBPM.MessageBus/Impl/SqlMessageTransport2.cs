@@ -73,7 +73,7 @@ namespace NGinnBPM.MessageBus.Impl
         private string _connAlias;
         private Dictionary<string, string> _connStrings = new Dictionary<string,string>();
         private string _queueTable = "MessageQueue";
-        private ISqlQueue _queueOps = null;
+        
 
 
         public virtual string Endpoint
@@ -88,7 +88,6 @@ namespace NGinnBPM.MessageBus.Impl
             	if (value == null)
             	{
             		_connAlias = _queueTable = null;
-            		_queueOps = null;
             	}
             	else
             	{
@@ -227,6 +226,12 @@ namespace NGinnBPM.MessageBus.Impl
             MaxSqlParamsInBatch = 200;
             //MaxReceiveFrequency = 1000;
         }
+        
+        private static ISqlQueue GetQueueOps(DbConnection c)
+        {
+        	return SqlQueueBase.GetQueue(c);  
+        }
+        
 
         static SqlMessageTransport2()
         {
@@ -318,7 +323,7 @@ namespace NGinnBPM.MessageBus.Impl
             {
                 using (var con = OpenConnection())
                 {
-                	return _queueOps.GetSubqeueSize(con, _queueTable, "R");
+                	return GetQueueOps(con).GetSubqeueSize(con, _queueTable, "R");
                 }
             }
         }
@@ -333,7 +338,7 @@ namespace NGinnBPM.MessageBus.Impl
             {
                 using (var con = OpenConnection())
                 {
-                	return _queueOps.GetSubqeueSize(con, _queueTable, "F");
+                	return GetQueueOps(con).GetSubqeueSize(con, _queueTable, "F");
                 }
             }
         }
@@ -344,7 +349,7 @@ namespace NGinnBPM.MessageBus.Impl
             {
                 using (var con = OpenConnection())
                 {
-                	return _queueOps.GetAverageLatencyMs(con, _queueTable);
+                	return GetQueueOps(con).GetAverageLatencyMs(con, _queueTable);
                 }
             }
         }
@@ -357,7 +362,7 @@ namespace NGinnBPM.MessageBus.Impl
             {
                 using (var con = OpenConnection())
                 {
-                	return _queueOps.GetSubqeueSize(con, _queueTable, "I");
+                	return GetQueueOps(con).GetSubqeueSize(con, _queueTable, "I");
                 }
             }
         }
@@ -368,7 +373,7 @@ namespace NGinnBPM.MessageBus.Impl
         {
             using (var conn = OpenConnection())
             {
-            	_queueOps.RetryAllFailedMessages(conn, _queueTable);
+            	GetQueueOps(conn).RetryAllFailedMessages(conn, _queueTable);
             }
         }
 
@@ -564,7 +569,6 @@ namespace NGinnBPM.MessageBus.Impl
                 try
                 {
                     var cn = OpenConnection();
-                    if (_queueOps == null) _queueOps = SqlQueueBase.GetQueue(cn);
                     bool pause = true;
                     int delayMs = 0;
                     try
@@ -708,7 +712,7 @@ namespace NGinnBPM.MessageBus.Impl
                     {
                         bool moreMessages = false;
                         //var mc = UseSqlOutputClause ? SelectNextMessageForProcessing2008(conn, out retryTime) : SelectNextMessageForProcessing(conn, out retryTime, out moreMessages);
-                        var mc = _queueOps.SelectAndLockNextInputMessage(conn, _queueTable, () => _nowProcessing.Keys, out retryTime, out moreMessages);
+                        var mc = GetQueueOps(conn).SelectAndLockNextInputMessage(conn, _queueTable, () => _nowProcessing.Keys, out retryTime, out moreMessages);
                         if (mc == null) return moreMessages;
                         id = mc.BusMessageId;
                         _nowProcessing[id] = DateTime.Now;
@@ -762,7 +766,7 @@ namespace NGinnBPM.MessageBus.Impl
                                 }
                                 else if (md.MessageDispositon == SequenceMessageDisposition.ProcessingDisposition.Postpone)
                                 {
-                                	_queueOps.MarkMessageForProcessingLater(conn, _queueTable, id, md.EstimatedRetry.HasValue ? md.EstimatedRetry.Value : DateTime.Now.AddMinutes(1));
+                                	GetQueueOps(conn).MarkMessageForProcessingLater(conn, _queueTable, id, md.EstimatedRetry.HasValue ? md.EstimatedRetry.Value : DateTime.Now.AddMinutes(1));
                                     abort = false; //save the transaction
                                     return true;
                                 }
@@ -770,7 +774,7 @@ namespace NGinnBPM.MessageBus.Impl
                                 {
                                     if (!string.IsNullOrEmpty(md.NextMessageId))
                                     {
-                                    	_queueOps.MoveMessageFromRetryToInput(conn, _queueTable, md.NextMessageId);
+                                    	GetQueueOps(conn).MoveMessageFromRetryToInput(conn, _queueTable, md.NextMessageId);
                                     }
                                 }
                                 else throw new Exception();
@@ -796,7 +800,7 @@ namespace NGinnBPM.MessageBus.Impl
                                 }
                                 else
                                 {
-                                	_queueOps.MarkMessageForProcessingLater(conn, _queueTable, id, _curMsg.ProcessLater.Value);
+                                	GetQueueOps(conn).MarkMessageForProcessingLater(conn, _queueTable, id, _curMsg.ProcessLater.Value);
                                     //MarkMessageForProcessingLater(id, _curMsg.ProcessLater.Value, null, conn);
                                 }
                             }
@@ -871,7 +875,7 @@ namespace NGinnBPM.MessageBus.Impl
                     using (var ts = new TransactionScope(TransactionScopeOption.Required, to))
                     {
                         conn.EnlistTransaction(Transaction.Current);
-                        if (_queueOps.MarkMessageFailed(conn, _queueTable, id, handlingError.ToString(), doRetry, nextRetry.HasValue ? nextRetry.Value : DateTime.Now))
+                        if (GetQueueOps(conn).MarkMessageFailed(conn, _queueTable, id, handlingError.ToString(), doRetry, nextRetry.HasValue ? nextRetry.Value : DateTime.Now))
                         {
                             log.Info("Message {0}  marked {1} because of  failure. Retry number: {2}", id, doRetry, retryCount);
                         }
@@ -918,7 +922,7 @@ namespace NGinnBPM.MessageBus.Impl
                 DateTime lmt = DateTime.Now - MessageRetentionPeriod;
                 using (var conn = OpenConnection())
                 {
-                	_queueOps.CleanupProcessedMessages(conn, _queueTable, lmt);
+                	GetQueueOps(conn).CleanupProcessedMessages(conn, _queueTable, lmt);
                 }
                 TimeSpan ts = DateTime.Now - t0;
                 log.Log(ts.TotalMilliseconds > 2000.0 ? LogLevel.Warn : LogLevel.Trace, "CleanupProcessedMessages update time: {0}", ts);
@@ -982,7 +986,7 @@ namespace NGinnBPM.MessageBus.Impl
             {
             	using (var conn = OpenConnection())
                 {
-            		_queueOps.MoveScheduledMessagesToInputQueue(conn, _queueTable);
+            		GetQueueOps(conn).MoveScheduledMessagesToInputQueue(conn, _queueTable);
             	}
             }
             catch (Exception ex)
@@ -1033,9 +1037,8 @@ namespace NGinnBPM.MessageBus.Impl
         /// <param name="messages"></param>
         protected virtual void InsertMessageBatchToLocalQueues(DbConnection conn, ICollection<MessageContainer> messages)
         {
-        	var qops = _queueOps;
-        	if (qops == null) qops = SqlQueueBase.GetQueue(conn);
-            if (!SendLocalMessagesDirectly)
+        	var qops = GetQueueOps(conn);
+        	if (!SendLocalMessagesDirectly)
             {
                 Dictionary<string, ICollection<MessageContainer>> dic = new Dictionary<string, ICollection<MessageContainer>>();
                 dic[_queueTable] = messages; //insert all messages to local queue
@@ -1087,13 +1090,13 @@ namespace NGinnBPM.MessageBus.Impl
                 CurrentConnection != null && 
                 SqlUtil.IsSameDatabaseConnection(CurrentConnection.ConnectionString, connString))
             {
-                _queueOps.InsertMessageBatchToLocalDatabaseQueues(CurrentConnection, messages);
+                GetQueueOps(CurrentConnection).InsertMessageBatchToLocalDatabaseQueues(CurrentConnection, messages);
             }
             else
             {
                 using (var conn = OpenConnection(connString))
                 {
-                    _queueOps.InsertMessageBatchToLocalDatabaseQueues(conn, messages);
+                	GetQueueOps(conn).InsertMessageBatchToLocalDatabaseQueues(conn, messages);
                 }
             }
         }

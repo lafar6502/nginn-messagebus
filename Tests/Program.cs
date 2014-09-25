@@ -33,6 +33,8 @@ namespace Tests
             
             try
             {
+            	OracleTests.TestBasicOps();
+            	return;
                 //MongoQueue.Test1();
                 //MongoQueue.TestSer();
                 //MongoQueue.Test2();

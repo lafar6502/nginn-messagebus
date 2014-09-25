@@ -27,6 +27,14 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		F,
 		X
 	}
+	
+	public interface ISqlAbstractions
+	{
+		void AddParameter(DbCommand cmd, string parameterAlias, string value);
+		void AddParameter(DbCommand cmd, string parameterAlias, int? value);
+		void AddParameter(DbCommand cmd, string parameterAlias, DateTime? value);
+		void AddParameter(DbCommand cmd, string parameterAlias, long? value);
+	}
 
 	/// <summary>
 	/// Abstraction of sql queue operations

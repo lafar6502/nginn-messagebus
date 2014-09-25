@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Data.Common;
 
+
 namespace NGinnBPM.MessageBus.Impl.SqlQueue
 {
 	/// <summary>
@@ -402,8 +403,8 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		
 		public static ISqlQueue GetQueue(string dbProviderName)
 		{
-			string s = dbProviderName.ToLowerInvariant();
-			if (s == "oracle" || s.Contains("oracle")) {
+			var dialect = GetSqlDialectFor(dbProviderName);
+			if (dialect == "oracle") {
 				return new OracleQueue();
 			}
 			return new SqlQueueBase();
@@ -413,5 +414,15 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		{
 			return GetQueue(conn.GetType().Name);
 		}
+		
+		public static string GetSqlDialectFor(string dbProviderName)
+		{
+			string s = dbProviderName.ToLowerInvariant();
+			if (s == "oracle" || s.Contains("oracle")) {
+				return "oracle";
+			}
+			return "sqlserver";
+		}
+		
 	}
 }
