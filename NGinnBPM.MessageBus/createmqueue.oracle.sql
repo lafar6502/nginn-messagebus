@@ -13,9 +13,9 @@
   msg_text NCLOB NULL,
   msg_headers NCLOB NULL,
   unique_id VARCHAR2(40) NULL
-  );
+  )
 --- --- ---
-  CREATE SEQUENCE SEQ_{0};
+  CREATE  SEQUENCE SEQ_{0}
 --- --- ---
 CREATE OR REPLACE TRIGGER TRG_BIR_{0}
 BEFORE INSERT ON {0}

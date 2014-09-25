@@ -132,6 +132,8 @@
     <Compile Include="Impl\PingService.cs" />
     <Compile Include="Impl\SqlQueue\ISqlQueue.cs" />
     <Compile Include="Impl\SqlQueue\OracleQueue.cs" />
+    <Compile Include="Impl\SqlQueue\SqlAbstractions.cs" />
+    <Compile Include="Impl\SqlQueue\SqlHelper.cs" />
     <Compile Include="Impl\SqlQueue\SqlQueueBase.cs" />
     <Compile Include="Impl\SqlSequenceManager.cs" />
     <Compile Include="Impl\SqlUtil.cs" />
@@ -219,7 +221,9 @@
     <EmbeddedResource Include="create_sagatable.sql" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="createmqueue.oracle.sql" />
+    <EmbeddedResource Include="createmqueue.oracle.sql" />
+    <EmbeddedResource Include="Impl\SqlQueue\NamedQueries.oracle.json" />
+    <EmbeddedResource Include="Impl\SqlQueue\NamedQueries.sqlserver.json" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

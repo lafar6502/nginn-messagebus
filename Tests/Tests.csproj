@@ -142,7 +142,6 @@
     <None Include="NLog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="NLog0.config" />
     <None Include="packages.config" />
     <None Include="Routing.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
