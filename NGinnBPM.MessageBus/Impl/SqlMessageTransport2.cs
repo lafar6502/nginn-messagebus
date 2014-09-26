@@ -229,7 +229,7 @@ namespace NGinnBPM.MessageBus.Impl
         
         private static ISqlQueue GetQueueOps(DbConnection c)
         {
-        	return SqlQueueBase.GetQueue(c);  
+            return SqlHelper.GetQueueOps(SqlHelper.GetDialect(c.GetType()));
         }
         
 
