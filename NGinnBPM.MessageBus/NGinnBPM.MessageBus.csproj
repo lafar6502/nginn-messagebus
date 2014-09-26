@@ -132,6 +132,7 @@
     <Compile Include="Impl\PingService.cs" />
     <Compile Include="Impl\SqlQueue\CommonQueueOps.cs" />
     <Compile Include="Impl\SqlQueue\ISqlQueue.cs" />
+    <Compile Include="Impl\SqlQueue\OracleQueueOps.cs" />
     <Compile Include="Impl\SqlQueue\SqlAbstractions.cs" />
     <Compile Include="Impl\SqlQueue\SqlHelper.cs" />
     <Compile Include="Impl\SqlSequenceManager.cs" />

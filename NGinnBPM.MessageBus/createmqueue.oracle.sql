@@ -4,7 +4,7 @@
   to_endpoint VARCHAR(50) NOT NULL,
   subqueue CHAR(1) NOT NULL,
   insert_time DATE NOT NULL,
-  last_processed DATE NOT NULL,
+  last_processed DATE NULL,
   retry_time DATE NOT NULL,
   retry_count NUMBER(2) NOT NULL,
   error_info CLOB NULL,

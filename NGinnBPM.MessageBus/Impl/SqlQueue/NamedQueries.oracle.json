@@ -1,19 +1,19 @@
 ﻿{
-    "SelectAndLockNext1": "select top 1 id, correlation_id, from_endpoint, to_endpoint, retry_count, msg_text, msg_headers, unique_id, retry_time from {0} where subqueue='I' order by retry_time  FOR UPDATE SKIP LOCKED",
+    "SelectAndLockNext1": "select id, correlation_id, from_endpoint, to_endpoint, retry_count, msg_text, msg_headers, unique_id, retry_time from {0} where subqueue='I' and ROWNUM <= 1 order by retry_time  FOR UPDATE SKIP LOCKED",
     
-    "SelectAndLockNext2": "update {0} set subqueue='X', last_processed = getdate() where id=:id and subqueue='I'",
+    "SelectAndLockNext2": "update {0} set subqueue='X', last_processed = SYSDATE where id=:id and subqueue='I'",
     
     "MarkMessageForProcessingLater": "update {0} set retry_time=:retry_time, last_processed=SYSDATE, subqueue='R' where id=:id",
     
-    "InsertMessageBatch_InsertSql": "INSERT INTO {0} (from_endpoint, to_endpoint, subqueue, insert_time, last_processed, retry_count, retry_time, error_info, msg_text,correlation_id,label, msg_headers, unique_id) VALUES (:from_endpoint{1}, :to_endpoint{1}, :subqueue{1}, SYSDATE, null, 0, :retry_time{1}, null, {2}, :correl_id{1}, :label{1}, :headers{1}, :unique_id{1});",
+    "InsertMessageBatch_InsertSql": "INSERT INTO {0} (from_endpoint, to_endpoint, subqueue, insert_time, last_processed, retry_count, retry_time, error_info, msg_text,correlation_id,label, msg_headers, unique_id) VALUES (:from_endpoint, :to_endpoint, :subqueue, SYSDATE, null, 0, :retry_time, null, :msgtext, :correl_id, :label, :headers, :unique_id)",
     
     "MoveMessageFromRetryToInput": "update {0} set subqueue='I' where id=:id and subqueue='R'",
 	
     "MarkMessageFailed": "update {0} set retry_count = retry_count + {1}, retry_time=:retry_time, error_info=:error_info, last_processed=SYSDATE, subqueue=:subq where id=:id",
     
-    "CleanupProcessedMessages": "delete top(10000) {0} where retry_time <= :lmt and subqueue='X'",
+    "CleanupProcessedMessages": "delete {0} where retry_time <= :lmt and subqueue='X' and ROWNUM <= 10000",
     
-    "MoveScheduledMessagesToInputQueue": "update top (1000) {0} set subqueue='I' where subqueue='R' and retry_time <= SYSDATE",
+    "MoveScheduledMessagesToInputQueue": "update {0} set subqueue='I' where subqueue='R' and retry_time <= SYSDATE and ROWNUM <= 1000",
     
 	"GetAverageLatencyMs": "select coalesce(avg(DATEDIFF(millisecond, retry_time, last_processed)), 0) from {0} with(nolock) where retry_time >= :time_limit and subqueue='X'",
     

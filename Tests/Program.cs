@@ -34,7 +34,7 @@ namespace Tests
             try
             {
             	//OracleTests.TestBasicOps();
-            	//OracleTests.TestDbInit();
+            	OracleTests.TestDbInit();
             	//OracleTests.TestSend();
             	//OracleTests.TestNamedQ();
             	OracleTests.TestQueueOps();

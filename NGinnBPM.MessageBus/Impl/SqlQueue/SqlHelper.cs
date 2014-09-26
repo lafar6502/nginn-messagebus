@@ -25,12 +25,14 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 	    
 		public static string GetDialect(string dbProviderName)
 		{
-			return null;
+		    if (dbProviderName.ToLower().Contains("oracle")) return "oracle";
+		    return "sqlserver";
 		}
 		
 		public static string GetDialect(Type connectionType)
 		{
-			return null;
+		    if (connectionType.Name.ToLower().Contains("oracle")) return "oracle";
+		    return "sqlserver";
 		}
 		
 		public static ISqlAbstractions GetSqlAbstraction(string dialect)
@@ -110,6 +112,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		
 		public static ISqlQueue GetQueueOps(string dialect)
 		{
+		    if (dialect == "oracle") return new OracleQueueOps();
 		    return new CommonQueueOps(dialect);
 		}
 	}

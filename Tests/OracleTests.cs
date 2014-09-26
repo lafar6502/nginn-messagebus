@@ -3,6 +3,7 @@
  */
 using System;
 using System.Configuration;
+using System.Reflection;
 using NLog;
 using System.Data.Common;
 using NGinnBPM.MessageBus;
@@ -12,6 +13,7 @@ using System.Text;
 using NGinnBPM.MessageBus.Windsor;
 using Castle.Windsor;
 using NGinnBPM.MessageBus.Impl.SqlQueue;
+using System.Collections.Generic;
 
 namespace Tests
 {
@@ -147,6 +149,25 @@ namespace Tests
 		                    var qops = SqlHelper.GetQueueOps(SqlHelper.GetDialect(con.GetType()));
 		                    qops.CleanupProcessedMessages(con, qt, null);
 		                    qops.MoveScheduledMessagesToInputQueue(con, qt);
+		                    
+		                    var mc = new MessageContainer {
+		                        Body = "ala ma kota",
+		                        From = "sql://oradb/mq_test2",
+		                        To = "sql://oradb/mq_test2",
+		                        Label = "lbl",
+		                        BodyStr = "a tu takki kot",
+		                        HeadersString = null
+		                    };
+		                    var msgs = new Dictionary<string, ICollection<MessageContainer>> {
+		                        {"mq_test2", new List<MessageContainer>{mc }}
+		                    };
+		                    qops.InsertMessageBatchToLocalDatabaseQueues(con, msgs);
+		                    
+		                    
+		                    DateTime? rt;
+		                    bool more;
+		                    mc = qops.SelectAndLockNextInputMessage(con, qt, () => new string[] {}, out rt, out more);
+		                    log.Info("MC: {0}", mc == null ? " - nul - " : mc.BusMessageId);
 		    });
 		                
 		}

@@ -20,11 +20,11 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 {
 	public class CommonQueueOps : ISqlQueue
 	{
-		private static readonly Logger log = LogManager.GetCurrentClassLogger();
-		private static readonly Logger statLog = LogManager.GetCurrentClassLogger();
+		protected static readonly Logger log = LogManager.GetCurrentClassLogger();
+		protected static readonly Logger statLog = LogManager.GetCurrentClassLogger();
 		public int MaxSqlParamsInBatch { get;set;}
-		private string _dialect;
-		private ISqlAbstractions _sql;
+		protected string _dialect;
+		protected ISqlAbstractions _sql;
 		
 		public CommonQueueOps(string dialect)
 		{
@@ -286,10 +286,11 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		{
 		
 			var lmt = olderThan.HasValue ? olderThan.Value : DateTime.Now.AddDays(-7);
-        	using (IDbCommand cmd = conn.CreateCommand())
+        	using (DbCommand cmd = conn.CreateCommand())
             {
         		cmd.CommandText = string.Format(GetSqlFormatString("CleanupProcessedMessages"), queueTable);
-                SqlUtil.AddParameter(cmd, "@lmt", lmt);
+                _sql.AddParameter(cmd, "lmt", lmt);
+                log.Info("Exec query {0}", cmd.CommandText);
                 int n = cmd.ExecuteNonQuery();
                 log.Info("Deleted {0} messages from {1}", n, queueTable);
             }

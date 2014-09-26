@@ -4,11 +4,13 @@ using System.Data.Common;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Data;
+using NLog;
 
 namespace NGinnBPM.MessageBus.Impl.SqlQueue
 {
     public class SqlAbstract_sqlserver : ISqlAbstractions
     {
+        protected static Logger log = LogManager.GetCurrentClassLogger();
         /// <summary>
         /// 'normalize' parameter name
         /// </summary>
@@ -19,15 +21,15 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             return n.StartsWith("@") ? n.Substring(1) : n;
         }
 		
-		public void AddParameter(DbCommand cmd, string parameterAlias, string value)
+		public virtual void AddParameter(DbCommand cmd, string parameterAlias, string value)
 		{
 			var prm = cmd.CreateParameter();
 			prm.ParameterName = NormName(parameterAlias);
-            prm.Value = value == null ? SqlString.Null : value;
-            prm.DbType = DbType.AnsiString;
+            prm.DbType = DbType.String;
+			prm.Value = value;
             cmd.Parameters.Add(prm);
 		}
-		public void AddParameter(DbCommand cmd, string parameterAlias, int? value)
+		public virtual void AddParameter(DbCommand cmd, string parameterAlias, int? value)
 		{
 			IDataParameter para = cmd.CreateParameter();
             para.DbType = DbType.Int32;
@@ -36,7 +38,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             para.ParameterName = NormName(parameterAlias);
             cmd.Parameters.Add(para);
 		}
-		public void AddParameter(DbCommand cmd, string parameterAlias, DateTime? value)
+		public virtual void AddParameter(DbCommand cmd, string parameterAlias, DateTime? value)
 		{
 			IDataParameter para = cmd.CreateParameter();
             para.DbType = DbType.DateTime;
@@ -45,7 +47,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             para.ParameterName = NormName(parameterAlias);
             cmd.Parameters.Add(para);
 		}
-		public void AddParameter(DbCommand cmd, string parameterAlias, long? value)
+		public virtual void AddParameter(DbCommand cmd, string parameterAlias, long? value)
 		{
 			IDataParameter para = cmd.CreateParameter();
             para.DbType = DbType.Int64;
@@ -75,6 +77,27 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
         public override string NormName(string n)
         {
             return n.StartsWith(":") ? n.Substring(1) : n;
+        }
+        
+        public override void AddParameter(DbCommand cmd, string parameterAlias, DateTime? value)
+        {
+            var para = cmd.CreateParameter();
+            para.DbType = DbType.DateTime;
+            para.ParameterName = NormName(parameterAlias);
+            para.Direction = ParameterDirection.Input;
+            para.Value = value.HasValue ? (object) value.Value : SqlDateTime.Null;
+            cmd.Parameters.Add(para);
+            log.Info("Added dt param {0}={1}", para.ParameterName, para.Value);
+        }
+        
+        public override void AddParameter(DbCommand cmd, string parameterAlias, long? value)
+        {
+            var para = cmd.CreateParameter();
+            para.DbType = DbType.Int64;
+            para.Value = value.HasValue ? value.Value : (object) SqlInt64.Null;
+            para.Direction = ParameterDirection.Input;
+            para.ParameterName = NormName(parameterAlias);
+            cmd.Parameters.Add(para);
         }
 		
     }
