@@ -34,6 +34,12 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		void AddParameter(DbCommand cmd, string parameterAlias, int? value);
 		void AddParameter(DbCommand cmd, string parameterAlias, DateTime? value);
 		void AddParameter(DbCommand cmd, string parameterAlias, long? value);
+	    /// <summary>
+	    /// run ddl batch
+	    /// </summary>
+	    /// <param name="con"></param>
+	    /// <param name="query"></param>
+	    void ExecuteDDLBatch(DbConnection con, string query);
 	}
 
 	/// <summary>

@@ -11,6 +11,7 @@ using System.IO;
 using System.Text;
 using NGinnBPM.MessageBus.Windsor;
 using Castle.Windsor;
+using NGinnBPM.MessageBus.Impl.SqlQueue;
 
 namespace Tests
 {
@@ -136,6 +137,18 @@ namespace Tests
 		{
 		    var qry = NGinnBPM.MessageBus.Impl.SqlQueue.SqlHelper.GetNamedSqlQuery("CleanupProcessedMessages", "oracle");
 		    log.Info(qry);
+		}
+		
+		
+		public static void TestQueueOps()
+		{
+		    AccessOraDb("oradb", con => {
+		                    var qt ="mq_test2";
+		                    var qops = SqlHelper.GetQueueOps(SqlHelper.GetDialect(con.GetType()));
+		                    qops.CleanupProcessedMessages(con, qt, null);
+		                    qops.MoveScheduledMessagesToInputQueue(con, qt);
+		    });
+		                
 		}
 	}
 }

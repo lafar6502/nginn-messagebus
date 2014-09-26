@@ -101,9 +101,16 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		    abs.AddParameter(cmd, name, value);
 		}
 		
+		public static void RunDDL(DbConnection con, string ddlBatch)
+		{
+		    var di = GetDialect(con.GetType());
+		    var abs = GetSqlAbstraction(di);
+		    abs.ExecuteDDLBatch(con, ddlBatch);
+		}
+		
 		public static ISqlQueue GetQueueOps(string dialect)
 		{
-		    throw new NotImplementedException();
+		    return new CommonQueueOps(dialect);
 		}
 	}
 }
