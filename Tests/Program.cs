@@ -34,12 +34,12 @@ namespace Tests
             try
             {
             	//OracleTests.TestBasicOps();
-            	OracleTests.TestDbInit();
+            	//OracleTests.TestDbInit();
             	//OracleTests.TestSend();
             	//OracleTests.TestNamedQ();
-            	OracleTests.TestQueueOps();
-            	Console.ReadLine();
-            	return;
+            	//OracleTests.TestQueueOps();
+            	//Console.ReadLine();
+            	//return;
                 //MongoQueue.Test1();
                 //MongoQueue.TestSer();
                 //MongoQueue.Test2();

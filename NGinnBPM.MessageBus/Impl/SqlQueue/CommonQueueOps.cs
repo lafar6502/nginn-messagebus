@@ -100,6 +100,8 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             if (messages.Count == 0) return;
             var tm = Stopwatch.StartNew();
             var allMessages = new List<MessageContainer>();
+            string qry = "";
+            string qprm = "";
             try
             {
                 using (DbCommand cmd = conn.CreateCommand())
@@ -122,7 +124,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
                             {
                                 prevBody = mw.BodyStr;
                                 reuseBody = false;
-                                bodyParam = "@msg_body" + cnt;
+                                bodyParam = "msg_body" + cnt;
                             }
                             else reuseBody = true;
                             Dictionary<string, string> headers = RemoveNGHeaders(mw.Headers);
@@ -144,13 +146,15 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
                             if (string.IsNullOrEmpty(s)) s = mw.Body == null ? "" : mw.Body.ToString();
                             if (s.Length > 100) s = s.Substring(0, 100);
 
-                            _sql.AddParameter(cmd, "@label" + cnt, s);
-                            _sql.AddParameter(cmd, "@headers" + cnt, HeadersToString(headers));
-                            _sql.AddParameter(cmd, "@unique_id" + cnt, mw.UniqueId);
+                            _sql.AddParameter(cmd, "label" + cnt, s);
+                            _sql.AddParameter(cmd, "headers" + cnt, HeadersToString(headers));
+                            _sql.AddParameter(cmd, "unique_id" + cnt, mw.UniqueId);
                             cnt++;
                             if (cmd.Parameters.Count >= MaxSqlParamsInBatch)
                             {
-                            	cmd.ExecuteNonQuery();
+                                qry = cmd.CommandText;
+                                qprm = SqlAbstract_sqlserver.DumpCommandParams(cmd);
+                                cmd.ExecuteNonQuery();
                                 cmd.CommandText = "";
                                 cmd.Parameters.Clear();
                             }
@@ -158,7 +162,9 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
                     }
                     if (cmd.CommandText.Length > 0)
                     {
-                    	cmd.ExecuteNonQuery();
+                        qry = cmd.CommandText;
+                        qprm = SqlAbstract_sqlserver.DumpCommandParams(cmd);
+                        cmd.ExecuteNonQuery();
                     }
                 }
 
@@ -169,7 +175,8 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             }
             catch (Exception ex)
             {
-                log.Error("Error inserting message batch: {0}", ex);
+                log.Error("Error inserting message batch: {0}\nQuery:\n{1}\n{2}", ex, qry, qprm);
+                
                 int cnt = 0;
                 foreach (MessageContainer mc in allMessages)
                 {

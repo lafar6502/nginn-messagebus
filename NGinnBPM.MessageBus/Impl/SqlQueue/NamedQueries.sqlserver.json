@@ -5,7 +5,7 @@
     
     "MarkMessageForProcessingLater": "update {0} with(rowlock) set retry_time=@retry_time, last_processed=getdate(), subqueue='R' where id=@id",
     
-    "InsertMessageBatch_InsertSql": "INSERT INTO {0} with(rowlock) ([from_endpoint], [to_endpoint],[subqueue],[insert_time],[last_processed],[retry_count],[retry_time],[error_info],[msg_text],[correlation_id],[label], [msg_headers], [unique_id]) VALUES (@from_endpoint{1}, @to_endpoint{1}, @subqueue{1}, getdate(), null, 0, @retry_time{1}, null, {2}, @correl_id{1}, @label{1}, @headers{1}, @unique_id{1});",
+    "InsertMessageBatch_InsertSql": "INSERT INTO {0} with(rowlock) ([from_endpoint], [to_endpoint],[subqueue],[insert_time],[last_processed],[retry_count],[retry_time],[error_info],[msg_text],[correlation_id],[label], [msg_headers], [unique_id]) VALUES (@from_endpoint{1}, @to_endpoint{1}, @subqueue{1}, getdate(), null, 0, @retry_time{1}, null, @{2}, @correl_id{1}, @label{1}, @headers{1}, @unique_id{1});",
     
     "MoveMessageFromRetryToInput": "update {0} with(readpast, rowlock) set subqueue='I' where id=@id and subqueue='R'",
 	

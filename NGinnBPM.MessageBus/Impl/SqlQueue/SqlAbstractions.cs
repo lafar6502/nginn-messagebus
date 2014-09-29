@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Data;
 using NLog;
+using System.Text;
 
 namespace NGinnBPM.MessageBus.Impl.SqlQueue
 {
@@ -18,7 +19,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
         /// <returns></returns>
 		public virtual string NormName(string n)
         {
-            return n.StartsWith("@") ? n.Substring(1) : n;
+            return n.StartsWith("@") ? n : "@" + n;
         }
 		
 		public virtual void AddParameter(DbCommand cmd, string parameterAlias, string value)
@@ -26,7 +27,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 			var prm = cmd.CreateParameter();
 			prm.ParameterName = NormName(parameterAlias);
             prm.DbType = DbType.String;
-			prm.Value = value;
+            prm.Value = value == null ? SqlString.Null : new SqlString(value);
             cmd.Parameters.Add(prm);
 		}
 		public virtual void AddParameter(DbCommand cmd, string parameterAlias, int? value)
@@ -65,7 +66,18 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		        cmd.ExecuteNonQuery();
 		    }
 		}
-		
+
+
+        public static string DumpCommandParams(DbCommand cmd)
+        {
+            var sb = new StringBuilder();
+            foreach (DbParameter p in cmd.Parameters)
+            {
+                if (sb.Length > 0) sb.Append(", ");
+                sb.AppendFormat("{0}={1}", p.ParameterName, p.Value);
+            }
+            return sb.ToString();
+        }
         
     }
     
