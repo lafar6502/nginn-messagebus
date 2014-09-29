@@ -11,70 +11,7 @@ namespace NGinnBPM.MessageBus.Impl
 {
     public class SqlUtil
     {
-        #region SQL
-        /// <summary>
-        /// Add db command parameter
-        /// </summary>
-        /// <param name="cmd"></param>
-        /// <param name="name"></param>
-        /// <param name="value"></param>
-        public static void AddParameter(IDbCommand cmd, string name, string value)
-        {
-            IDbDataParameter prm = cmd.CreateParameter();
-            prm.ParameterName = name;
-            prm.Value = value == null ? SqlString.Null : value;
-            prm.DbType = DbType.AnsiString;
-            cmd.Parameters.Add(prm);
-        }
-
-        public static void AddParameter(IDbCommand cmd, string name, DateTime? value)
-        {
-            IDbDataParameter prm = cmd.CreateParameter();
-            prm.ParameterName = name;
-            prm.Value = value.HasValue ? new SqlDateTime(value.Value) : SqlDateTime.Null;
-            prm.DbType = DbType.DateTime;
-            cmd.Parameters.Add(prm);
-        }
-
-        public static void AddParameter(IDbCommand cmd, string name, long val)
-        {
-            IDbDataParameter prm = cmd.CreateParameter();
-            prm.ParameterName = name;
-            prm.Value = val;
-            prm.DbType = DbType.Int64;
-            cmd.Parameters.Add(prm);
-        }
-
-        public static void AddParameter(IDbCommand cmd, string name, int? value)
-        {
-            IDataParameter para = cmd.CreateParameter();
-            para.DbType = DbType.Int32;
-            para.Value = value.HasValue ? new System.Data.SqlTypes.SqlInt32(value.Value) : new System.Data.SqlTypes.SqlInt32();
-            para.Direction = ParameterDirection.Input;
-            para.ParameterName = name;
-            cmd.Parameters.Add(para);
-        }
-
-        public static void AddParameter(IDbCommand cmd, string name, object val, DbType paramType)
-        {
-            IDbDataParameter prm = cmd.CreateParameter();
-            prm.ParameterName = name;
-            prm.Value = val;
-            prm.DbType = paramType;
-            cmd.Parameters.Add(prm);
-        }
-
-        public static void AddParameter(IDbCommand cmd, string name, byte[] value)
-        {
-            IDbDataParameter prm = cmd.CreateParameter();
-            prm.ParameterName = name;
-            prm.Value = value;
-            prm.DbType = DbType.Binary;
-            cmd.Parameters.Add(prm);
-        }
-
-        #endregion
-
+        
         public static bool IsSameDatabaseConnection(string connectionString1, string connectionString2)
         {
             if (string.Equals(connectionString1, connectionString2, StringComparison.InvariantCultureIgnoreCase)) return true;

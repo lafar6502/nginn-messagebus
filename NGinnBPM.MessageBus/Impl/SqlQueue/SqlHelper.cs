@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using System.IO;
 using System.Text;
+using System.Configuration;
 
 namespace NGinnBPM.MessageBus.Impl.SqlQueue
 {
@@ -40,6 +41,11 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		    ISqlAbstractions ret;
 		    return _abstr.TryGetValue(dialect, out ret) ? ret : null;
 		}
+
+        public static ISqlAbstractions GetSqlAbstraction(DbConnection conn)
+        {
+            return GetSqlAbstraction(GetDialect(conn.GetType()));
+        }
 		
 		protected static Dictionary<string, string> ReadNamedQueryResource(string dialect)
 		{
@@ -48,7 +54,13 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		        return JsonConvert.DeserializeObject<Dictionary<string, string>>(new StreamReader(stm, Encoding.UTF8).ReadToEnd());
 		    }
 		}
-		
+
+        public static string FormatSqlQuery(string queryId, string dialect, params object[] prm)
+        {
+            var q = GetNamedSqlQuery(queryId, dialect);
+            return string.Format(q, prm);
+        }
+
 		public static string GetNamedSqlQuery(string queryId, string dialect)
 		{
 		    var d = _namedQueries;
@@ -115,5 +127,33 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		    if (dialect == "oracle") return new OracleQueueOps();
 		    return new CommonQueueOps(dialect);
 		}
+
+        public static DbConnection OpenConnection(string connectionString, string dbProvider = null)
+        {
+            var cs = ConfigurationManager.ConnectionStrings[connectionString];
+            if (cs != null)
+            {
+                dbProvider = cs.ProviderName;
+                connectionString = cs.ConnectionString;
+            };
+            if (dbProvider == null) dbProvider = "System.Data.SqlClient";
+            var cn = DbProviderFactories.GetFactory(dbProvider).CreateConnection();
+            try
+            {
+                cn.ConnectionString = connectionString;
+                cn.Open();
+                return cn;
+            }
+            catch(Exception)
+            {
+                cn.Dispose();
+                throw; 
+            }
+        }
+
+        public static DbConnection OpenConnection(ConnectionStringSettings cs)
+        {
+            return OpenConnection(cs.ConnectionString, cs.ProviderName);
+        }
 	}
 }

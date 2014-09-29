@@ -4,8 +4,10 @@ using System.Linq;
 using System.Text;
 using NGinnBPM.MessageBus;
 using System.Data.SqlClient;
-using System.Data;
+using System.Data.Common;
 using System.Data.SqlTypes;
+using System.Data;
+using NGinnBPM.MessageBus.Impl.SqlQueue;
 using NLog;
 using System.IO;
 
@@ -23,9 +25,11 @@ namespace NGinnBPM.MessageBus.Impl
             SubscriptionTableName = "NGinnMessageBus_Subscriptions";
             AutoCreateSubscriptionTable = true;
             CacheExpiration = TimeSpan.FromMinutes(60); //1-hour expiration
+            DbProvider = "System.Data.SqlClient";
         }
 
         public string ConnectionString { get; set; }
+        public string DbProvider { get; set; }
 
         public string SubscriptionTableName { get; set; }
         public string Endpoint { get; set; }
@@ -36,18 +40,11 @@ namespace NGinnBPM.MessageBus.Impl
         private DateTime _lastCacheLoad = DateTime.Now;
         private static string[] empty = new string[0];
 
-        private IDbConnection OpenConnection()
-        {
-            SqlConnection con = new SqlConnection(ConnectionString);
-            con.Open();
-            return con;
-        }
-
         #region ISubscriptionService Members
 
-        protected void AccessDb(Action<IDbConnection> act)
+        protected void AccessDb(Action<DbConnection> act)
         {
-            var cn = MessageBusContext.ReceivingConnection as IDbConnection;
+            var cn = MessageBusContext.ReceivingConnection as DbConnection;
             if (cn != null
                 && (ConnectionString == null || SqlUtil.IsSameDatabaseConnection(cn.ConnectionString, ConnectionString))
                 && cn.State == ConnectionState.Open)
@@ -56,7 +53,7 @@ namespace NGinnBPM.MessageBus.Impl
             }
             else
             {
-                using (var cn2 = OpenConnection())
+                using (var cn2 = SqlHelper.OpenConnection(ConnectionString, DbProvider))
                 {
                     act(cn2);
                 }
@@ -74,13 +71,15 @@ namespace NGinnBPM.MessageBus.Impl
             var c = _cache;
             if (c == null)
             {
-                AccessDb(delegate(IDbConnection con)
+                AccessDb(delegate(DbConnection con)
                 {
+                    var sq = SqlHelper.GetSqlAbstraction(con);
                     c = new Dictionary<string, List<string>>();
-                    using (IDbCommand cmd = con.CreateCommand())
+                    using (DbCommand cmd = con.CreateCommand())
                     {
-                        cmd.CommandText = string.Format("select subscriber_endpoint, message_type from {0} where publisher_endpoint=@pub and (expiration_date is null or expiration_date >= getdate())", SubscriptionTableName);
-                        SqlUtil.AddParameter(cmd, "@pub", Endpoint);
+                        var qry = SqlHelper.GetNamedSqlQuery("SqlSubscriptionService_GetSubscriptions", SqlHelper.GetDialect(con.GetType()));
+                        cmd.CommandText = string.Format(qry, SubscriptionTableName);
+                        sq.AddParameter(cmd, "pub", Endpoint);
 
                         using (IDataReader dr = cmd.ExecuteReader())
                         {
@@ -106,25 +105,27 @@ namespace NGinnBPM.MessageBus.Impl
         {
             InitializeIfNeeded();
             if (expiration.HasValue && expiration.Value < DateTime.Now) return;
-            AccessDb(delegate(IDbConnection con)
+            AccessDb(delegate(DbConnection con)
             {
-                using (IDbCommand cmd = con.CreateCommand())
+                var sq = SqlHelper.GetSqlAbstraction(con);
+                string dialect = SqlHelper.GetDialect(con.GetType());
+                using (DbCommand cmd = con.CreateCommand())
                 {
-                    cmd.CommandText = string.Format("update {0} set expiration_date=@expiration where publisher_endpoint=@pub and subscriber_endpoint=@sub and message_type=@mtype", SubscriptionTableName);
-                    SqlUtil.AddParameter(cmd, "@pub", Endpoint);
-                    SqlUtil.AddParameter(cmd, "@sub", subscriberEndpoint);
-                    SqlUtil.AddParameter(cmd, "@mtype", messageType);
-                    SqlUtil.AddParameter(cmd, "@expiration", expiration);
+                    cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSubscriptionService_UpdateSubscription", dialect), SubscriptionTableName);
+                    sq.AddParameter(cmd, "pub", Endpoint);
+                    sq.AddParameter(cmd, "sub", subscriberEndpoint);
+                    sq.AddParameter(cmd, "mtype", messageType);
+                    sq.AddParameter(cmd, "expiration", expiration);
 
                     var rows = cmd.ExecuteNonQuery();
                     if (rows == 0)
                     {
-                        cmd.CommandText = string.Format("insert into {0} (publisher_endpoint, subscriber_endpoint, message_type, created_date, expiration_date) values(@pub, @sub, @mtype, getdate(), @expiration)", SubscriptionTableName);
+                        cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSubscriptionService_InsertSubscription", dialect), SubscriptionTableName);
                         cmd.Parameters.Clear();
-                        SqlUtil.AddParameter(cmd, "@pub", Endpoint);
-                        SqlUtil.AddParameter(cmd, "@sub", subscriberEndpoint);
-                        SqlUtil.AddParameter(cmd, "@mtype", messageType);
-                        SqlUtil.AddParameter(cmd, "@expiration", expiration);
+                        sq.AddParameter(cmd, "@pub", Endpoint);
+                        sq.AddParameter(cmd, "@sub", subscriberEndpoint);
+                        sq.AddParameter(cmd, "@mtype", messageType);
+                        sq.AddParameter(cmd, "@expiration", expiration);
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -135,14 +136,16 @@ namespace NGinnBPM.MessageBus.Impl
         public void Unsubscribe(string subscriberEndpoint, string messageType)
         {
             InitializeIfNeeded();
-            AccessDb(delegate(IDbConnection con)
+            AccessDb(delegate(DbConnection con)
             {
-                using (IDbCommand cmd = con.CreateCommand())
+                var sq = SqlHelper.GetSqlAbstraction(con);
+                string dialect = SqlHelper.GetDialect(con.GetType());
+                using (DbCommand cmd = con.CreateCommand())
                 {
-                    cmd.CommandText = string.Format("delete {0} where publisher_endpoint=:pub and subscriber_endpoint=:sub and message_type=:mtype", this.SubscriptionTableName);
-                    SqlUtil.AddParameter(cmd, ":pub", Endpoint);
-                    SqlUtil.AddParameter(cmd, ":sub", subscriberEndpoint);
-                    SqlUtil.AddParameter(cmd, ":mtype", messageType);
+                    cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSubscriptionService_DeleteSubscription", dialect), this.SubscriptionTableName);
+                    sq.AddParameter(cmd, "pub", Endpoint);
+                    sq.AddParameter(cmd, "sub", subscriberEndpoint);
+                    sq.AddParameter(cmd, "mtype", messageType);
                     cmd.ExecuteNonQuery();
                 }
             });
@@ -157,14 +160,12 @@ namespace NGinnBPM.MessageBus.Impl
             using (Stream stm = typeof(SqlSubscriptionService).Assembly.GetManifestResourceStream("NGinnBPM.MessageBus.create_subscribertable.mssql.sql"))
             {
                 StreamReader sr = new StreamReader(stm);
-                AccessDb(delegate(IDbConnection con)
+                AccessDb(delegate(DbConnection con)
                 {
-                    using (IDbCommand cmd = con.CreateCommand())
-                    {
-                        string txt = sr.ReadToEnd();
-                        cmd.CommandText = string.Format(txt, SubscriptionTableName);
-                        cmd.ExecuteNonQuery();
-                    }
+                    var sq = SqlHelper.GetSqlAbstraction(con);
+                    string txt = sr.ReadToEnd();
+                    txt = string.Format(txt, SubscriptionTableName);
+                    sq.ExecuteDDLBatch(con, txt);
                 });
             }
         }
@@ -197,14 +198,16 @@ namespace NGinnBPM.MessageBus.Impl
         public void HandleSubscriptionExpirationIfNecessary(string subscriberEndpoint, string messageType)
         {
             InitializeIfNeeded();
-            AccessDb(delegate(IDbConnection con)
+            AccessDb(delegate(DbConnection con)
             {
-                using (IDbCommand cmd = con.CreateCommand())
+                var sq = SqlHelper.GetSqlAbstraction(con);
+                string dialect = SqlHelper.GetDialect(con.GetType());
+                using (DbCommand cmd = con.CreateCommand())
                 {
-                    cmd.CommandText = string.Format("delete {0} where publisher_endpoint=@pub and subscriber_endpoint=@sub and message_type=@mtype and expiration_date <= getdate()", SubscriptionTableName);
-                    SqlUtil.AddParameter(cmd, "@pub", Endpoint);
-                    SqlUtil.AddParameter(cmd, "@sub", subscriberEndpoint);
-                    SqlUtil.AddParameter(cmd, "@mtype", messageType);
+                    cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSubscriptionService_ExpireSubscriptions", dialect), SubscriptionTableName);
+                    sq.AddParameter(cmd, "pub", Endpoint);
+                    sq.AddParameter(cmd, "sub", subscriberEndpoint);
+                    sq.AddParameter(cmd, "mtype", messageType);
 
                     var rows = cmd.ExecuteNonQuery();
                     if (rows == 0) return;

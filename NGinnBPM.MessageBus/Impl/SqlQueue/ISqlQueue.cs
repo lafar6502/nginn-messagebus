@@ -30,6 +30,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 	
 	public interface ISqlAbstractions
 	{
+        string Dialect { get; }
 		void AddParameter(DbCommand cmd, string parameterAlias, string value);
 		void AddParameter(DbCommand cmd, string parameterAlias, int? value);
 		void AddParameter(DbCommand cmd, string parameterAlias, DateTime? value);

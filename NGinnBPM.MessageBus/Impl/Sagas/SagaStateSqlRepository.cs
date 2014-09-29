@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Data.Common;
 using Newtonsoft.Json;
+using NGinnBPM.MessageBus.Impl.SqlQueue;
 using System.IO;
 using NLog;
 
@@ -69,7 +70,7 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
             else
             {
                 if (string.IsNullOrEmpty(ConnectionString)) throw new Exception("Connection string is not set");
-                using (cn = SqlUtil.OpenConnection(ConnectionString, ProviderName))
+                using (cn = SqlHelper.OpenConnection(ConnectionString, ProviderName))
                 {
                     act(cn);
                 }
@@ -82,10 +83,13 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
             string s = null, v = null;
             AccessDb(delegate(DbConnection con)
             {
+                var sq = SqlHelper.GetSqlAbstraction(con);
                 using (var cmd = con.CreateCommand())
                 {
-                    cmd.CommandText = string.Format("select data, version from {0} where id=@id", forUpdate ? TableName + " with(updlock) " : TableName);
-                    SqlUtil.AddParameter(cmd, "@id", id);
+                    cmd.CommandText = string.Format("select data, version from {0} where id=@id", TableName);
+                    if (forUpdate) cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSagaStateRepository_SelectWithLock", sq.Dialect), TableName);
+                    sq.AddParameter(cmd, "id", id);
+
                     using (var dr = cmd.ExecuteReader())
                     {
                         if (!dr.Read()) return;
@@ -107,15 +111,16 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
             _ser.Serialize(sw, state);
             AccessDb(delegate(DbConnection con)
             {
+                var sq = SqlHelper.GetSqlAbstraction(con);
                 using (var cmd = con.CreateCommand())
                 {
                     string newVersion = (Int32.Parse(updatedVersion) + 1).ToString();
-                    cmd.CommandText = string.Format("update {0} set data=@data, version=@newVersion, last_updated=@updateDate where id=@id and version=@version", TableName);
-                    SqlUtil.AddParameter(cmd, "@id", id);
-                    SqlUtil.AddParameter(cmd, "@version", updatedVersion);
-                    SqlUtil.AddParameter(cmd, "@newVersion", newVersion);
-                    SqlUtil.AddParameter(cmd, "@data", sw.ToString());
-                    SqlUtil.AddParameter(cmd, "@updateDate", DateTime.Now);
+                    cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSagaStateRepository_UpdateSaga", sq.Dialect), TableName);
+                    sq.AddParameter(cmd, "id", id);
+                    sq.AddParameter(cmd, "version", updatedVersion);
+                    sq.AddParameter(cmd, "newVersion", newVersion);
+                    sq.AddParameter(cmd, "data", sw.ToString());
+                    sq.AddParameter(cmd, "updateDate", DateTime.Now);
 
                     if (cmd.ExecuteNonQuery() == 0)
                     {
@@ -129,10 +134,11 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
         {
             AccessDb(delegate(DbConnection con)
             {
+                var sq = SqlHelper.GetSqlAbstraction(con);
                 using (var cmd = con.CreateCommand())
                 {
-                    cmd.CommandText = string.Format("delete {0} where id=@id", TableName);
-                    SqlUtil.AddParameter(cmd, "@id", id);
+                    cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSagaStateRepository_DeleteSaga", sq.Dialect), TableName);
+                    sq.AddParameter(cmd, "id", id);
                     if (cmd.ExecuteNonQuery() == 0)
                     {
                         //
@@ -147,13 +153,14 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
             _ser.Serialize(sw, state);
             AccessDb(delegate(DbConnection con)
             {
+                var sq = SqlHelper.GetSqlAbstraction(con);
                 using (var cmd = con.CreateCommand())
                 {
-                    cmd.CommandText = string.Format("insert into {0}(id, data, version, created_date, last_updated) values(@id, @data, @version, @updDate, @updDate)", TableName);
-                    SqlUtil.AddParameter(cmd, "@id", id);
-                    SqlUtil.AddParameter(cmd, "@version", "1");
-                    SqlUtil.AddParameter(cmd, "@data", sw.ToString());
-                    SqlUtil.AddParameter(cmd, "@updDate", DateTime.Now);
+                    cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSagaStateRepository_InsertSaga", sq.Dialect) , TableName);
+                    sq.AddParameter(cmd, "id", id);
+                    sq.AddParameter(cmd, "version", "1");
+                    sq.AddParameter(cmd, "data", sw.ToString());
+                    sq.AddParameter(cmd, "updDate", DateTime.Now);
                     cmd.ExecuteNonQuery();
                 }
             });

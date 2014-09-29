@@ -78,7 +78,12 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             }
             return sb.ToString();
         }
-        
+
+
+        public virtual string Dialect
+        {
+            get { return "sqlserver"; }
+        }
     }
     
     
@@ -110,6 +115,14 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             para.Direction = ParameterDirection.Input;
             para.ParameterName = NormName(parameterAlias);
             cmd.Parameters.Add(para);
+        }
+
+        public override string Dialect
+        {
+            get
+            {
+                return "oracle";
+            }
         }
 		
     }

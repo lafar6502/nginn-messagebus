@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.ComponentModel;
-using System.Data;
+using System.Data.Common;
 using NLog;
 using Newtonsoft.Json;
+using NGinnBPM.MessageBus.Impl.SqlQueue;
+
 
 namespace NGinnBPM.MessageBus.Impl
 {
@@ -68,14 +70,15 @@ namespace NGinnBPM.MessageBus.Impl
             }
         }
 
-        protected void UpdateSequence(string id, IDbConnection conn, Action<SequenceInfo> act)
+        protected void UpdateSequence(string id, DbConnection conn, Action<SequenceInfo> act)
         {
             bool found = false;
             SequenceInfo si = null;
+            var sql = SqlQueue.SqlHelper.GetSqlAbstraction(conn);
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText = string.Format("select data from {0} with(updlock) where id=@id", SequenceTable);
-                SqlUtil.AddParameter(cmd, "@id", id);
+                cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSequenceManager_SelectWithLock", sql.Dialect), SequenceTable);
+                sql.AddParameter(cmd, "id", id);
                 using (var rdr = cmd.ExecuteReader())
                 {
                     if (rdr.Read())
@@ -96,26 +99,26 @@ namespace NGinnBPM.MessageBus.Impl
                 si.LastMessageSeen = DateTime.Now;
                 if (found)
                 {
-                    cmd.CommandText = string.Format("update {0} set data=@json, last_modified=@mdate where id=@id", SequenceTable);
+                    cmd.CommandText = SqlHelper.FormatSqlQuery("SqlSequenceManager_Update", sql.Dialect, SequenceTable);
                 }
                 else
                 {
-                    cmd.CommandText = string.Format("insert into {0} (id, data, last_modified) values(@id, @json, @mdate)", SequenceTable);
+                    cmd.CommandText = SqlHelper.FormatSqlQuery("SqlSequenceManager_Insert", sql.Dialect, SequenceTable);
                 }
                 if (si.Length.HasValue && si.LastProcessedNumber.HasValue && si.LastProcessedNumber.Value >= si.Length.Value - 1)
                 {
                     log.Info("Sequence completed: {0}", si.Id);
                     if (found)
                     {
-                        cmd.CommandText = string.Format("delete {0} where id=@id", SequenceTable);
+                        cmd.CommandText = SqlHelper.FormatSqlQuery("SqlSequenceManager_Delete", sql.Dialect, SequenceTable);
                     }
                     else
                     {
                         return; //nothing to do
                     }
                 }
-                SqlUtil.AddParameter(cmd, "@json", JsonConvert.SerializeObject(si));
-                SqlUtil.AddParameter(cmd, "@mdate", DateTime.Now);
+                sql.AddParameter(cmd, "json", JsonConvert.SerializeObject(si));
+                sql.AddParameter(cmd, "mdate", DateTime.Now);
                 int n = cmd.ExecuteNonQuery();
                 if (n == 0) throw new Exception("Unexpected error - no records were updated");
             }
@@ -128,13 +131,14 @@ namespace NGinnBPM.MessageBus.Impl
         /// <param name="seqNum">0-based number of message in sequence</param>
         /// <param name="tran"></param>
         /// <param name="act"></param>
-        private SequenceMessageDisposition UpdateSequenceInfo(string seqId, int seqNum, int? seqLen, string msgId, IDbConnection con)
+        private SequenceMessageDisposition UpdateSequenceInfo(string seqId, int seqNum, int? seqLen, string msgId, DbConnection con)
         {
             if (string.IsNullOrEmpty(seqId)) throw new ArgumentException("seqId");
             if (seqNum < 0) throw new ArgumentException("seqNum");
 
             var md = new SequenceMessageDisposition();
             md.MessageDispositon = SequenceMessageDisposition.ProcessingDisposition.HandleMessage;
+            
             UpdateSequence(seqId, con, si => {
                 if (seqLen.HasValue) si.Length = seqLen;
                 if (si.LastProcessedNumber.HasValue)
@@ -208,8 +212,8 @@ namespace NGinnBPM.MessageBus.Impl
         public SequenceMessageDisposition SequenceMessageArrived(string seqId, int seqNumber, int? seqLen, object transactionObj, string messageId)
         {
             log.Debug("Seq message arrived. Seq = {0}:{1}, len: {2}", seqId, seqNumber, seqLen);
-            if (!(transactionObj is IDbConnection)) throw new ArgumentException("DB connection expected", "transactionObj");
-            var conn = transactionObj as IDbConnection;
+            if (!(transactionObj is DbConnection)) throw new ArgumentException("DB connection expected", "transactionObj");
+            var conn = transactionObj as DbConnection;
             var ret = UpdateSequenceInfo(seqId, seqNumber, seqLen, messageId, conn);
             return ret;
         }
