@@ -9,7 +9,7 @@
     
     "MoveMessageFromRetryToInput": "update {0} with(readpast, rowlock) set subqueue='I' where id=@id and subqueue='R'",
 	
-    "MarkMessageFailed": "update {0} with(readpast, rowlock) set retry_count = retry_count + {1}, retry_time=@retry_time, error_info=@error_info, last_processed=getdate(), subqueue=@subq where id=@id",
+    "MarkMessageFailed": "update {0} with(readpast, rowlock) set retry_count = retry_count + {1}, retry_time=@retry_time, error_info=@error_info, last_processed=getdate(), subqueue=@subq where id=@id and subqueue in ('I', 'R')",
     
     "CleanupProcessedMessages": "delete top(10000) {0} with(READPAST) where retry_time <= @lmt and subqueue='X'",
     

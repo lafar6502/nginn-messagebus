@@ -72,19 +72,26 @@ namespace Tests
 
                 
                 IMessageBus mb1 = wc1.Resolve<IMessageBus>();
+                string sqid = Guid.NewGuid().ToString();
                 using (var ts = new TransactionScope())
                 {
                 	mb1.Notify(new TestMessage1 { });
                 	mb1.Notify(new TestMessage1 { Id = 32423 });
+                	mb1.NewMessage(new TestMessage1 { Id = 101 }).InSequence(sqid, 0, 4).Publish();
+                	mb1.NewMessage(new TestMessage1 { Id = 103 }).InSequence(sqid, 2, 4).Publish();
+                	mb1.NewMessage(new TestMessage1 { Id = 102 }).InSequence(sqid, 1, 4).Publish();
+                    mb1.NewMessage(new TestMessage1 { Id = 99 }).SetDeliveryDate(DateTime.Now.AddSeconds(10)).Publish();
                 	var m = mb1 as NGinnBPM.MessageBus.Impl.MessageBus;
                 	Console.WriteLine("STATE");
                 	Console.WriteLine(m.GetCurrentTransactionState());
                 	ts.Complete();
                 }
                 Console.ReadLine();
+                SagaTest(wc1);
+                Console.ReadLine();
                 return;
                 //IMessageBus mb2 = wc1.Resolve<IMessageBus>("bus2");
-                //SagaTest(wc1);
+                
                 
                 //IMessageBus mb2 = wc2.Resolve<IMessageBus>();
                 //mb1.SubscribeAt("sql://testdb2/MQueue2", typeof(TestMessage1));
@@ -182,11 +189,11 @@ namespace Tests
             MessageBusConfigurator cfg = MessageBusConfigurator.Begin()
                 .SetConnectionStrings(dbConnectionStrings)
                 .SetEndpoint(endpointName)
-                //.UseSqlSubscriptions()
+                .UseSqlSubscriptions()
                 .UseStaticMessageRouting("Routing.json")
                 //.RegisterHttpMessageServicesFromAssembly(typeof(Program).Assembly)
                 .AddMessageHandlersFromAssembly(typeof(Program).Assembly)
-                //.UseSqlSequenceManager()
+                .UseSqlSequenceManager()
                 .SetEnableSagas(true)
                 .SetSendOnly(false)
                 .SetMaxConcurrentMessages(1)
@@ -285,6 +292,7 @@ namespace Tests
         static void SagaTest(IWindsorContainer wc)
         {
             IMessageBus mb = wc.Resolve<IMessageBus>();
+            mb.SubscribeAt("sql://testdb1/MQueue2", typeof(TestMessage1));
             var id1= "SAGA_1";
             var id2 = "SAGA_2";
             using (TransactionScope ts = new TransactionScope())
