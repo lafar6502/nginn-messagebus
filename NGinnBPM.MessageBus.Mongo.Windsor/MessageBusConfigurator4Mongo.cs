@@ -21,7 +21,13 @@ namespace NGinnBPM.MessageBus.Mongo.Windsor
             string connstr, collection;
             if (!Util.ParseMongoEndpoint(cfg.Endpoint, out connstr, out collection))
                 throw new Exception("Invalid mongo connection string: " + cfg.Endpoint);
-            var cstr = Util.GetMongoConnectionStringForEndpoint(cfg.Endpoint, cfg.GetConnectionStrings());
+            var dic = new Dictionary<string, string>();
+            foreach(var cs in cfg.GetConnectionStrings())
+            {
+                if (cs.Name == null || dic.ContainsKey(cs.Name)) continue;
+                dic[cs.Name] = cs.ConnectionString;
+            }
+            var cstr = Util.GetMongoConnectionStringForEndpoint(cfg.Endpoint, dic);
 
             cfg.CustomizeContainer(wc =>
             {

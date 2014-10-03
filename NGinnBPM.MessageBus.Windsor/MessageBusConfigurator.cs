@@ -10,9 +10,11 @@ using NGinnBPM.MessageBus.Impl;
 using NGinnBPM.MessageBus.Messages;
 using System.Collections;
 using System.Reflection;
+using System.Data.Common;
 using NGinnBPM.MessageBus.Impl.HttpService;
 using NGinnBPM.MessageBus.Sagas;
 using NGinnBPM.MessageBus.Impl.Sagas;
+using NGinnBPM.MessageBus.Impl.SqlQueue;
 using System.Configuration;
 using System.IO;
 
@@ -25,7 +27,7 @@ namespace NGinnBPM.MessageBus.Windsor
     public partial class MessageBusConfigurator 
     {
         private IWindsorContainer _wc;
-        private IDictionary<string, string> _connStrings = new Dictionary<string, string>();
+        private List<ConnectionStringSettings> _connStrings = new List<ConnectionStringSettings>();
         private static Logger log = LogManager.GetCurrentClassLogger();
         
         private bool _useSqlOutputClause = false;
@@ -36,6 +38,8 @@ namespace NGinnBPM.MessageBus.Windsor
         public TimeSpan TransactionTimeout { get; set; }
         public bool AlwaysPublishLocal { get; set; }
         public bool EnableSagas { get; set; }
+        public string DefaultDbProviderName { get;set;}
+        
         private TimeSpan[] _retryTimes = new TimeSpan[] {
             TimeSpan.FromSeconds(30),
             TimeSpan.FromMinutes(3),
@@ -61,6 +65,7 @@ namespace NGinnBPM.MessageBus.Windsor
             AutoCreateQueues = true;
             TransactionTimeout = TimeSpan.FromMinutes(1);
             SubscriptionLifetime = TimeSpan.FromHours(48);
+            DefaultDbProviderName = "System.Data.SqlClient";
         }
 
         /// <summary>
@@ -102,14 +107,19 @@ namespace NGinnBPM.MessageBus.Windsor
         /// <param name="alias"></param>
         /// <param name="connString"></param>
         /// <returns></returns>
-        public  MessageBusConfigurator AddConnectionString(string alias, string connString)
+        public  MessageBusConfigurator AddConnectionString(string alias, string connString, string providerName = null)
         {
-            _connStrings.Add(alias, connString);
+            if (_connStrings.Any(x => x.Name == alias)) throw new Exception("Connection string already added: " + alias);
+            _connStrings.Add(new ConnectionStringSettings {
+                                 Name = alias,
+                                 ConnectionString = connString,
+                                 ProviderName = providerName ?? DefaultDbProviderName
+                             });
             return this;
         }
 
 
-        public IDictionary<string, string> GetConnectionStrings()
+        public IEnumerable<ConnectionStringSettings> GetConnectionStrings()
         {
             return _connStrings;
         }
@@ -160,11 +170,11 @@ namespace NGinnBPM.MessageBus.Windsor
         /// <summary>
         /// Set all connection string aliases at once
         /// </summary>
-        /// <param name="aliasToConnectionString"></param>
+        /// <param name="connStrings"></param>
         /// <returns></returns>
-        public MessageBusConfigurator SetConnectionStrings(IDictionary<string, string> aliasToConnectionString)
+        public MessageBusConfigurator SetConnectionStrings(IEnumerable<ConnectionStringSettings> connStrings)
         {
-            _connStrings = aliasToConnectionString;
+            _connStrings  = new List<ConnectionStringSettings>(connStrings);
             return this;
         }
 
@@ -291,17 +301,17 @@ namespace NGinnBPM.MessageBus.Windsor
             return this;
         }
 
-        private string GetDefaultConnectionString()
+        private ConnectionStringSettings GetDefaultConnectionString()
         {
             if (Endpoint == null || Endpoint.Length == 0) throw new Exception("Configure endpoint first");
-            if (_connStrings == null || _connStrings.Count == 0) throw new Exception("Configure connection strings first");
             string alias, table;
             if (!Impl.SqlUtil.ParseSqlEndpoint(Endpoint, out alias, out table))
                 throw new Exception("Invalid endpoint");
-            string connstr;
-            if (!_connStrings.TryGetValue(alias, out connstr))
+            var cs = _connStrings.FirstOrDefault(x => x.Name == alias);
+            if (cs == null) cs = SqlHelper.GetConnectionString(alias);
+            if (cs == null)
                 throw new Exception("Connection string not defined for alias: " + alias);
-            return connstr;
+            return cs;
         }
 
         /// <summary>
@@ -312,12 +322,13 @@ namespace NGinnBPM.MessageBus.Windsor
         /// <returns></returns>
         public MessageBusConfigurator UseSqlSubscriptions()
         {
-            string connstr = GetDefaultConnectionString();
+            var connstr = GetDefaultConnectionString();
             _wc.Register(Component.For < ISubscriptionService>()
                 .ImplementedBy<NGinnBPM.MessageBus.Impl.SqlSubscriptionService>()
                 .DependsOn(new
                 {
-                    ConnectionString = connstr,
+                    ConnectionString = connstr.ConnectionString,
+                    DbProvider = connstr.ProviderName,
                     AutoCreateSubscriptionTable = true,
                     Endpoint = Endpoint,
                     CacheExpiration = _subscriptionCacheTime
@@ -361,7 +372,6 @@ namespace NGinnBPM.MessageBus.Windsor
         /// <returns></returns>
         public MessageBusConfigurator UseSqlSequenceManager()
         {
-            string connstr = GetDefaultConnectionString();
             _wc.Register(Component.For<ISequenceMessages>()
                 .ImplementedBy<SqlSequenceManager>().LifeStyle.Singleton
                 .DependsOn(new
@@ -1059,15 +1069,17 @@ namespace NGinnBPM.MessageBus.Windsor
                 if (!IsServiceRegistered<ISagaRepository>())
                 {
                     string calias, tmp;
-                    string cs = null;
+                    ConnectionStringSettings cs = null;
                     if (SqlUtil.ParseSqlEndpoint(Endpoint, out calias, out tmp))
                     {
-                        cs = _connStrings.ContainsKey(calias) ? _connStrings[calias] : null;
-                    }
+                        cs = _connStrings.FirstOrDefault(x => x.Name == calias);
+                        if (cs == null) cs = SqlHelper.GetConnectionString(calias);
+                    } else throw new Exception("Endpoint");
                     _wc.Register(Component.For<ISagaRepository>().ImplementedBy<SqlSagaStateRepository>().LifeStyle.Singleton
                         .DependsOn(new
                         {
-                            ConnectionString = cs,
+                            ConnectionString = cs == null ? calias : cs.ConnectionString,
+                            ProviderName = cs == null ? DefaultDbProviderName : cs.ProviderName,
                             TableName = "NG_Sagas",
                             AutoCreateDatabase = AutoCreateQueues
                         }));
@@ -1129,24 +1141,10 @@ namespace NGinnBPM.MessageBus.Windsor
             return this;
         }
 
-        protected System.Data.IDbConnection OpenConnection(string cstring)
+        protected DbConnection OpenConnection(string cstring)
         {
-            string cstr = cstring;
-            string drv = "System.Data.SqlClient";
-            var cs = System.Configuration.ConfigurationManager.ConnectionStrings[cstring];
-            if (cs != null)
-            {
-                cstr = cs.ConnectionString;
-                if (!string.IsNullOrEmpty(cs.ProviderName)) drv = cs.ProviderName;
-            }
-            else if (_connStrings.ContainsKey(cstring))
-            {
-                cstr = _connStrings[cstring];
-            }
-            var fact = System.Data.Common.DbProviderFactories.GetFactory(drv);
-            var con = fact.CreateConnection();
-            con.ConnectionString = cstr;
-            return con;
+            var cs = _connStrings.FirstOrDefault(x => x.Name == cstring);
+            return SqlHelper.OpenConnection(cs == null ? cstring : cs.ConnectionString, cs == null ? null : cs.ProviderName);
         }
         /// <summary>
         /// Read the configuration from app config file

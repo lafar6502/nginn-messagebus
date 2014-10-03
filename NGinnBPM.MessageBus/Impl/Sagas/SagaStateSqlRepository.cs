@@ -63,14 +63,15 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
         protected void AccessDb(Action<DbConnection> act)
         {
             var cn = MessageBusContext.ReceivingConnection as DbConnection;
-            if (cn != null && (string.IsNullOrEmpty(ConnectionString) || SqlUtil.IsSameDatabaseConnection(ConnectionString, cn.ConnectionString)))
+            var cs = SqlHelper.GetConnectionString(this.ConnectionString, this.ProviderName);
+            if (cn != null && (cs == null || SqlHelper.IsSameDatabaseConnection(cn.GetType(), cs.ConnectionString, cn.ConnectionString)))
             {
                 act(cn);
             }
             else
             {
-                if (string.IsNullOrEmpty(ConnectionString)) throw new Exception("Connection string is not set");
-                using (cn = SqlHelper.OpenConnection(ConnectionString, ProviderName))
+                if (cs == null) throw new Exception("Connection string is not set");
+                using (cn = SqlHelper.OpenConnection(cs))
                 {
                     act(cn);
                 }

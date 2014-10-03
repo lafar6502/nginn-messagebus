@@ -15,6 +15,8 @@ using System.Reflection;
 using NGinnBPM.MessageBus.Impl.SqlQueue;
 using System.Collections.Concurrent;
 using System.Data.Common;
+using System.Configuration;
+
 
 namespace NGinnBPM.MessageBus.Impl
 {
@@ -45,7 +47,7 @@ namespace NGinnBPM.MessageBus.Impl
             }
 
             if (sc != null 
-                && SqlUtil.IsSameDatabaseConnection(sc.ConnectionString, ConnectionString)
+                && SqlHelper.IsSameDatabaseConnection(sc.GetType(), sc.ConnectionString, ConnectionString.ConnectionString)
                 && sc.State == ConnectionState.Open)
             {
                 InsertMessageBatchToLocalQueues(sc, messages);
@@ -71,9 +73,8 @@ namespace NGinnBPM.MessageBus.Impl
         protected Logger statLog = LogManager.GetLogger("STAT.SqlMessageTransport2");
         
         private string _connAlias;
-        private Dictionary<string, string> _connStrings = new Dictionary<string,string>();
         private string _queueTable = "MessageQueue";
-        
+        private Dictionary<string, ConnectionStringSettings> _connStrings = new  Dictionary<string, ConnectionStringSettings>();
 
 
         public virtual string Endpoint
@@ -134,16 +135,27 @@ namespace NGinnBPM.MessageBus.Impl
         /// Throttling. Maximum message receiving frequency.
         /// </summary>
         public double? MaxReceiveFrequency { get; set; }
+        
         /// <summary>
-        /// Map alias->connection string used for mapping endpoint name to a database
+        /// DB connnection string configuration, alias names are required
         /// </summary>
-        public IDictionary<string, string> ConnectionStrings
+        public IEnumerable<ConnectionStringSettings> ConnectionStrings
         {
-            get { return _connStrings; }
-            set { _connStrings = new Dictionary<string,string>(value); }
+            get { return _connStrings.Values; }
+            set 
+            {
+                _connStrings.Clear();
+                foreach(var cs in value)
+                {
+                    if (string.IsNullOrEmpty(cs.Name)) continue;
+                    _connStrings[cs.Name] = cs;
+                }
+            }
         }
-
-        public IDictionary ConnectionStringDictionary
+        
+        public string DefaultProviderName { get;set;}
+        
+        /*public IDictionary ConnectionStringDictionary
         {
             get { return _connStrings; }
             set 
@@ -152,18 +164,16 @@ namespace NGinnBPM.MessageBus.Impl
                 foreach (string k in value.Keys)
                     _connStrings[k] = (string)value[k];
             }
-        }
+        }*/
 
         /// <summary>
         /// Connection string for current endpoint
         /// </summary>
-        public string ConnectionString
+        public ConnectionStringSettings ConnectionString
         {
             get
             {
-                string connstr;
-                if (!_connStrings.TryGetValue(_connAlias, out connstr)) return null;
-                return connstr;
+                return GetConnectionString(_connAlias);
             }
         }
 
@@ -292,16 +302,14 @@ namespace NGinnBPM.MessageBus.Impl
 
         private DbConnection OpenConnection(string alias)
         {	
-            string connstr;
-            return _connStrings.TryGetValue(alias, out connstr) ? SqlUtil.OpenConnection(connstr, null) : SqlUtil.OpenConnection(alias, null);
+            var cs = GetConnectionString(alias);
+            if (cs == null) throw new Exception("connection string unknown: " + alias);
+            return SqlHelper.OpenConnection(cs);
         }
         
         private DbConnection OpenConnection()
         {	
-            string connstr;
-            if (!_connStrings.TryGetValue(_connAlias, out connstr))
-                throw new Exception("No connection string for alias " + _connAlias);
-            return SqlUtil.OpenConnection(connstr, null);
+            return OpenConnection(_connAlias);
         }
 
 
@@ -946,6 +954,13 @@ namespace NGinnBPM.MessageBus.Impl
         }
        
 
+        protected ConnectionStringSettings GetConnectionString(string alias)
+        {
+            ConnectionStringSettings cs;
+            if (!_connStrings.TryGetValue(alias, out cs)) cs = ConfigurationManager.ConnectionStrings[alias];
+            if (cs != null && string.IsNullOrEmpty(cs.ProviderName)) cs.ProviderName = DefaultProviderName;
+            return cs;
+        }
         /// <summary>
         /// Forwards message to a remote endpoint
         /// </summary>
@@ -961,8 +976,9 @@ namespace NGinnBPM.MessageBus.Impl
                 l.Add(mc);
                 var d = new Dictionary<string, ICollection<MessageContainer>>();
                 d[table] = l;
-                if (!ConnectionStrings.ContainsKey(alias)) throw new Exception("Unknown connection string alias: " + alias);
-                InsertMessageBatchToLocalDatabaseQueues(this.ConnectionStrings[alias], d);
+                var cs = GetConnectionString(alias);
+                if (cs == null) throw new Exception("Unknown connection string alias: " + alias);
+                InsertMessageBatchToLocalDatabaseQueues(cs, d);
             }
             else
             {
@@ -1055,8 +1071,8 @@ namespace NGinnBPM.MessageBus.Impl
                     string con, tbl;
                     if (SqlUtil.ParseSqlEndpoint(mc.To, out con, out tbl))
                     {
-                        var cs = this._connStrings[con];
-                        if (con == this._connAlias || SqlUtil.IsSameDatabaseConnection(cs, ConnectionString))
+                        var cs = GetConnectionString(con);
+                        if (con == this._connAlias || SqlHelper.IsSameDatabaseConnection(cs.ProviderName, cs.ConnectionString, ConnectionString.ConnectionString))
                         {
                             ICollection<MessageContainer> l = null;
                             if (!dic.TryGetValue(tbl, out l))
@@ -1083,18 +1099,18 @@ namespace NGinnBPM.MessageBus.Impl
         /// <param name="messages"></param>
         /// <param name="serializer">message serializer to use</param>
         /// <returns>id of last message inserted</returns>
-        private void InsertMessageBatchToLocalDatabaseQueues(string connString, IDictionary<string, ICollection<MessageContainer>> messages)
+        private void InsertMessageBatchToLocalDatabaseQueues(ConnectionStringSettings connString, IDictionary<string, ICollection<MessageContainer>> messages)
         {
             var cm = _curMsg;
             if (UseReceiveTransactionForSending && 
                 CurrentConnection != null && 
-                SqlUtil.IsSameDatabaseConnection(CurrentConnection.ConnectionString, connString))
+                SqlHelper.IsSameDatabaseConnection(CurrentConnection.GetType(), CurrentConnection.ConnectionString, connString.ConnectionString))
             {
                 GetQueueOps(CurrentConnection).InsertMessageBatchToLocalDatabaseQueues(CurrentConnection, messages);
             }
             else
             {
-                using (var conn = OpenConnection(connString))
+                using (var conn = SqlHelper.OpenConnection(connString))
                 {
                 	GetQueueOps(conn).InsertMessageBatchToLocalDatabaseQueues(conn, messages);
                 }
@@ -1113,8 +1129,9 @@ namespace NGinnBPM.MessageBus.Impl
             bool b = true;
             if (!SqlUtil.ParseSqlEndpoint(endpoint, out remConn, out remTable)) return false;
             if (!String.Equals(_queueTable, remTable, StringComparison.InvariantCultureIgnoreCase)) return false;
-            if (!_connStrings.ContainsKey(remConn)) return false;
-            if (!SqlUtil.IsSameDatabaseConnection(ConnectionString, _connStrings[remConn])) return false;
+            var cs = GetConnectionString(remConn);
+            if (cs == null) return false;
+            if (!SqlHelper.IsSameDatabaseConnection(cs.ProviderName, ConnectionString.ConnectionString, cs.ConnectionString)) return false;
             return true;
         }
 

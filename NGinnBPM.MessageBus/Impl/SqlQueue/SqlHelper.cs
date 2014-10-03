@@ -128,6 +128,17 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		    return new CommonQueueOps(dialect);
 		}
 
+		public static ConnectionStringSettings GetConnectionString(string connStr, string providerName = null)
+		{
+		    if (connStr == null) return null;
+            var cs = ConfigurationManager.ConnectionStrings[connStr];
+            if (cs != null) return cs;
+            return new ConnectionStringSettings {
+              ConnectionString = connStr,
+              ProviderName = providerName == null ? "System.Data.SqlClient" : providerName
+            };
+		}
+		
         public static DbConnection OpenConnection(string connectionString, string dbProvider = null)
         {
             var cs = ConfigurationManager.ConnectionStrings[connectionString];
@@ -154,6 +165,29 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
         public static DbConnection OpenConnection(ConnectionStringSettings cs)
         {
             return OpenConnection(cs.ConnectionString, cs.ProviderName);
+        }
+        
+        public static bool IsSameDatabaseConnection(DbConnection c1, DbConnection c2)
+        {
+            if (c1.GetType() != c2.GetType()) return false;
+            if (object.Equals(c1, c2)) return true;
+            if (string.Equals(c1.ConnectionString, c2.ConnectionString)) return true;
+            return IsSameDatabaseConnection(c1.GetType(), c1.ConnectionString, c2.ConnectionString);
+            
+        }
+        
+        public static bool IsSameDatabaseConnection(Type connType, string connectionString1, string connectionString2)
+        {
+            var dialect = GetDialect(connType);
+            var abs = GetSqlAbstraction(dialect);
+            return abs.IsSameDatabaseConnection(connectionString1, connectionString2);
+        }
+        
+        public static bool IsSameDatabaseConnection(string providerName, string connectionString1, string connectionString2)
+        {
+            var dialect = GetDialect(providerName);
+            var abs = GetSqlAbstraction(dialect);
+            return abs.IsSameDatabaseConnection(connectionString1, connectionString2);
         }
 	}
 }

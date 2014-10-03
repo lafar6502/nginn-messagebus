@@ -187,7 +187,6 @@ namespace Tests
         public static IWindsorContainer ConfigureMessageBus(string endpointName, IDictionary<string, string> dbConnectionStrings, string httpUrl)
         {
             MessageBusConfigurator cfg = MessageBusConfigurator.Begin()
-                .SetConnectionStrings(dbConnectionStrings)
                 .SetEndpoint(endpointName)
                 .UseSqlSubscriptions()
                 .UseStaticMessageRouting("Routing.json")

@@ -84,6 +84,11 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
         {
             get { return "sqlserver"; }
         }
+
+		public virtual bool IsSameDatabaseConnection(string connectionString1, string connectionString2)
+		{
+		    return string.Equals(connectionString1, connectionString2, StringComparison.InvariantCultureIgnoreCase);
+		}
     }
     
     
