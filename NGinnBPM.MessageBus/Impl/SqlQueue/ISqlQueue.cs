@@ -42,6 +42,10 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 	    /// <param name="query"></param>
 	    void ExecuteDDLBatch(DbConnection con, string query);
 	    bool IsSameDatabaseConnection(string connectionString1, string connectionString2);
+        /// <summary>
+        /// yes, because we can't just create a command in a database independent way
+        /// </summary>
+        DbCommand CreateCommand(DbConnection conn);
 	}
 
 	/// <summary>

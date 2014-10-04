@@ -392,7 +392,14 @@ namespace NGinnBPM.MessageBus.Impl
         /// </summary>
         protected virtual void InitializeQueueTableIfDoesntExist(DbConnection con)
         {
-            SqlHelper.RunDDLFromResource(con, "NGinnBPM.MessageBus.createmqueue.${dialect}.sql", new object[] { _queueTable});
+            try
+            {
+                SqlHelper.RunDDLFromResource(con, "NGinnBPM.MessageBus.createmqueue.${dialect}.sql", new object[] { _queueTable });
+            }
+            catch (DbException ex)
+            {
+                log.Warn("Error initializing queue table: {0}", ex.Message);
+            }
         }
 
         /// <summary>

@@ -42,7 +42,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 			retryTime = null;;
             var mc = new MessageContainer();
             moreMessages = false;        
-            using (DbCommand cmd = conn.CreateCommand())
+            using (DbCommand cmd = _sql.CreateCommand(conn))
             {
                 string sql = string.Format(SqlHelper.GetNamedSqlQuery("SelectAndLockNext1", _dialect), queueTable);
                 cmd.CommandText = sql;
@@ -80,7 +80,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 			DateTime t0 = DateTime.Now;
             var dialect = SqlHelper.GetDialect(conn.GetType());
 			var sql = string.Format(SqlHelper.GetNamedSqlQuery("MarkMessageForProcessingLater", dialect), queueTable);
-            using (DbCommand cmd = conn.CreateCommand())
+            using (DbCommand cmd = _sql.CreateCommand(conn))
             {
                 cmd.CommandText = sql;
                 _sql.AddParameter(cmd, "id", Convert.ToInt64(messageId));
@@ -104,7 +104,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             string qprm = "";
             try
             {
-                using (DbCommand cmd = conn.CreateCommand())
+                using (DbCommand cmd = _sql.CreateCommand(conn))
                 {
                     int cnt = 0;
                     cmd.CommandText = "";
@@ -200,7 +200,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 			string sql = GetSqlFormatString("MoveMessageFromRetryToInput");
 
             sql = string.Format(sql, queueTable);
-            using (DbCommand cmd = conn.CreateCommand())
+            using (DbCommand cmd = _sql.CreateCommand(conn))
             {
                 cmd.CommandText = sql;
                 _sql.AddParameter(cmd, "id", Convert.ToInt64(messageId));
@@ -215,13 +215,14 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             bool ret = true;
             string sql = GetSqlFormatString("MarkMessageFailed");
             sql = string.Format(sql, queueTable, disp == MessageFailureDisposition.RetryDontIncrementRetryCount ? 0 : 1);
-            using (DbCommand cmd = conn.CreateCommand())
+            using (DbCommand cmd = _sql.CreateCommand(conn))
             {
                 cmd.CommandText = sql;
-                _sql.AddParameter(cmd, "id", Convert.ToInt64(messageId));
                 _sql.AddParameter(cmd, "retry_time", retryTime);
                 _sql.AddParameter(cmd, "error_info", errorInfo);
                 _sql.AddParameter(cmd, "subq", disp == MessageFailureDisposition.Fail ? "F" : "R");
+                _sql.AddParameter(cmd, "id", Convert.ToInt64(messageId));
+                
                 int n = cmd.ExecuteNonQuery();
                 if (n != 1)
                 {
@@ -293,7 +294,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		{
 		
 			var lmt = olderThan.HasValue ? olderThan.Value : DateTime.Now.AddDays(-7);
-        	using (DbCommand cmd = conn.CreateCommand())
+        	using (DbCommand cmd = _sql.CreateCommand(conn))
             {
         		cmd.CommandText = string.Format(GetSqlFormatString("CleanupProcessedMessages"), queueTable);
                 _sql.AddParameter(cmd, "lmt", lmt);
@@ -308,7 +309,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 
 			string sql = string.Format(GetSqlFormatString("MoveScheduledMessagesToInputQueue"), queueTable);
             
-            using (DbCommand cmd = conn.CreateCommand())
+            using (DbCommand cmd = _sql.CreateCommand(conn))
             {
                 cmd.CommandText = sql;
                 int n = cmd.ExecuteNonQuery();
@@ -325,7 +326,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
         {
             
 			string sql = string.Format(GetSqlFormatString("GetAverageLatencyMs"), queueTable);
-            using (DbCommand cmd = conn.CreateCommand())
+            using (DbCommand cmd = _sql.CreateCommand(conn))
             {
                 cmd.CommandText = sql;
                 _sql.AddParameter(cmd, "time_limit", DateTime.Now.AddMinutes(-5));
@@ -340,7 +341,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		
 		public void RetryAllFailedMessages(DbConnection conn, string queueTable)
 		{
-			using (DbCommand cmd = conn.CreateCommand())
+			using (DbCommand cmd = _sql.CreateCommand(conn))
             {
 				cmd.CommandText = string.Format(GetSqlFormatString("RetryAllFailedMessages"), queueTable);
                 int rows = cmd.ExecuteNonQuery();
@@ -354,7 +355,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		public int GetSubqeueSize(DbConnection conn, string queueTable, string subqueue)
 		{
 			string sql = string.Format(GetSqlFormatString("GetSubqueueSize"), queueTable, subqueue);
-            using (DbCommand cmd = conn.CreateCommand())
+            using (DbCommand cmd = _sql.CreateCommand(conn))
             {
                 cmd.CommandText = sql;
                 return Convert.ToInt32(cmd.ExecuteScalar());
@@ -363,7 +364,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 
 		public bool MoveMessageToSubqueue(DbConnection conn, string queueTable, string messageId, Subqueue toSubqueue, Subqueue? fromSubqueue)
 		{
-			using (DbCommand cmd = conn.CreateCommand())
+			using (DbCommand cmd = _sql.CreateCommand(conn))
             {
 				cmd.CommandText = string.Format(GetSqlFormatString("MoveMessageToSubqueue"), queueTable);
                 if (fromSubqueue.HasValue) 

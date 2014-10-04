@@ -16,13 +16,13 @@ namespace NGinnBPM.MessageBus.Impl
     /// <summary>
     /// Subscription database 
     /// </summary>
-    public class SqlSubscriptionService : ISubscriptionService
+    public class SqlSubscriptionService : ISubscriptionService, IMessageConsumer<InternalEvents.DatabaseInit>
     {
         private Logger log = LogManager.GetCurrentClassLogger();
 
         public SqlSubscriptionService()
         {
-            SubscriptionTableName = "NGinnMessageBus_Subscriptions";
+            SubscriptionTableName = "NGMB_Subscriptions";
             AutoCreateSubscriptionTable = true;
             CacheExpiration = TimeSpan.FromMinutes(60); //1-hour expiration
             DbProvider = "System.Data.SqlClient";
@@ -156,10 +156,17 @@ namespace NGinnBPM.MessageBus.Impl
 
         protected void InitializeSubscriptionTable()
         {
-            AccessDb(delegate(DbConnection con)
+            try
             {
-                SqlHelper.RunDDLFromResource(con, "NGinnBPM.MessageBus.create_subscribertable.${dialect}.sql", new object[] { SubscriptionTableName });
-            });
+                AccessDb(delegate(DbConnection con)
+                {
+                    SqlHelper.RunDDLFromResource(con, "NGinnBPM.MessageBus.create_subscribertable.${dialect}.sql", new object[] { SubscriptionTableName });
+                });
+            }
+            catch (DbException ex)
+            {
+                log.Warn("Error creating subscription table {0}: {1}", SubscriptionTableName, ex.Message);
+            }
         }
 
         private bool _inited = false;
@@ -208,6 +215,11 @@ namespace NGinnBPM.MessageBus.Impl
                 }
 
             });
+        }
+
+        public void Handle(InternalEvents.DatabaseInit message)
+        {
+            //todo move table creation logic here
         }
     }
 }

@@ -145,6 +145,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             }
             log.Info("Running ddl script: {0}", rcName);
             RunDDL(cn, txt);
+            
         }
 		
 		public static ISqlQueue GetQueueOps(string dialect)

@@ -71,7 +71,7 @@ namespace NGinnBPM.MessageBus.Impl
             bool found = false;
             SequenceInfo si = null;
             var sql = SqlQueue.SqlHelper.GetSqlAbstraction(conn);
-            using (var cmd = conn.CreateCommand())
+            using (var cmd = sql.CreateCommand(conn))
             {
                 cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSequenceManager_SelectWithLock", sql.Dialect), SequenceTable);
                 sql.AddParameter(cmd, "id", id);
@@ -113,8 +113,10 @@ namespace NGinnBPM.MessageBus.Impl
                         return; //nothing to do
                     }
                 }
+                cmd.Parameters.Clear();
                 sql.AddParameter(cmd, "json", JsonConvert.SerializeObject(si));
                 sql.AddParameter(cmd, "mdate", DateTime.Now);
+                sql.AddParameter(cmd, "id", id);
                 int n = cmd.ExecuteNonQuery();
                 if (n == 0) throw new Exception("Unexpected error - no records were updated");
             }
@@ -222,9 +224,9 @@ namespace NGinnBPM.MessageBus.Impl
                 log.Info("Initializing the sequence table {0}", SequenceTable);
                 SqlHelper.RunDDLFromResource(message.Connection, "NGinnBPM.MessageBus.create_seqtable.${dialect}.sql", new object[] { SequenceTable });
             }
-            catch (Exception ex)
+            catch (DbException ex)
             {
-                log.Warn("Failed to create sequence table {0}: {1}", SequenceTable, ex);
+                log.Warn("Failed to create sequence table {0}: {1}", SequenceTable, ex.Message);
             }
         }
     }

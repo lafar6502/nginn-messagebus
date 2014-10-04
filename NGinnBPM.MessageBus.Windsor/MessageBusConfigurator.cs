@@ -323,7 +323,7 @@ namespace NGinnBPM.MessageBus.Windsor
         public MessageBusConfigurator UseSqlSubscriptions()
         {
             var connstr = GetDefaultConnectionString();
-            _wc.Register(Component.For < ISubscriptionService>()
+            _wc.Register(Component.For < ISubscriptionService, IMessageConsumer<Impl.InternalEvents.DatabaseInit>>()
                 .ImplementedBy<NGinnBPM.MessageBus.Impl.SqlSubscriptionService>()
                 .DependsOn(new
                 {

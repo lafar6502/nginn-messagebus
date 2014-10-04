@@ -64,10 +64,8 @@ namespace Tests
                 ///Map database alias to database connection string, so then you can use 
                 ///the alias when referring to a queue: e.g. sql://testdb1/Queue1
                 Dictionary<string, string> connStrings = new Dictionary<string,string>();
-                connStrings["testdb1"] = "Data Source=(local);Initial Catalog=NGinn;User Id=nginn;Password=PASS";
-                connStrings["testdb2"] = "Data Source=(local);Initial Catalog=NGinn;User Id=nginn;Password=PASS";
-                ///configure two containers with two message buses
-                IWindsorContainer wc1 = ConfigureMessageBus("sql://testdb1/MQueue1", connStrings, null);
+                 ///configure two containers with two message buses
+                IWindsorContainer wc1 = ConfigureMessageBus("sql://oradb/MQueue1", connStrings, null);
                 
                 //IWindsorContainer wc2 = ConfigureMessageBus("sql://testdb2/MQueue2", connStrings, null);
 

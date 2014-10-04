@@ -50,8 +50,7 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
                 }
                 catch (Exception ex)
                 {
-                    log.Error("Error initializing the saga table {0}: {1}", TableName, ex);
-                    throw;
+                    log.Warn("Error initializing the saga table {0}: {1}", TableName, ex.Message);
                 }
                 finally
                 {

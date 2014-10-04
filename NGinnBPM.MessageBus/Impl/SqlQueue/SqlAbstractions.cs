@@ -7,6 +7,7 @@ using System.Data;
 using System.Data.SqlClient;
 using NLog;
 using System.Text;
+using System.IO;
 
 namespace NGinnBPM.MessageBus.Impl.SqlQueue
 {
@@ -59,7 +60,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             cmd.Parameters.Add(para);
 		}
 		
-		public void ExecuteDDLBatch(DbConnection con, string query)
+		public virtual void ExecuteDDLBatch(DbConnection con, string query)
 		{
 		    using (var cmd = con.CreateCommand())
 		    {
@@ -101,6 +102,12 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             return false;
 
 		}
+
+
+        public virtual DbCommand CreateCommand(DbConnection conn)
+        {
+            return conn.CreateCommand();
+        }
     }
     
     
@@ -145,6 +152,56 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
         public override bool IsSameDatabaseConnection(string connectionString1, string connectionString2)
         {
             return string.Equals(connectionString1, connectionString2, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        public static readonly string DDL_Statement_Separator = "--- --- ---";
+
+        public override void ExecuteDDLBatch(DbConnection con, string query)
+        {
+            var sb = new StringBuilder();
+            var sr = new StringReader(query);
+            
+            using (var cmd = con.CreateCommand())
+            {
+                Action<string> exec = s =>
+                {
+                    try
+                    {
+                        cmd.CommandText = s;
+                        cmd.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Warn("Error executing {0}: {1}", s, ex.Message);
+                        throw;
+                    }
+                };
+                string line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    if (line.Trim() == DDL_Statement_Separator)
+                    {
+                        exec(sb.ToString());
+                        sb = new StringBuilder();
+                    }
+                    else
+                    {
+                        sb.AppendLine(line);
+                    }
+                }
+                if (sb.Length > 0)
+                {
+                    exec(sb.ToString());
+                }
+            }
+        }
+
+        public override DbCommand CreateCommand(DbConnection conn)
+        {
+            var cmd = conn.CreateCommand();
+            var pi = cmd.GetType().GetProperty("BindByName");
+            if (pi != null) pi.SetValue(cmd, true);
+            return cmd;
         }
 		
     }

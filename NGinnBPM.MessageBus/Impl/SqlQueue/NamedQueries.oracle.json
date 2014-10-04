@@ -9,7 +9,7 @@
     
     "MoveMessageFromRetryToInput": "update {0} set subqueue='I' where id=:id and subqueue='R'",
 	
-    "MarkMessageFailed": "update {0} set retry_count = retry_count + {1}, retry_time=:retry_time, error_info=:error_info, last_processed=SYSDATE, subqueue=:subq where id=:id and subqueue in ('I', 'R')",
+    "MarkMessageFailed": "update {0} set retry_count = retry_count + {1}, retry_time= :retry_time, error_info=:error_info, last_processed=SYSDATE, subqueue=:subq where id=:id and subqueue in ('I', 'R')",
     
     "CleanupProcessedMessages": "delete {0} where retry_time <= :lmt and subqueue='X' and ROWNUM <= 10000",
     
@@ -25,20 +25,20 @@
 	
 	
 	
-	"SqlSubscriptionService_GetSubscriptions" : "select subscriber_endpoint, message_type from {0} where publisher_endpoint=@pub and (expiration_date is null or expiration_date >= getdate())",
-	"SqlSubscriptionService_UpdateSubscription" : "update {0} set expiration_date=@expiration where publisher_endpoint=@pub and subscriber_endpoint=@sub and message_type=@mtype",
-	"SqlSubscriptionService_InsertSubscription" : "insert into {0} (publisher_endpoint, subscriber_endpoint, message_type, created_date, expiration_date) values(@pub, @sub, @mtype, getdate(), @expiration)",
+	"SqlSubscriptionService_GetSubscriptions" : "select subscriber_endpoint, message_type from {0} where publisher_endpoint=:pub and (expiration_date is null or expiration_date >= SYSDATE)",
+	"SqlSubscriptionService_UpdateSubscription" : "update {0} set expiration_date=:expiration where publisher_endpoint=:pub and subscriber_endpoint=:sub and message_type=:mtype",
+	"SqlSubscriptionService_InsertSubscription" : "insert into {0} (publisher_endpoint, subscriber_endpoint, message_type, created_date, expiration_date) values(:pub, :sub, :mtype, SYSDATE, :expiration)",
 	"SqlSubscriptionService_DeleteSubscription" : "delete {0} where publisher_endpoint=:pub and subscriber_endpoint=:sub and message_type=:mtype",
-    "SqlSubscriptionService_ExpireSubscriptions" : "delete {0} where publisher_endpoint=@pub and subscriber_endpoint=@sub and message_type=@mtype and expiration_date <= getdate()",
+    "SqlSubscriptionService_ExpireSubscriptions" : "delete {0} where publisher_endpoint=:pub and subscriber_endpoint=:sub and message_type=:mtype and expiration_date <= SYSDATE",
 
 	"SqlSagaStateRepository_SelectWithLock" : "select data, version from {0} with(rowlock) where id=@id",
 	"SqlSagaStateRepository_UpdateSaga" : "update {0} set data=@data, version=@newVersion, last_updated=@updateDate where id=@id and version=@version",
 	"SqlSagaStateRepository_DeleteSaga" : "delete {0} where id=@id",
 	"SqlSagaStateRepository_InsertSaga" : "insert into {0} (id, data, version, created_date, last_updated) values(@id, @data, @version, @updDate, @updDate)",
 	
-	"SqlSequenceManager_SelectWithLock" : "select data from {0} with(updlock) where id=@id",
-	"SqlSequenceManager_Update" : "update {0} set data=@json, last_modified=@mdate where id=@id",
-	"SqlSequenceManager_Insert" : "insert into {0} (id, data, last_modified) values(@id, @json, @mdate)",
-	"SqlSequenceManager_Delete" : "delete {0} where id=@id"
+	"SqlSequenceManager_SelectWithLock" : "select data from {0} where id=:id for update",
+	"SqlSequenceManager_Update" : "update {0} set data=:json, last_modified=:mdate where id=:id",
+	"SqlSequenceManager_Insert" : "insert into {0} (id, data, last_modified) values(:id, :json, :mdate)",
+	"SqlSequenceManager_Delete" : "delete {0} where id=:id"
     
 }

@@ -24,9 +24,8 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             var tm = Stopwatch.StartNew();
             var allMessages = new List<MessageContainer>();
         
-            using (DbCommand cmd = conn.CreateCommand())
+            using (DbCommand cmd = _sql.CreateCommand(conn))
             {
-                int cnt = 0;
                 foreach (string tableName in messages.Keys)
                 {
                     ICollection<MessageContainer> lmc = messages[tableName];
@@ -48,9 +47,9 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
                         string s = mw.ToString();
                         if (string.IsNullOrEmpty(s)) s = mw.Body == null ? "" : mw.Body.ToString();
                         if (s.Length > 100) s = s.Substring(0, 100);
-                        _sql.AddParameter(cmd, "label" + cnt, s);
-                        _sql.AddParameter(cmd, "headers" + cnt, HeadersToString(headers));
-                        _sql.AddParameter(cmd, "unique_id" + cnt, mw.UniqueId);
+                        _sql.AddParameter(cmd, "label", s);
+                        _sql.AddParameter(cmd, "headers", HeadersToString(headers));
+                        _sql.AddParameter(cmd, "unique_id", mw.UniqueId);
                         cmd.ExecuteNonQuery();
                         cmd.Parameters.Clear();
                     }
