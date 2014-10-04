@@ -108,6 +108,12 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
         {
             return conn.CreateCommand();
         }
+
+
+        public virtual bool IsSameDatabaseConnection(DbConnection conn, string connectionString)
+        {
+            return IsSameDatabaseConnection(conn.ConnectionString, connectionString);
+        }
     }
     
     
@@ -149,10 +155,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             }
         }
 
-        public override bool IsSameDatabaseConnection(string connectionString1, string connectionString2)
-        {
-            return string.Equals(connectionString1, connectionString2, StringComparison.InvariantCultureIgnoreCase);
-        }
+        
 
         public static readonly string DDL_Statement_Separator = "--- --- ---";
 

@@ -63,7 +63,7 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
         {
             var cn = MessageBusContext.ReceivingConnection as DbConnection;
             var cs = SqlHelper.GetConnectionString(this.ConnectionString, this.ProviderName);
-            if (cn != null && (cs == null || SqlHelper.IsSameDatabaseConnection(cn.GetType(), cs.ConnectionString, cn.ConnectionString)))
+            if (cn != null && (cs == null || SqlHelper.IsSameDatabaseConnection(cn, cs.ConnectionString)))
             {
                 act(cn);
             }
@@ -84,7 +84,7 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
             AccessDb(delegate(DbConnection con)
             {
                 var sq = SqlHelper.GetSqlAbstraction(con);
-                using (var cmd = con.CreateCommand())
+                using (var cmd = sq.CreateCommand(con))
                 {
                     cmd.CommandText = string.Format("select data, version from {0} where id=@id", TableName);
                     if (forUpdate) cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSagaStateRepository_SelectWithLock", sq.Dialect), TableName);
@@ -112,7 +112,7 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
             AccessDb(delegate(DbConnection con)
             {
                 var sq = SqlHelper.GetSqlAbstraction(con);
-                using (var cmd = con.CreateCommand())
+                using (var cmd = sq.CreateCommand(con))
                 {
                     string newVersion = (Int32.Parse(updatedVersion) + 1).ToString();
                     cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSagaStateRepository_UpdateSaga", sq.Dialect), TableName);
@@ -135,7 +135,7 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
             AccessDb(delegate(DbConnection con)
             {
                 var sq = SqlHelper.GetSqlAbstraction(con);
-                using (var cmd = con.CreateCommand())
+                using (var cmd = sq.CreateCommand(con))
                 {
                     cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSagaStateRepository_DeleteSaga", sq.Dialect), TableName);
                     sq.AddParameter(cmd, "id", id);
@@ -154,7 +154,7 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
             AccessDb(delegate(DbConnection con)
             {
                 var sq = SqlHelper.GetSqlAbstraction(con);
-                using (var cmd = con.CreateCommand())
+                using (var cmd = sq.CreateCommand(con))
                 {
                     cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSagaStateRepository_InsertSaga", sq.Dialect) , TableName);
                     sq.AddParameter(cmd, "id", id);

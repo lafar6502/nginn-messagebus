@@ -41,6 +41,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 	    /// <param name="con"></param>
 	    /// <param name="query"></param>
 	    void ExecuteDDLBatch(DbConnection con, string query);
+        bool IsSameDatabaseConnection(DbConnection conn, string connectionString);
 	    bool IsSameDatabaseConnection(string connectionString1, string connectionString2);
         /// <summary>
         /// yes, because we can't just create a command in a database independent way

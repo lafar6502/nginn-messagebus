@@ -194,7 +194,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             return OpenConnection(cs.ConnectionString, cs.ProviderName);
         }
         
-        public static bool IsSameDatabaseConnection(DbConnection c1, DbConnection c2)
+        private static bool IsSameDatabaseConnection(DbConnection c1, DbConnection c2)
         {
             if (c1.GetType() != c2.GetType()) return false;
             if (object.Equals(c1, c2)) return true;
@@ -202,8 +202,14 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             return IsSameDatabaseConnection(c1.GetType(), c1.ConnectionString, c2.ConnectionString);
             
         }
-        
-        public static bool IsSameDatabaseConnection(Type connType, string connectionString1, string connectionString2)
+
+        public static bool IsSameDatabaseConnection(DbConnection conn, string connStr)
+        {
+            var abs = GetSqlAbstraction(conn);
+            return abs.IsSameDatabaseConnection(conn, connStr);
+        }
+
+        private static bool IsSameDatabaseConnection(Type connType, string connectionString1, string connectionString2)
         {
             var dialect = GetDialect(connType);
             var abs = GetSqlAbstraction(dialect);

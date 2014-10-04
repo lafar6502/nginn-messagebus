@@ -218,7 +218,7 @@ namespace Tests
                         BaseDirectory = "c:\\inetpub\\wwwroot"
                     }).LifeStyle.Transient);
             });
-            cfg.ConfigureAdditionalSqlMessageBus("bus2", "sql://testdb1/MQueue2");
+            //cfg.ConfigureAdditionalSqlMessageBus("bus2", "sql://testdb1/MQueue2");
             cfg.FinishConfiguration();
             //cfg.StartMessageBus();
 

@@ -40,7 +40,7 @@ namespace NGinnBPM.MessageBus.Impl
     {
         public SqlSequenceManager()
         {
-            SequenceTable = "NGinnMessageBus_Sequences";
+            SequenceTable = "NGMB_Sequences";
         }
 
         public string SequenceTable { get; set; }

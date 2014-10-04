@@ -47,7 +47,7 @@ namespace NGinnBPM.MessageBus.Impl
             }
 
             if (sc != null 
-                && SqlHelper.IsSameDatabaseConnection(sc.GetType(), sc.ConnectionString, ConnectionString.ConnectionString)
+                && SqlHelper.IsSameDatabaseConnection(sc, ConnectionString.ConnectionString)
                 && sc.State == ConnectionState.Open)
             {
                 InsertMessageBatchToLocalQueues(sc, messages);
@@ -255,7 +255,7 @@ namespace NGinnBPM.MessageBus.Impl
             log.Info("***\nDistributed transaction started (Message: {1})! {0}***\n", e.Transaction.TransactionInformation.LocalIdentifier, _curMsg == null ? "none" : _curMsg.Message.BusMessageId);
             if (log.IsDebugEnabled)
             {
-                log.Debug("DT stack: {0}", Environment.StackTrace);
+                //log.Debug("DT stack: {0}", Environment.StackTrace);
             }
         }
 
@@ -1104,7 +1104,7 @@ namespace NGinnBPM.MessageBus.Impl
             var cm = _curMsg;
             if (UseReceiveTransactionForSending && 
                 CurrentConnection != null && 
-                SqlHelper.IsSameDatabaseConnection(CurrentConnection.GetType(), CurrentConnection.ConnectionString, connString.ConnectionString))
+                SqlHelper.IsSameDatabaseConnection(CurrentConnection, connString.ConnectionString))
             {
                 GetQueueOps(CurrentConnection).InsertMessageBatchToLocalDatabaseQueues(CurrentConnection, messages);
             }

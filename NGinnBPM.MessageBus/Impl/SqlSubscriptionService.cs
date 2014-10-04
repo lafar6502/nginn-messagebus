@@ -48,7 +48,7 @@ namespace NGinnBPM.MessageBus.Impl
             var cs = SqlHelper.GetConnectionString(ConnectionString, DbProvider);
             if (cs != null && cn != null)
             {
-                if (cn.State == ConnectionState.Open && SqlHelper.IsSameDatabaseConnection(cn.GetType(), cn.ConnectionString, cs.ConnectionString))
+                if (cn.State == ConnectionState.Open && SqlHelper.IsSameDatabaseConnection(cn, cs.ConnectionString))
                 {
                     act(cn);
                     return;
@@ -75,7 +75,7 @@ namespace NGinnBPM.MessageBus.Impl
                 {
                     var sq = SqlHelper.GetSqlAbstraction(con);
                     c = new Dictionary<string, List<string>>();
-                    using (DbCommand cmd = con.CreateCommand())
+                    using (DbCommand cmd = sq.CreateCommand(con))
                     {
                         var qry = SqlHelper.GetNamedSqlQuery("SqlSubscriptionService_GetSubscriptions", SqlHelper.GetDialect(con.GetType()));
                         cmd.CommandText = string.Format(qry, SubscriptionTableName);
@@ -109,7 +109,7 @@ namespace NGinnBPM.MessageBus.Impl
             {
                 var sq = SqlHelper.GetSqlAbstraction(con);
                 string dialect = SqlHelper.GetDialect(con.GetType());
-                using (DbCommand cmd = con.CreateCommand())
+                using (DbCommand cmd = sq.CreateCommand(con))
                 {
                     cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSubscriptionService_UpdateSubscription", dialect), SubscriptionTableName);
                     sq.AddParameter(cmd, "pub", Endpoint);
@@ -139,8 +139,8 @@ namespace NGinnBPM.MessageBus.Impl
             AccessDb(delegate(DbConnection con)
             {
                 var sq = SqlHelper.GetSqlAbstraction(con);
-                string dialect = SqlHelper.GetDialect(con.GetType());
-                using (DbCommand cmd = con.CreateCommand())
+                string dialect = sq.Dialect;
+                using (DbCommand cmd = sq.CreateCommand(con))
                 {
                     cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSubscriptionService_DeleteSubscription", dialect), this.SubscriptionTableName);
                     sq.AddParameter(cmd, "pub", Endpoint);
@@ -201,7 +201,7 @@ namespace NGinnBPM.MessageBus.Impl
             {
                 var sq = SqlHelper.GetSqlAbstraction(con);
                 string dialect = SqlHelper.GetDialect(con.GetType());
-                using (DbCommand cmd = con.CreateCommand())
+                using (DbCommand cmd = sq.CreateCommand(con))
                 {
                     cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSubscriptionService_ExpireSubscriptions", dialect), SubscriptionTableName);
                     sq.AddParameter(cmd, "pub", Endpoint);
