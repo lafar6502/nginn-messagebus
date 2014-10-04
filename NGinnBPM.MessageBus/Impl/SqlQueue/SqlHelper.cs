@@ -164,6 +164,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 
         public static DbConnection OpenConnection(ConnectionStringSettings cs)
         {
+            if (cs == null) throw new Exception("Connection string not provided");
             return OpenConnection(cs.ConnectionString, cs.ProviderName);
         }
         

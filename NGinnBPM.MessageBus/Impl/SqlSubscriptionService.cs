@@ -46,18 +46,17 @@ namespace NGinnBPM.MessageBus.Impl
         {
             var cn = MessageBusContext.ReceivingConnection as DbConnection;
             var cs = SqlHelper.GetConnectionString(ConnectionString, DbProvider);
-            if (cn != null 
-                && (cs == null || SqlHelper.IsSameDatabaseConnection(cn.GetType(), cn.ConnectionString, cs.ConnectionString))
-                && cn.State == ConnectionState.Open)
+            if (cs != null && cn != null)
             {
-                act(cn);
-            }
-            else
-            {
-                using (var cn2 = SqlHelper.OpenConnection(cs))
+                if (cn.State == ConnectionState.Open && SqlHelper.IsSameDatabaseConnection(cn.GetType(), cn.ConnectionString, cs.ConnectionString))
                 {
-                    act(cn2);
+                    act(cn);
+                    return;
                 }
+            }
+            using (var cn2 = SqlHelper.OpenConnection(cs))
+            {
+                act(cn2);
             }
         }
 

@@ -20,6 +20,7 @@ using NGinnBPM.MessageBus.Impl.Sagas;
 using NGinnBPM.MessageBus.Impl;
 using System.Transactions;
 using System.Threading;
+using System.Configuration;
 
 namespace Tests
 {
@@ -188,6 +189,7 @@ namespace Tests
         {
             MessageBusConfigurator cfg = MessageBusConfigurator.Begin()
                 .SetEndpoint(endpointName)
+                .SetConnectionStrings(dbConnectionStrings.Select((kv, i) => new ConnectionStringSettings { Name = kv.Key, ProviderName = "System.Data.SqlClient", ConnectionString = kv.Value }))
                 .UseSqlSubscriptions()
                 .UseStaticMessageRouting("Routing.json")
                 //.RegisterHttpMessageServicesFromAssembly(typeof(Program).Assembly)

@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Data;
+using System.Data.SqlClient;
 using NLog;
 using System.Text;
 
@@ -87,7 +88,18 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 
 		public virtual bool IsSameDatabaseConnection(string connectionString1, string connectionString2)
 		{
-		    return string.Equals(connectionString1, connectionString2, StringComparison.InvariantCultureIgnoreCase);
+            if (string.Equals(connectionString1, connectionString2, StringComparison.InvariantCultureIgnoreCase)) return true;
+            SqlConnectionStringBuilder b1 = new SqlConnectionStringBuilder(connectionString1);
+            SqlConnectionStringBuilder b2 = new SqlConnectionStringBuilder(connectionString2);
+            if (string.Equals(b1.DataSource, b2.DataSource, StringComparison.InvariantCultureIgnoreCase) &&
+                string.Equals(b1.UserID, b2.UserID, StringComparison.InvariantCultureIgnoreCase) &&
+                string.Equals(b1.InitialCatalog, b2.InitialCatalog, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return true;
+            }
+
+            return false;
+
 		}
     }
     
@@ -128,6 +140,11 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             {
                 return "oracle";
             }
+        }
+
+        public override bool IsSameDatabaseConnection(string connectionString1, string connectionString2)
+        {
+            return string.Equals(connectionString1, connectionString2, StringComparison.InvariantCultureIgnoreCase);
         }
 		
     }
