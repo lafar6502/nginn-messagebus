@@ -66,6 +66,7 @@ namespace NGinnBPM.MessageBus.Impl
        
         public event MessageArrived OnMessageArrived;
         public event MessageArrived OnMessageToUnknownDestination;
+        public event Action<DbConnection> OnDatabaseInit;
 
         #endregion
 
@@ -389,22 +390,9 @@ namespace NGinnBPM.MessageBus.Impl
         /// <summary>
         /// Create the message queue table
         /// </summary>
-        protected virtual void InitializeQueueTableIfDoesntExist()
+        protected virtual void InitializeQueueTableIfDoesntExist(DbConnection con)
         {
-            using (Stream stm = typeof(SqlMessageTransport2).Assembly.GetManifestResourceStream("NGinnBPM.MessageBus.createmqueue.mssql.sql"))
-            {
-                StreamReader sr = new StreamReader(stm);
-                using (IDbConnection conn = OpenConnection())
-                {
-                    using (IDbCommand cmd = conn.CreateCommand())
-                    {
-                        string txt = sr.ReadToEnd();
-                        cmd.CommandText = string.Format(txt, _queueTable);
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-            }
-
+            SqlHelper.RunDDLFromResource(con, "NGinnBPM.MessageBus.createmqueue.${dialect}.sql", new object[] { _queueTable});
         }
 
         /// <summary>
@@ -432,10 +420,15 @@ namespace NGinnBPM.MessageBus.Impl
                 }
                 else
                 {
-                    if (AutoCreateQueueTable)
+                    using (var dbConn = OpenConnection())
                     {
-                        InitializeQueueTableIfDoesntExist();
+                        if (AutoCreateQueueTable)
+                        {
+                            InitializeQueueTableIfDoesntExist(dbConn);
+                        }
+                        if (OnDatabaseInit != null) OnDatabaseInit(dbConn);
                     }
+                    
                     if (_processorThread == null)
                     {
                         _stop = false;

@@ -9,6 +9,8 @@ using Newtonsoft.Json;
 using System.IO;
 using System.Text;
 using System.Configuration;
+using System.Reflection;
+using NLog;
 
 namespace NGinnBPM.MessageBus.Impl.SqlQueue
 {
@@ -18,7 +20,8 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 	public class SqlHelper
 	{
 	    private static Dictionary<string, Dictionary<string, string>> _namedQueries = null;
-	    
+        private static Logger log = LogManager.GetCurrentClassLogger();
+
 	    private static Dictionary<string, ISqlAbstractions> _abstr = new Dictionary<string, ISqlAbstractions> {
 	        {"oracle", new SqlAbstract_oracle() },
 	        {"sqlserver", new SqlAbstract_sqlserver() }
@@ -121,6 +124,28 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		    var abs = GetSqlAbstraction(di);
 		    abs.ExecuteDDLBatch(con, ddlBatch);
 		}
+
+        public static void RunDDLFromResource(DbConnection cn, string rcName, object[] formatParams)
+        {
+            RunDDLFromResource(cn, rcName, typeof(SqlHelper).Assembly, formatParams);
+        }
+
+        public static void RunDDLFromResource(DbConnection cn, string rcName, Assembly asm, object[] formatParams)
+        {
+            var abs = GetSqlAbstraction(cn);
+            rcName = rcName.Replace("${dialect}", abs.Dialect);
+            if (asm == null) asm = typeof(SqlHelper).Assembly;
+            
+            string txt;
+            using (Stream stm = asm.GetManifestResourceStream(rcName))
+            {
+                if (stm == null) throw new Exception("Could not read resource: " + rcName);
+                txt = new StreamReader(stm, Encoding.UTF8).ReadToEnd();
+                txt = string.Format(txt, formatParams);    
+            }
+            log.Info("Running ddl script: {0}", rcName);
+            RunDDL(cn, txt);
+        }
 		
 		public static ISqlQueue GetQueueOps(string dialect)
 		{

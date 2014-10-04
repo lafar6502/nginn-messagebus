@@ -156,18 +156,10 @@ namespace NGinnBPM.MessageBus.Impl
 
         protected void InitializeSubscriptionTable()
         {
-
-            using (Stream stm = typeof(SqlSubscriptionService).Assembly.GetManifestResourceStream("NGinnBPM.MessageBus.create_subscribertable.mssql.sql"))
+            AccessDb(delegate(DbConnection con)
             {
-                StreamReader sr = new StreamReader(stm);
-                AccessDb(delegate(DbConnection con)
-                {
-                    var sq = SqlHelper.GetSqlAbstraction(con);
-                    string txt = sr.ReadToEnd();
-                    txt = string.Format(txt, SubscriptionTableName);
-                    sq.ExecuteDDLBatch(con, txt);
-                });
-            }
+                SqlHelper.RunDDLFromResource(con, "NGinnBPM.MessageBus.create_subscribertable.${dialect}.sql", new object[] { SubscriptionTableName });
+            });
         }
 
         private bool _inited = false;

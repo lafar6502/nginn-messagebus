@@ -44,7 +44,7 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
                         log.Info("Initializing saga table: {0}", TableName);
                         AccessDb(delegate(DbConnection con)
                         {
-                            DbInitialize.RunResourceDbScript(con, "NGinnBPM.MessageBus.create_sagatable.sql", new object[] { TableName });
+                            SqlHelper.RunDDLFromResource(con, "NGinnBPM.MessageBus.create_sagatable.${dialect}.sql", new object[] { TableName });
                         });
                     }
                 }

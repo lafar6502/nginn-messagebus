@@ -8,7 +8,7 @@ using System.Data.Common;
 using NLog;
 using Newtonsoft.Json;
 using NGinnBPM.MessageBus.Impl.SqlQueue;
-
+using System.Configuration;
 
 namespace NGinnBPM.MessageBus.Impl
 {
@@ -36,7 +36,7 @@ namespace NGinnBPM.MessageBus.Impl
         public int? Length { get; set; }
     }
 
-    public class SqlSequenceManager : ISequenceMessages, ISupportInitialize
+    public class SqlSequenceManager : ISequenceMessages, IMessageConsumer<InternalEvents.DatabaseInit>
     {
         public SqlSequenceManager()
         {
@@ -45,7 +45,7 @@ namespace NGinnBPM.MessageBus.Impl
 
         public string SequenceTable { get; set; }
         public bool AutoCreateTable { get; set; }
-        public DbInitialize DbInit { get; set; }
+        
         public int CacheSize { get; set; }
 
         /// <summary>Ids of currently processed sequences</summary>
@@ -63,11 +63,7 @@ namespace NGinnBPM.MessageBus.Impl
 
         public void EndInit()
         {
-            if (AutoCreateTable)
-            {
-                log.Info("Initializing the sequence table {0}", SequenceTable);
-                DbInit.RunDbScript("NGinnBPM.MessageBus.create_seqtable.mssql.sql", new object[] { SequenceTable });
-            }
+            
         }
 
         protected void UpdateSequence(string id, DbConnection conn, Action<SequenceInfo> act)
@@ -216,6 +212,20 @@ namespace NGinnBPM.MessageBus.Impl
             var conn = transactionObj as DbConnection;
             var ret = UpdateSequenceInfo(seqId, seqNumber, seqLen, messageId, conn);
             return ret;
+        }
+
+        public void Handle(InternalEvents.DatabaseInit message)
+        {
+            try
+            {
+                if (!AutoCreateTable) return;
+                log.Info("Initializing the sequence table {0}", SequenceTable);
+                SqlHelper.RunDDLFromResource(message.Connection, "NGinnBPM.MessageBus.create_seqtable.${dialect}.sql", new object[] { SequenceTable });
+            }
+            catch (Exception ex)
+            {
+                log.Warn("Failed to create sequence table {0}: {1}", SequenceTable, ex);
+            }
         }
     }
 }

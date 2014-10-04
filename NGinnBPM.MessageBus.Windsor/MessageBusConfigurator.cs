@@ -372,7 +372,7 @@ namespace NGinnBPM.MessageBus.Windsor
         /// <returns></returns>
         public MessageBusConfigurator UseSqlSequenceManager()
         {
-            _wc.Register(Component.For<ISequenceMessages>()
+            _wc.Register(Component.For<ISequenceMessages, IMessageConsumer<Impl.InternalEvents.DatabaseInit>>()
                 .ImplementedBy<SqlSequenceManager>().LifeStyle.Singleton
                 .DependsOn(new
                 {
@@ -476,15 +476,7 @@ namespace NGinnBPM.MessageBus.Windsor
 
         protected MessageBusConfigurator ConfigureSqlMessageBus()
         {
-            if (!IsServiceRegistered<DbInitialize>())
-            {
-                _wc.Register(Component.For<DbInitialize>()
-                    .ImplementedBy<DbInitialize>().LifeStyle.Singleton
-                    .DependsOn(new
-                    {
-                        ConnectionString = GetDefaultConnectionString()
-                    }));
-            }
+            
 
             _wc.Register(Component.For<IMessageTransport, IStartableService, IHealthCheck, SqlMessageTransport2>()
                 .ImplementedBy<SqlMessageTransport2>()
@@ -1060,6 +1052,7 @@ namespace NGinnBPM.MessageBus.Windsor
             {
                 UseSqlSubscriptions();
             }
+            var dcs = GetDefaultConnectionString();
             if (EnableSagas)
             {
                 if (!IsServiceRegistered<SagaStateHelper>())
@@ -1090,6 +1083,7 @@ namespace NGinnBPM.MessageBus.Windsor
             {
                 ConfigureSqlMessageBus();
             }
+            var dmb = _wc.Resolve<IMessageBus>();
             foreach (var ac in _additionalBuses)
             {
                 log.Info("Configuring additional message bus {0} | {1}", ac.Endpoint, ac.BusName);
@@ -1098,6 +1092,14 @@ namespace NGinnBPM.MessageBus.Windsor
             foreach (IPlugin pl in _wc.ResolveAll<IPlugin>())
             {
                 pl.OnFinishConfiguration(_wc);
+            }
+            if (dcs != null)
+            {
+                using (var con = SqlHelper.OpenConnection(dcs))
+                {
+                    IMessageDispatcher md = _wc.Resolve<IMessageDispatcher>();
+                    md.DispatchMessage(new Impl.InternalEvents.DatabaseInit { Connection = con }, dmb);
+                }
             }
             if (AutoStart)
             {
@@ -1131,12 +1133,12 @@ namespace NGinnBPM.MessageBus.Windsor
         /// <returns></returns>
         public MessageBusConfigurator CreateQueueTable(string endpoint)
         {
+            var dcs = GetDefaultConnectionString();
             string cs, table;
             if (!SqlUtil.ParseSqlEndpoint(endpoint, out cs, out table)) throw new Exception("Invalid sql endpoint");
-            using (var con = OpenConnection(cs))
+            using (var con = SqlHelper.OpenConnection(cs))
             {
-                con.Open();
-                DbInitialize.RunResourceDbScript(con, "NGinnBPM.MessageBus.createmqueue.mssql.sql", new object[] { table });
+                SqlHelper.RunDDLFromResource(con, "NGinnBPM.MessageBus.createmqueue.${dialect}.sql", new object[] { table });
             }
             return this;
         }

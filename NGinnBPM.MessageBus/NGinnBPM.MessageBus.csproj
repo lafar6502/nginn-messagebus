@@ -100,6 +100,7 @@
     <Compile Include="Impl\HttpService\HealthCheckServlet.cs" />
     <Compile Include="Impl\HttpService\MasterDispatcherServlet.cs" />
     <Compile Include="Impl\IMessageDispatcher.cs" />
+    <Compile Include="Impl\InternalEvents\DatabaseInit.cs" />
     <Compile Include="Impl\IPreprocessMessages.cs" />
     <Compile Include="Impl\ServiceCallContext.cs" />
     <Compile Include="Impl\IHealthCheck.cs" />
@@ -113,7 +114,6 @@
     <Compile Include="Impl\HttpService\ServiceCallServlet.cs" />
     <Compile Include="Impl\HttpService\ServletBase.cs" />
     <Compile Include="Impl\ServiceMessageDipatcher.cs" />
-    <Compile Include="Impl\DbInitialize.cs" />
     <Compile Include="Impl\DummySubscriptionService.cs" />
     <Compile Include="Impl\FileQueueTransport.cs" />
     <Compile Include="Impl\HttpService\HttpServer.cs" />
@@ -172,10 +172,10 @@
     <Compile Include="ServiceClient.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="createmqueue.mssql.sql" />
+    <EmbeddedResource Include="createmqueue.sqlserver.sql" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="create_subscribertable.mssql.sql" />
+    <EmbeddedResource Include="create_subscribertable.sqlserver.sql" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Impl\HttpMessageGateway.cs" />
@@ -215,10 +215,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="create_seqtable.mssql.sql" />
+    <EmbeddedResource Include="create_seqtable.sqlserver.sql" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="create_sagatable.sql" />
+    <EmbeddedResource Include="create_sagatable.sqlserver.sql" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="createmqueue.oracle.sql" />
@@ -226,9 +226,7 @@
     <EmbeddedResource Include="Impl\SqlQueue\NamedQueries.sqlserver.json" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Impl\SqlQueue" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
