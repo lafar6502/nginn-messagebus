@@ -65,13 +65,18 @@ namespace Tests
                 ///the alias when referring to a queue: e.g. sql://testdb1/Queue1
                 Dictionary<string, string> connStrings = new Dictionary<string,string>();
                  ///configure two containers with two message buses
-                IWindsorContainer wc1 = ConfigureMessageBus("sql://oradb/MQueue1", connStrings, null);
+                IWindsorContainer wc1 = ConfigureMessageBus("sql://oradb/MQueue4", connStrings, null);
                 
                 //IWindsorContainer wc2 = ConfigureMessageBus("sql://testdb2/MQueue2", connStrings, null);
 
                 
                 IMessageBus mb1 = wc1.Resolve<IMessageBus>();
                 string sqid = Guid.NewGuid().ToString();
+                for (var o = 0; o < 10000; o++)
+                {
+                    mb1.Notify(new TestMessage1 { Id = 100000 + o });
+                }
+                Console.ReadLine();
                 using (var ts = new TransactionScope())
                 {
                 	mb1.Notify(new TestMessage1 { });
@@ -195,7 +200,7 @@ namespace Tests
                 .UseSqlSequenceManager()
                 .SetEnableSagas(true)
                 .SetSendOnly(false)
-                .SetMaxConcurrentMessages(1)
+                .SetMaxConcurrentMessages(4)
                 .SetUseTransactionScope(true)
                 .SetAlwaysPublishLocal(false)
                 .SetReuseReceiveConnectionForSending(true)

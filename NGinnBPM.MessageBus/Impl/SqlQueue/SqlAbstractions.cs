@@ -170,6 +170,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
                 {
                     try
                     {
+                        log.Info("** ORA EXECUTING:\n{0}", s);
                         cmd.CommandText = s;
                         cmd.ExecuteNonQuery();
                     }

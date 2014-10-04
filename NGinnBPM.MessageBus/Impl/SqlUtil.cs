@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Data;
 using System.Data.SqlTypes;
-using System.Data.SqlClient;
 using System.Data.Common;
 
 namespace NGinnBPM.MessageBus.Impl

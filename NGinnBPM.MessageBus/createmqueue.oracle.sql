@@ -15,6 +15,8 @@
   unique_id VARCHAR2(40) NULL
   )
 --- --- ---
+create index IDX_{0}_retr on {0} (subqueue, retry_time) 
+--- --- ---
   CREATE  SEQUENCE SEQ_{0}
 --- --- ---
 CREATE OR REPLACE TRIGGER TRG_BIR_{0}

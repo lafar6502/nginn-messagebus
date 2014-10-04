@@ -5,7 +5,6 @@ using System.Text;
 using NLog;
 using System.Data.SqlClient;
 using System.Data;
-using System.Data.SqlTypes;
 using System.Threading;
 using System.IO;
 using System.Transactions;
@@ -998,11 +997,12 @@ namespace NGinnBPM.MessageBus.Impl
         protected virtual bool ProcessRetryMessages()
         {
             DateTime st = DateTime.Now;
+            bool b = false;
             try
             {
             	using (var conn = OpenConnection())
                 {
-            		GetQueueOps(conn).MoveScheduledMessagesToInputQueue(conn, _queueTable);
+            		b = GetQueueOps(conn).MoveScheduledMessagesToInputQueue(conn, _queueTable);
             	}
             }
             catch (Exception ex)
@@ -1015,7 +1015,7 @@ namespace NGinnBPM.MessageBus.Impl
                 log.Log(ts.TotalMilliseconds > 100 ? LogLevel.Warn : LogLevel.Trace, "ProcessRetryMessages time: {0}", ts);
                 statLog.Info("ProcessRetryMessages:{0}", (int) ts.TotalMilliseconds);
             }
-            return false;
+            return b;
         }
 
         
