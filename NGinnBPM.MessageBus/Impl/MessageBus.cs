@@ -97,6 +97,7 @@ namespace NGinnBPM.MessageBus.Impl
                 {
                     try
                     {
+                        callbacks.Reverse();
                         callbacks.ForEach(x => x(message, e2));
                     }
                     catch (Exception e3)
