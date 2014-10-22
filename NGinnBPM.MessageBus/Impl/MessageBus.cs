@@ -73,14 +73,38 @@ namespace NGinnBPM.MessageBus.Impl
         void _transport_OnMessageArrived(MessageContainer message, IMessageTransport transport)
         {
             Debug.Assert(message.BodyStr != null && message.Body == null);
-            MessagePreprocessResult disp = PreprocessIncomingMessage(message, transport);
+            List<Action<MessageContainer, Exception>> callbacks = null;
+            MessagePreprocessResult disp = PreprocessIncomingMessage(message, transport, out callbacks);
             if (disp == MessagePreprocessResult.CancelFurtherProcessing)
             {
                 return; 
             }
-            DeserializeMessage(message);
-            Debug.Assert(message.Body != null);
-            DispatchIncomingMessage(message);
+            Exception e2 = null;
+            try
+            {
+                DeserializeMessage(message);
+                Debug.Assert(message.Body != null);
+                DispatchIncomingMessage(message);
+            }
+            catch (Exception ex)
+            {
+                e2 = ex;
+                throw;
+            }
+            finally
+            {
+                if (callbacks != null)
+                {
+                    try
+                    {
+                        callbacks.ForEach(x => x(message, e2));
+                    }
+                    catch (Exception e3)
+                    {
+                        log.Warn("Callback error: {0}", e3);
+                    }
+                }
+            }
         }
 
         protected virtual void DeserializeMessage(MessageContainer mc)
@@ -101,15 +125,24 @@ namespace NGinnBPM.MessageBus.Impl
         [ThreadStatic]
         private static CurMsg _currentMessage;
 
-        protected virtual MessagePreprocessResult PreprocessIncomingMessage(MessageContainer mc, IMessageTransport t)
+        protected virtual MessagePreprocessResult PreprocessIncomingMessage(MessageContainer mc, IMessageTransport t, out List<Action<MessageContainer, Exception>> callbacks)
         {
+            List<Action<MessageContainer, Exception>> callb = null;
+            callbacks = callb;
             //todo: allow for ordering of message preprocessors
             foreach (IPreprocessMessages pm in this.ServiceLocator.GetAllInstances<IPreprocessMessages>())
             {
-                var res = pm.HandleIncomingMessage(mc, t);
+                Action<MessageContainer, Exception> act;
+                var res = pm.HandleIncomingMessage(mc, t, out act);
                 ServiceLocator.ReleaseInstance(pm);
                 if (res != MessagePreprocessResult.ContinueProcessing) return res;
+                if (act != null)
+                {
+                    if (callb == null) callb = new List<Action<MessageContainer, Exception>>();
+                    callb.Add(act);
+                }
             }
+            callbacks = callb;
             return MessagePreprocessResult.ContinueProcessing;
         }
         /// <summary>

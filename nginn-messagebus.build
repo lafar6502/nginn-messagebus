@@ -48,6 +48,7 @@
             <resources basedir="NGinnBPM.MessageBus" prefix="NGinnBPM.MessageBus" dynamicprefix="true">
                 <include name="StaticRC/index.htm" />
                 <include name="*.sql" />
+                <include name="Impl/SqlQueue/*.json" />
             </resources>
         </csc>
 	</target>

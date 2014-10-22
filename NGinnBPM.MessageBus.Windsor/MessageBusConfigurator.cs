@@ -179,6 +179,23 @@ namespace NGinnBPM.MessageBus.Windsor
         }
 
         /// <summary>
+        /// Set a mapping: alias -> connection string
+        /// </summary>
+        /// <param name="connStrings"></param>
+        /// <returns></returns>
+        public MessageBusConfigurator SetConnectionStrings(IDictionary<string, string> connStrings)
+        {
+            SetConnectionStrings(connStrings.Select(kv => new ConnectionStringSettings { Name = kv.Key, ConnectionString = kv.Value, ProviderName = this.DefaultDbProviderName }));
+            return this;
+        }
+
+        public MessageBusConfigurator SetDefaultDbProvider(string name)
+        {
+            this.DefaultDbProviderName = name;
+            return this;
+        }
+
+        /// <summary>
         /// Set message bus endpoint name
         /// </summary>
         /// <param name="endpoint"></param>

@@ -224,6 +224,7 @@
     <EmbeddedResource Include="createmqueue.oracle.sql" />
     <EmbeddedResource Include="Impl\SqlQueue\NamedQueries.oracle.json" />
     <EmbeddedResource Include="Impl\SqlQueue\NamedQueries.sqlserver.json" />
+    <EmbeddedResource Include="Impl\SqlQueue\NamedQueries.postgres.json" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

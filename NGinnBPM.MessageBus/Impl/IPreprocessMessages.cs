@@ -10,12 +10,15 @@ namespace NGinnBPM.MessageBus.Impl
         ContinueProcessing,
         CancelFurtherProcessing
     }
+    
+    
     /// <summary>
     /// Message preprocessor interface called just after a message has been retrieved from the queue,
     /// but before it's been deserialized and forwarded to its handlers. 
     /// </summary>
     public interface IPreprocessMessages
     {
-        MessagePreprocessResult HandleIncomingMessage(MessageContainer message, IMessageTransport transport);
+        MessagePreprocessResult HandleIncomingMessage(MessageContainer message, IMessageTransport transport, out Action<MessageContainer, Exception> afterProcessCallback);
     }
+
 }

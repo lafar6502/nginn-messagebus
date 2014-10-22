@@ -65,7 +65,7 @@ namespace Tests
                 ///the alias when referring to a queue: e.g. sql://testdb1/Queue1
                 Dictionary<string, string> connStrings = new Dictionary<string,string>();
                  ///configure two containers with two message buses
-                IWindsorContainer wc1 = ConfigureMessageBus("sql://oradb/MQueue4", connStrings, null);
+                IWindsorContainer wc1 = ConfigureMessageBus("sql://testdb1/MQueue4", connStrings, null);
                 
                 //IWindsorContainer wc2 = ConfigureMessageBus("sql://testdb2/MQueue2", connStrings, null);
 
