@@ -18,7 +18,22 @@ namespace NGinnBPM.MessageBus.Impl
     /// </summary>
     public interface IPreprocessMessages
     {
-        MessagePreprocessResult HandleIncomingMessage(MessageContainer message, IMessageTransport transport, out Action<MessageContainer, Exception> afterProcessCallback);
+        /// <summary>
+        /// Invoked before message is processed (and even before it is deserialized)
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="bus"></param>
+        /// <param name="transport"></param>
+        /// <returns></returns>
+        MessagePreprocessResult HandleIncomingMessage(MessageContainer message, IMessageBus bus, IMessageTransport transport);
+        /// <summary>
+        /// Invoked after message has been processed (but before transaction commit)
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="bus"></param>
+        /// <param name="transport"></param>
+        /// <param name="ex"></param>
+        void AfterMessageProcessed(MessageContainer message, IMessageBus bus, IMessageTransport transport, Exception ex);
     }
 
 }
