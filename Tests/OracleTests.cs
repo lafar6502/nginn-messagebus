@@ -23,10 +23,11 @@ namespace Tests
 	public class OracleTests
 	{
 		private static Logger log = LogManager.GetCurrentClassLogger();
-		
+        public static readonly string DefaultAlias = "testdb1";
+
 		public static void AccessOraDb(string csalias, Action<DbConnection> act)
 		{
-			csalias = csalias ?? "oradb";
+            csalias = csalias ?? DefaultAlias;
 			var cs = ConfigurationManager.ConnectionStrings[csalias];
 			if (cs == null) throw new Exception(csalias + " - connection string missing");
 			Console.WriteLine("Opening {0}", cs.ConnectionString);
@@ -46,7 +47,7 @@ namespace Tests
 		
 		public static void TestBasicOps()
 		{
-			AccessOraDb("oradb", con => {
+			AccessOraDb(null, con => {
 			            	using (var cmd = con.CreateCommand())
 			            	{
 			            		cmd.CommandText = "select * from DUAL";
@@ -70,7 +71,7 @@ namespace Tests
 			using (Stream stm = typeof(SqlMessageTransport2).Assembly.GetManifestResourceStream("NGinnBPM.MessageBus.createmqueue.oracle.sql"))
             {
 				
-                AccessOraDb("oradb", con => {
+                AccessOraDb(null, con => {
 				     Action<string> act = str => {
 				        str = string.Format(str, qt);
 						try
@@ -144,7 +145,7 @@ namespace Tests
 		
 		public static void TestQueueOps()
 		{
-		    AccessOraDb("oradb", con => {
+		    AccessOraDb(null, con => {
 		                    var qt ="mq_test2";
 		                    var qops = SqlHelper.GetQueueOps(SqlHelper.GetDialect(con.GetType()));
 		                    qops.CleanupProcessedMessages(con, qt, null);

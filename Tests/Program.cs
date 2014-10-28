@@ -37,8 +37,8 @@ namespace Tests
             	//OracleTests.TestBasicOps();
             	//OracleTests.TestDbInit();
             	//OracleTests.TestSend();
-            	//OracleTests.TestNamedQ();
-            	//OracleTests.TestQueueOps();
+            	OracleTests.TestNamedQ();
+            	OracleTests.TestQueueOps();
             	//Console.ReadLine();
             	//return;
                 //MongoQueue.Test1();

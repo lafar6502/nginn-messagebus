@@ -44,6 +44,7 @@ namespace NGinnBPM.MessageBus.Impl
         protected void AccessDb(Action<DbConnection> act)
         {
             var cn = MessageBusContext.ReceivingConnection as DbConnection;
+            if (cn == null || cn.State != ConnectionState.Open) cn = MessageBusContext.AppManagedConnection as DbConnection;
             var cs = SqlHelper.GetConnectionString(ConnectionString, DbProvider);
             if (cs != null && cn != null)
             {

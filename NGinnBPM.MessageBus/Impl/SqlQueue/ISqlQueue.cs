@@ -33,7 +33,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
         string Dialect { get; }
 		void AddParameter(DbCommand cmd, string parameterAlias, string value);
 		void AddParameter(DbCommand cmd, string parameterAlias, int? value);
-		void AddParameter(DbCommand cmd, string parameterAlias, DateTime? value);
+        void AddParameter(DbCommand cmd, string parameterAlias, DateTime? value);
 		void AddParameter(DbCommand cmd, string parameterAlias, long? value);
 	    /// <summary>
 	    /// run ddl batch

@@ -529,12 +529,12 @@ namespace NGinnBPM.MessageBus.Impl
         public string GetCurrentTransactionState()
         {
         	var rm = this.GetCurrentTransactionMessageBatch();
-        	return  Newtonsoft.Json.JsonConvert.SerializeObject(rm.Messages);
+        	return  rm == null ? null : Newtonsoft.Json.JsonConvert.SerializeObject(rm.Messages);
         }
         
         public void SetCurrentTransactionState(string state)
         {
-        	var rm = this.GetCurrentTransactionMessageBatch();
+            var rm = this.GetCreateMessageBatchForCurrentTransaction();
         	rm.Messages = Newtonsoft.Json.JsonConvert.DeserializeObject<List<MessageContainer>>(state);
         }
         

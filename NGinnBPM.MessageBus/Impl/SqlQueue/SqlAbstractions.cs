@@ -44,8 +44,8 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		public virtual void AddParameter(DbCommand cmd, string parameterAlias, DateTime? value)
 		{
 			IDataParameter para = cmd.CreateParameter();
-            para.DbType = DbType.DateTime;
-            para.Value = value.HasValue ? new SqlDateTime(value.Value) : SqlDateTime.Null;
+            para.DbType = DbType.DateTime2;
+            para.Value = value.HasValue ? (object) value.Value : null;
             para.Direction = ParameterDirection.Input;
             para.ParameterName = NormName(parameterAlias);
             cmd.Parameters.Add(para);
