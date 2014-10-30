@@ -47,6 +47,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
         /// yes, because we can't just create a command in a database independent way
         /// </summary>
         DbCommand CreateCommand(DbConnection conn);
+        int MaxNumberOfQueryParams { get; }
 	}
 
 	/// <summary>

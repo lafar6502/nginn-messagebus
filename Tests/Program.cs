@@ -74,9 +74,21 @@ namespace Tests
                 string sqid = Guid.NewGuid().ToString();
                 for (var o = 0; o < 10000; o++)
                 {
-                    mb1.Notify(new TestMessage1 { Id = 100000 + o });
+                   // mb1.Notify(new TestMessage1 { Id = 100000 + o });
                 }
                 Console.ReadLine();
+                using (var ts = new TransactionScope())
+                {
+                    var m = new TestMessage1 { Id = 9998 };
+                    for (int i = 0; i < 100; i++)
+                    {
+                        mb1.Notify(m);
+                    }
+                    ts.Complete();
+                }
+                Console.WriteLine("Batch sent. Enter");
+                Console.ReadLine();
+                return;
                 using (var ts = new TransactionScope())
                 {
                 	mb1.Notify(new TestMessage1 { });
@@ -90,6 +102,7 @@ namespace Tests
                 	Console.WriteLine(m.GetCurrentTransactionState());
                 	ts.Complete();
                 }
+                
                 Console.ReadLine();
                 SagaTest(wc1);
                 Console.ReadLine();

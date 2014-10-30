@@ -22,7 +22,6 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 	{
 		protected static readonly Logger log = LogManager.GetCurrentClassLogger();
 		protected static readonly Logger statLog = LogManager.GetCurrentClassLogger();
-		public int MaxSqlParamsInBatch { get;set;}
 		protected string _dialect;
 		protected ISqlAbstractions _sql;
 		
@@ -150,8 +149,9 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
                             _sql.AddParameter(cmd, "headers" + cnt, HeadersToString(headers));
                             _sql.AddParameter(cmd, "unique_id" + cnt, mw.UniqueId);
                             cnt++;
-                            if (cmd.Parameters.Count >= MaxSqlParamsInBatch)
+                            if (cmd.Parameters.Count >= _sql.MaxNumberOfQueryParams)
                             {
+                                reuseBody = false;
                                 qry = cmd.CommandText;
                                 qprm = SqlAbstract_sqlserver.DumpCommandParams(cmd);
                                 cmd.ExecuteNonQuery();

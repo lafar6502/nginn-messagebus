@@ -114,6 +114,12 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
         {
             return IsSameDatabaseConnection(conn.ConnectionString, connectionString);
         }
+
+
+        public virtual int MaxNumberOfQueryParams
+        {
+            get { return 2000; }
+        }
     }
     
     
