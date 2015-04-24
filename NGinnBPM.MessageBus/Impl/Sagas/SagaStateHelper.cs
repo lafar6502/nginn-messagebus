@@ -51,7 +51,7 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
             bool doLock = !(UseDbRecordLocking || string.IsNullOrEmpty(lockId));
             
 
-            while (doLock)
+            while (doLock) //either spin here or skip the lock altogether
             {
                 lock (_waiter)
                 {
