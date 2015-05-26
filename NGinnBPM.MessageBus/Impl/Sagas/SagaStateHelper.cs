@@ -57,7 +57,11 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
                 {
                     if (_currentlyProcessed.Contains(lockId))
                     {
-                        if (!wait) return false;
+                        if (!wait)
+                        {
+                            log.Info("Saga {0} locked, skipping for now", lockId);
+                            return false;
+                        }
                         Monitor.Wait(_waiter);
                     }
                     else
@@ -87,6 +91,21 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
             return true;
         }
 
+        /// <summary>
+        /// This function establishes the Saga ID from the passed message
+        /// then loads saga state from the repository (or creates a new state),        /// 
+        /// initializes the saga object with the proper state and finally calls our callback function
+        /// that will modify saga state somehow. Then saga state is saved/updated/deleted from the repository
+        /// based on saga status after the operation.
+        /// It is intended to be used internally by the framework
+        /// </summary>
+        /// <param name="correlationId">message correlation id</param>
+        /// <param name="message">the message</param>
+        /// <param name="createNew">true if new saga instance should be created (new saga state)</param>
+        /// <param name="wait">wait for any concurrent updates to finish or, (if false), return without doing anything if same saga is updated now </param>
+        /// <param name="sagaHandler"></param>
+        /// <param name="callback"></param>
+        /// <returns></returns>
         public SagaDispatchResult DispatchToSaga(string correlationId, object message, bool createNew, bool wait, SagaBase sagaHandler, Action<SagaBase> callback)
         {
             string sagaId = null;

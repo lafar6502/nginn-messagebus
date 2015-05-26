@@ -1,9 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-# SharpDevelop 5.0
-VisualStudioVersion = 12.0.20827.3
-MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{F0163AC1-3926-4F2A-8033-9AB2B48B1C77}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NGinnBPM.MessageBus.Windsor", "NGinnBPM.MessageBus.Windsor\NGinnBPM.MessageBus.Windsor.csproj", "{6837107E-5C65-4228-BB86-F8C97334016D}"
@@ -30,6 +27,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{D72F9F
 		.nuget\NuGet.exe = .nuget\NuGet.exe
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NGinnBPM.MessageBus.UnitTests", "NGinnBPM.MessageBus.UnitTests\NGinnBPM.MessageBus.UnitTests.csproj", "{FDE72C46-684F-444D-A659-186774B8FF16}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -113,6 +112,16 @@ Global
 		{4F4877EC-6608-4532-A91A-303DD2A35F39}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{4F4877EC-6608-4532-A91A-303DD2A35F39}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{4F4877EC-6608-4532-A91A-303DD2A35F39}.Release|x86.ActiveCfg = Release|Any CPU
+		{FDE72C46-684F-444D-A659-186774B8FF16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDE72C46-684F-444D-A659-186774B8FF16}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDE72C46-684F-444D-A659-186774B8FF16}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{FDE72C46-684F-444D-A659-186774B8FF16}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{FDE72C46-684F-444D-A659-186774B8FF16}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FDE72C46-684F-444D-A659-186774B8FF16}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDE72C46-684F-444D-A659-186774B8FF16}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDE72C46-684F-444D-A659-186774B8FF16}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{FDE72C46-684F-444D-A659-186774B8FF16}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{FDE72C46-684F-444D-A659-186774B8FF16}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

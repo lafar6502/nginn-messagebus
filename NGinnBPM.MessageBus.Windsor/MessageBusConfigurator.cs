@@ -511,7 +511,8 @@ namespace NGinnBPM.MessageBus.Windsor
                     AllowUseOfApplicationDbConnectionForSending = UseAppManagedConnectionForSending,
                     ExposeReceiveConnection = ExposeReceiveConnectionToApplication,
                     DefaultTransactionTimeout = TransactionTimeout,
-                    UseSqlOutputClause = _useSqlOutputClause
+                    UseSqlOutputClause = _useSqlOutputClause,
+                    RetryTimes = _retryTimes
                 })
                 .Named("MessageTransport_sql")
                 .LifeStyle.Singleton);
