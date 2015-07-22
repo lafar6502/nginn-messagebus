@@ -8,7 +8,7 @@
 		<property name="def" value="DOTNET_3_5" />
 	</if>
 	
-	<target name="build" depends="NGinnBPM.ServiceHost, NGinnBPM.MessageBus.Mongo.Windsor">
+	<target name="build" depends="NGinnBPM.ServiceHost">
 		
 	</target>
 	
@@ -23,6 +23,7 @@
                 <include name="Castle.*" />
                 <include name="NLog.*" />
                 <include name="MongoDB.*.dll" />
+                <include name="Newtonsoft.Json.dll" />
             </fileset>
 		</copy>
 		<copy todir="${build_dir}">

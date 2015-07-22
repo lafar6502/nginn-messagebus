@@ -118,7 +118,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 
         public virtual int MaxNumberOfQueryParams
         {
-            get { return 2000; }
+            get { return 1000; }
         }
     }
     
@@ -210,7 +210,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
         {
             var cmd = conn.CreateCommand();
             var pi = cmd.GetType().GetProperty("BindByName");
-            if (pi != null) pi.SetValue(cmd, true);
+            if (pi != null) pi.SetValue(cmd, true, null);
             return cmd;
         }
 		

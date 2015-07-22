@@ -519,8 +519,6 @@ namespace NGinnBPM.MessageBus.Windsor
 
             
 
-            //_wc.Kernel.ComponentRegistered += new Castle.MicroKernel.ComponentDataDelegate(Kernel_ComponentRegistered);
-            //_wc.Kernel.ComponentUnregistered += new Castle.MicroKernel.ComponentDataDelegate(Kernel_ComponentUnregistered);
 
             _wc.Register(Component.For<IMessageBus>()
                 .ImplementedBy<MessageBus.Impl.MessageBus>()
@@ -619,21 +617,6 @@ namespace NGinnBPM.MessageBus.Windsor
             }
         }
 
-        void Kernel_ComponentUnregistered(string key, Castle.MicroKernel.IHandler handler)
-        {
-            if (handler.ComponentModel.Services.Any(x => typeof(NGMessageConsumer).IsAssignableFrom(x)))
-            {
-                MessageConsumerAddedOrRemoved();
-            }
-        }
-
-        void Kernel_ComponentRegistered(string key, Castle.MicroKernel.IHandler handler)
-        {
-            if (handler.ComponentModel.Services.Any(x => typeof(NGMessageConsumer).IsAssignableFrom(x)))
-            {
-                MessageConsumerAddedOrRemoved();
-            }
-        }
 
         /// <summary>
         /// Configure message retention period
