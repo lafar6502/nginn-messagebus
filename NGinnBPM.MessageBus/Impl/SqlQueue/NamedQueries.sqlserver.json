@@ -30,7 +30,7 @@
 	"SqlSubscriptionService_DeleteSubscription" : "delete {0} where publisher_endpoint=:pub and subscriber_endpoint=:sub and message_type=:mtype",
     "SqlSubscriptionService_ExpireSubscriptions" : "delete {0} where publisher_endpoint=@pub and subscriber_endpoint=@sub and message_type=@mtype and expiration_date <= getdate()",
 
-	"SqlSagaStateRepository_SelectWithLock" : "select data, version from {0} with(rowlock) where id=@id",
+	"SqlSagaStateRepository_SelectWithLock" : "select data, version from {0} with(rowlock, updlock) where id=@id",
 	"SqlSagaStateRepository_UpdateSaga" : "update {0} set data=@data, version=@newVersion, last_updated=@updateDate where id=@id and version=@version",
 	"SqlSagaStateRepository_DeleteSaga" : "delete {0} where id=@id",
 	"SqlSagaStateRepository_InsertSaga" : "insert into {0} (id, data, version, created_date, last_updated) values(@id, @data, @version, @updDate, @updDate)",
