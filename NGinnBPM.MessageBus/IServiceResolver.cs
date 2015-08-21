@@ -14,13 +14,13 @@ namespace NGinnBPM.MessageBus
         //get all services that implement specified type of interface
         ICollection<object> GetAllInstances(Type t);
         //get all services that implement T
-        ICollection<T> GetAllInstances<T>();
+        ICollection<T> GetAllInstances<T>() where T : class;
         //get service that implements specified interface
         object GetInstance(Type t);
         //get named service that implements specified interface
         object GetInstance(Type t, string name);
-        T GetInstance<T>();
-        T GetInstance<T>(string name);
+        T GetInstance<T>() where T : class;
+        T GetInstance<T>(string name) where T : class;
         /// <summary>
         /// Check if a service of specified type is registered
         /// </summary>
