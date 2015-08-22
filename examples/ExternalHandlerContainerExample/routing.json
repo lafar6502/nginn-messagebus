@@ -1,0 +1,4 @@
+﻿{
+	"*" : [], 
+	"ExternalHandlerContainerExample.PingMessage" : ["sql://localdb/MQ_Test2", "sql://localdb/MQ_Test3"]
+}
