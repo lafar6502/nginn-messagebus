@@ -149,6 +149,7 @@ namespace ExternalHandlerContainerExample
                 .AutoCreateDatabase(true) //queue tables will be created if they don't exist. Warning: you have to have 'create table' db permissions to do that!
                 .SetEnableSagas(false) //disable saga for now
                 .UseStaticMessageRouting("routing.json") //
+                .UseSqlSequenceManager()
                 .SetAlwaysPublishLocal(false) //don't publish to local (publisher) queue by default
                 .FinishConfiguration()
                 .StartMessageBus(); //run the queue
