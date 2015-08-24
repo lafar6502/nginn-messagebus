@@ -15,9 +15,6 @@ namespace NGinnBPM.MessageBus.Windsor
             _krnl = kernel;
         }
 
-        #region IServiceResolver Members
-
-        
 
         public object GetInstance(Type t)
         {
@@ -29,19 +26,16 @@ namespace NGinnBPM.MessageBus.Windsor
             return _krnl.Resolve(name, t);
         }
 
-        public T GetInstance<T>()
+        public T GetInstance<T>() where T : class
         {
             return _krnl.Resolve<T>();
         }
 
-        public T GetInstance<T>(string name)
+        public T GetInstance<T>(string name) where T : class
         {
             return _krnl.Resolve<T>(name);
         }
 
-        #endregion
-
-        #region IServiceResolver Members
 
         public ICollection<object> GetAllInstances(Type t)
         {
@@ -49,12 +43,10 @@ namespace NGinnBPM.MessageBus.Windsor
             return new List<object>(a.Cast<object>());
         }
 
-        public ICollection<T> GetAllInstances<T>()
+        public ICollection<T> GetAllInstances<T>() where T : class
         {
             return _krnl.ResolveAll<T>();
         }
-
-        #endregion
 
 
         public bool HasService(Type t)
