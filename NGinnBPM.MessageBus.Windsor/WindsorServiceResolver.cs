@@ -29,12 +29,12 @@ namespace NGinnBPM.MessageBus.Windsor
             return _krnl.Resolve(name, t);
         }
 
-        public T GetInstance<T>()
+        public T GetInstance<T>() where T : class
         {
             return _krnl.Resolve<T>();
         }
 
-        public T GetInstance<T>(string name)
+        public T GetInstance<T>(string name) where T : class
         {
             return _krnl.Resolve<T>(name);
         }
@@ -49,7 +49,7 @@ namespace NGinnBPM.MessageBus.Windsor
             return new List<object>(a.Cast<object>());
         }
 
-        public ICollection<T> GetAllInstances<T>()
+        public ICollection<T> GetAllInstances<T>() where T : class
         {
             return _krnl.ResolveAll<T>();
         }
