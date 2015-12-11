@@ -21,6 +21,25 @@ namespace Tests
                 .Container;
         }
 
+        public static IWindsorContainer ConfigureTheBusSendOnly()
+        {
+            return MessageBusConfigurator.Begin()
+                .ConfigureFromAppConfig()
+                .AutoStartMessageBus(true)
+                .UseStaticMessageRouting("routing.json")
+                .SetSendOnly(true)
+                .FinishConfiguration()
+                .Container;
+        }
+
+        public static void TestSendOnly()
+        {
+            var container = ConfigureTheBusSendOnly();
+            var bus = container.Resolve<IMessageBus>();
+
+            bus.Notify(new MessageNotUsedAnywhere { Really = "oh dear" });
+        }
+
 
         public static void Test()
         {
@@ -29,5 +48,10 @@ namespace Tests
 
             bus.Notify(new TestMessage1 { Id = 1234 });
         }
+    }
+
+    public class MessageNotUsedAnywhere
+    {
+        public string Really { get; set; }
     }
 }

@@ -531,6 +531,15 @@ namespace NGinnBPM.MessageBus.Impl
         	var rm = this.GetCurrentTransactionMessageBatch();
         	return  rm == null ? null : Newtonsoft.Json.JsonConvert.SerializeObject(rm.Messages);
         }
+
+        public bool HasUncommitedMessages
+        {
+            get
+            {
+                var rm = this.GetCurrentTransactionMessageBatch();
+                return rm == null || rm.Messages == null || rm.Messages.Count == 0 ? false : true;
+            }
+        }
         
         public void SetCurrentTransactionState(string state)
         {

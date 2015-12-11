@@ -1054,7 +1054,7 @@ namespace NGinnBPM.MessageBus.Windsor
                 UseSqlSubscriptions();
             }
             var dcs = GetDefaultConnectionString();
-            if (EnableSagas)
+            if (EnableSagas && !SendOnly)
             {
                 if (!IsServiceRegistered<SagaStateHelper>())
                 {
@@ -1094,7 +1094,7 @@ namespace NGinnBPM.MessageBus.Windsor
             {
                 pl.OnFinishConfiguration(_wc);
             }
-            if (dcs != null)
+            if (dcs != null && !SendOnly && AutoCreateQueues)
             {
                 using (var con = SqlHelper.OpenConnection(dcs))
                 {

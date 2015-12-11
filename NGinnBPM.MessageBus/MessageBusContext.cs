@@ -91,6 +91,20 @@ namespace NGinnBPM.MessageBus
         	var mb = (Impl.MessageBus) CurrentMessageBus;
         	return mb.GetCurrentTransactionState();
         }
+
+        /// <summary>
+        /// returns true if there are uncommited messages in current transaction (sent but not commited yet)
+        /// </summary>
+        public static bool HasUncommitedMessagesInTransaction
+        {
+            get
+            {
+                var t = Transaction.Current;
+                if (t == null) return false;
+                var mb = (Impl.MessageBus) CurrentMessageBus;
+                return mb.HasUncommitedMessages;
+            }
+        }
         
         /// <summary>
         /// Set current transaction state (or exactly, a list of outgoing messages to be sent on commit)

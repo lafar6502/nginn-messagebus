@@ -34,7 +34,8 @@ namespace Tests
             
             try
             {
-                ConfigExample.Test();
+                ConfigExample.TestSendOnly();
+                //ConfigExample.Test();
             	//OracleTests.TestBasicOps();
             	//OracleTests.TestDbInit();
             	//OracleTests.TestSend();

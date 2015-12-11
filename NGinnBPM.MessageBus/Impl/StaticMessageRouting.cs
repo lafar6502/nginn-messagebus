@@ -15,6 +15,15 @@ namespace NGinnBPM.MessageBus.Impl
         private Logger log = LogManager.GetCurrentClassLogger();
         private static string[] empty = new string[0];
 
+        public StaticMessageRouting()
+        {
+        }
+
+        public StaticMessageRouting(IDictionary<string, List<string>> routes)
+        {
+            _routes = new Dictionary<string, List<string>>(routes);
+        }
+
         public IEnumerable<string> GetTargetEndpoints(string messageType)
         {
             if (_routes == null) LoadConfig();
