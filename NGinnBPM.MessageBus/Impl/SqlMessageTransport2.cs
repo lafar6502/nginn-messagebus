@@ -39,10 +39,14 @@ namespace NGinnBPM.MessageBus.Impl
 
         public virtual void SendBatch(IList<MessageContainer> messages, object conn)
         {
-            var sc = conn as DbConnection;
-            if (sc == null && AllowUseOfApplicationDbConnectionForSending)
+            var sc = CurrentConnection;
+            if (sc == null || !UseReceiveTransactionForSending)
             {
-                sc = MessageBusContext.AppManagedConnection as DbConnection;
+                sc = conn as DbConnection;
+                if (sc == null && AllowUseOfApplicationDbConnectionForSending)
+                {
+                    sc = MessageBusContext.AppManagedConnection as DbConnection;
+                }
             }
 
             if (sc != null 
@@ -55,7 +59,7 @@ namespace NGinnBPM.MessageBus.Impl
             {
                 if (AllowUseOfApplicationDbConnectionForSending && sc != null)
                 {
-                    log.Debug("*Not sharing the connection");
+                    log.Warn("Not reusing the connection for sending messages!");
                 }
                 InsertMessageBatchToLocalQueues(messages);
             }
@@ -853,6 +857,7 @@ namespace NGinnBPM.MessageBus.Impl
                         }
                         finally
                         {
+
                             _curMsg = null;
                         }
 
@@ -865,6 +870,11 @@ namespace NGinnBPM.MessageBus.Impl
                     }
                     finally
                     {
+                        if (Transaction.Current == null)
+                        {
+                            log.Warn("Transaction timed out for message {0}", id);
+                        }
+
                         if (!abort)
                         {
                             ts.Complete();
@@ -1029,6 +1039,7 @@ namespace NGinnBPM.MessageBus.Impl
         
         private void InsertMessageBatchToLocalQueues(ICollection<MessageContainer> messages)
         {
+            if (messages == null || messages.Count == 0) return;
             var cm = _curMsg;
             if (UseReceiveTransactionForSending &&
                 CurrentConnection != null)
@@ -1040,6 +1051,7 @@ namespace NGinnBPM.MessageBus.Impl
             {
                 using (var con = OpenConnection())
                 {
+                    log.Warn("Connection opened just for sending. Messages {0}", messages.Count);
                     InsertMessageBatchToLocalQueues(con, messages);
                 }
             }

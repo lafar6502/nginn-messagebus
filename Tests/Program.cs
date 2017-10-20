@@ -34,13 +34,13 @@ namespace Tests
             
             try
             {
-                ConfigExample.TestSendOnly();
+                //ConfigExample.TestSendOnly();
                 //ConfigExample.Test();
             	//OracleTests.TestBasicOps();
             	//OracleTests.TestDbInit();
             	//OracleTests.TestSend();
-            	OracleTests.TestNamedQ();
-            	OracleTests.TestQueueOps();
+            	//OracleTests.TestNamedQ();
+            	//OracleTests.TestQueueOps();
             	//Console.ReadLine();
             	//return;
                 //MongoQueue.Test1();

@@ -59,12 +59,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Castle.Core, Version=3.2.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Castle.Core.3.2.2\lib\net45\Castle.Core.dll</HintPath>
+      <HintPath>..\packages\Castle.Core.3.2.0\lib\net45\Castle.Core.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Castle.Windsor, Version=3.2.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Castle.Windsor.3.2.1\lib\net45\Castle.Windsor.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="MongoDB.Bson, Version=1.8.1.20, Culture=neutral, PublicKeyToken=f686731cfb9cc103, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -75,12 +75,12 @@
       <HintPath>..\packages\mongocsharpdriver.1.8.1\lib\net35\MongoDB.Driver.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.6.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="NLog, Version=2.1.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NLog.2.1.0\lib\net45\NLog.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
@@ -108,7 +108,6 @@
     <Compile Include="ConfigExample.cs" />
     <Compile Include="CorrelationIdSaga.cs" />
     <Compile Include="HelloWorldServlet.cs" />
-    <Compile Include="MongoQueue.cs" />
     <Compile Include="OracleTests.cs" />
     <Compile Include="PerfTest.cs" />
     <Compile Include="Program.cs" />
@@ -121,14 +120,6 @@
     <Compile Include="TransactionTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NGinnBPM.MessageBus.Mongo.Windsor\NGinnBPM.MessageBus.Mongo.Windsor.csproj">
-      <Project>{4F4877EC-6608-4532-A91A-303DD2A35F39}</Project>
-      <Name>NGinnBPM.MessageBus.Mongo.Windsor</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\NGinnBPM.MessageBus.Mongo\NGinnBPM.MessageBus.Mongo.csproj">
-      <Project>{26131B9A-9DCB-46FD-BBAC-8EC15109E804}</Project>
-      <Name>NGinnBPM.MessageBus.Mongo</Name>
-    </ProjectReference>
     <ProjectReference Include="..\NGinnBPM.MessageBus.Windsor\NGinnBPM.MessageBus.Windsor.csproj">
       <Project>{6837107E-5C65-4228-BB86-F8C97334016D}</Project>
       <Name>NGinnBPM.MessageBus.Windsor</Name>

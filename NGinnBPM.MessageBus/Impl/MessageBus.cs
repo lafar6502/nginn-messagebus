@@ -432,6 +432,10 @@ namespace NGinnBPM.MessageBus.Impl
             }
             if (Transaction.Current == null || BatchOutgoingMessagesInTransaction == false)
             {
+                if (BatchOutgoingMessagesInTransaction)
+                {
+                    log.Warn("Sending messages - no transaction scope, msg type: {0}, count: {1}", lst.FirstOrDefault().Body.GetType().Name, lst.Count);
+                }
                 MessageTransport.SendBatch(lst, dbTran);
             }
             else

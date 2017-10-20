@@ -373,6 +373,7 @@ namespace NGinnBPM.MessageBus.Windsor
         /// <returns></returns>
         public MessageBusConfigurator UseStaticMessageRouting(string configFile)
         {
+            
             _wc.Register(Component.For<ISubscriptionService>()
                 .ImplementedBy<StaticMessageRouting>().LifeStyle.Singleton
                 .DependsOn(new
@@ -786,7 +787,8 @@ namespace NGinnBPM.MessageBus.Windsor
         {
             foreach (Type t in asm.GetTypes())
             {
-                if (!IsServiceRegistered(wc, t))
+                if (t.IsInterface || t.IsAbstract) continue;
+                if (!t.GetInterfaces().Contains(typeof(DontAutoRegisterMe)) && !IsServiceRegistered(wc, t))
                 {
                     RegisterHandlerType(t, wc);
                 }
@@ -940,10 +942,11 @@ namespace NGinnBPM.MessageBus.Windsor
         /// <returns></returns>
         public MessageBusConfigurator RegisterHttpHandlersFromAssembly(Assembly asm)
         {
+            
             foreach (Type t in asm.GetTypes())
             {
-                if (t.IsAbstract) continue;
-                if (typeof(NGinnBPM.MessageBus.Impl.HttpService.IServlet).IsAssignableFrom(t))
+                if (t.IsAbstract || t.IsInterface) continue;
+                if (typeof(NGinnBPM.MessageBus.Impl.HttpService.IServlet).IsAssignableFrom(t) && !t.GetInterfaces().Contains(typeof(DontAutoRegisterMe)))
                 {
                     RegisterHttpHandler(t);
                 }
@@ -963,7 +966,7 @@ namespace NGinnBPM.MessageBus.Windsor
         {
             foreach (Type t in asm.GetTypes())
             {
-                if (typeof(IMessageHandlerServiceBase).IsAssignableFrom(t) && !IsServiceRegistered(_wc, t))
+                if (typeof(IMessageHandlerServiceBase).IsAssignableFrom(t) && !t.GetInterfaces().Contains(typeof(DontAutoRegisterMe)) && !IsServiceRegistered(_wc, t))
                 {
                     RegisterHttpMessageService(t);
                 }

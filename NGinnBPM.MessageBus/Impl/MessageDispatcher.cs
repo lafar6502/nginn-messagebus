@@ -122,10 +122,18 @@ namespace NGinnBPM.MessageBus.Impl
             }
         }
 
+        /// <summary>
+        /// returns true if there is a registered handler for messageType
+        /// (it can be handler for messageType or any of its base types, or any of interfaces messageType implements)
+        /// Important: if you register IMessageConsumer&lt;object&gt; this method will ignore this handler
+        /// when checking for base types
+        /// </summary>
+        /// <param name="messageType"></param>
+        /// <returns></returns>
         public virtual bool HasHandlerFor(Type messageType)
         {
             var tp = messageType;
-            while (tp != null) //dispatch based on message type
+            while (tp != null && tp != typeof(object)) //dispatch based on message type
             {
                 var ht = GetHandlersFor(tp).MessageHandlerGenericType;
                 if (ServiceLocator.HasService(ht)) return true;
