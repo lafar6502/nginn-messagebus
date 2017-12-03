@@ -532,12 +532,15 @@ namespace NGinnBPM.MessageBus.Impl
             NLog.MappedDiagnosticsContext.Set("nmbendpoint", Endpoint.Replace('/', '_').Replace(':', '_'));
             log.Info("Cleanup thread started");
             Thread.Sleep(2000);
+            
             while (!_stop)
             {
+                var anything = false;
                 try
                 {
                     if (ProcessRetryMessages())
                     {
+                        anything = true;
                         Wakeup();
                     }
                     if (!_stop && (DateTime.Now - lastCleanup).TotalMinutes > 1.03)
@@ -546,7 +549,7 @@ namespace NGinnBPM.MessageBus.Impl
                         lastCleanup = DateTime.Now;
                         DetectStuckMessages();
                     }
-                    Thread.Sleep(TimeSpan.FromSeconds(8.39));
+                    Thread.Sleep(TimeSpan.FromSeconds(anything ? 90 : 8.39));
                 }
                 catch (ThreadInterruptedException)
                 {
@@ -560,7 +563,7 @@ namespace NGinnBPM.MessageBus.Impl
                 catch (Exception ex)
                 {
                     log.Error("Cleanup  thread error - pausing execution: {0}", ex);
-                    Thread.Sleep(TimeSpan.FromMinutes(2));
+                    Thread.Sleep(TimeSpan.FromMinutes(3));
                 }
             }
         }
