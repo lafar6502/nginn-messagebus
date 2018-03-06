@@ -38,7 +38,7 @@ namespace NGinnBPM.MessageBus.Impl
             }
             log.Info("Forwarding incoming http message {0} (from {1}) to {2}", message, message.From, _bus.Endpoint);
             message.To = _bus.Endpoint;
-            _bus.Send(message);
+            _bus.SendBatch(new List<MessageContainer>() { message }, null);
             ReceivedMessageRegistry.RegisterReceived(message.UniqueId);
         }
     }

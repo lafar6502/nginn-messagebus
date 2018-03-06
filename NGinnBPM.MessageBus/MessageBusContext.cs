@@ -61,24 +61,21 @@ namespace NGinnBPM.MessageBus
             }
         }
 
-        /// <summary>
-        /// This property can be used to pass application's
-        /// db connection to NGinn.MessageBus. MessageBus 
-        /// can use it for sending messages in order to improve performance
-        /// and to avoid initiating a distributed transaction.
-        /// It depends on message bus configuration if this
-        /// connection will be used or not. For sql transport this
-        /// property should contain a SqlConnection object.
-        /// The application is responsible for clearing this property
-        /// when the connection is closed.
-        /// This is an advanced functionality, should be used only because of specific performance reasons
-        /// </summary>
         public static object AppManagedConnection
         {
-            get { return _appCon; }
-            set { _appCon = value; }
+            get
+            {
+                if (ProvideAppManagedConnection != null) return ProvideAppManagedConnection();
+                return _appCon;
+            }
+            set
+            {
+                _appCon = value;
+            }
         }
         
+        public static Func<object> ProvideAppManagedConnection { get; set; }
+
         /// <summary>
         /// Get current transaction's outgoing messages in serialized form
         /// this is used for persisting state between transactions

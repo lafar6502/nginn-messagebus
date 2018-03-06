@@ -342,11 +342,6 @@ namespace NGinnBPM.MessageBus.Impl
         /// </summary>
         string Endpoint { get; }
         /// <summary>
-        /// Send a message. Destination is in message.To field.
-        /// </summary>
-        /// <param name="message"></param>
-        void Send(MessageContainer message);
-        /// <summary>
         /// Send a batch of messages. Message destinations are in 'To' field.
         /// </summary>
         /// <param name="messages"></param>

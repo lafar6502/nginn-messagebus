@@ -67,7 +67,7 @@ namespace NGinnBPM.MessageBus.Impl
             string sn = string.Format("MessageTransport_{0}", uri.Scheme);
             IMessageTransport mt = ServiceLocator.GetInstance<IMessageTransport>(sn);
             if (mt == null) throw new Exception("No message transport configured for destination " + dest);
-            mt.Send(message);
+            mt.SendBatch(new List<MessageContainer>() { message }, null);
         }
 
         void _transport_OnMessageArrived(MessageContainer message, IMessageTransport transport)
@@ -97,14 +97,7 @@ namespace NGinnBPM.MessageBus.Impl
                 {
                     callbacks.Reverse();
                     callbacks.ForEach(x => {
-                        try
-                        {
-                            x.AfterMessageProcessed(message, this, this._transport, e2);
-                        }
-                        catch (Exception e3)
-                        {
-                            log.Warn("Callback error: {0}", e3);
-                        }
+                        x.AfterMessageProcessed(message, this, this._transport, e2);
                     });
                 }
             }

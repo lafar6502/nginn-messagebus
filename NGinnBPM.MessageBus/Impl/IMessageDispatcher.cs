@@ -13,6 +13,7 @@ namespace NGinnBPM.MessageBus.Impl
         void DispatchMessage(object message, IMessageBus bus);
         /// <summary>
         /// Check if there are any handlers for specified message type
+        /// Important: doesn't look at IOutgoingMessageHandlers, just normal message handlers.
         /// </summary>
         /// <param name="messageType"></param>
         /// <returns></returns>

@@ -1,20 +1,23 @@
+dobra uproszczenie mb
 
-IMessageConsumer<T>
-IMessageHandlerService<T>
-InitiatedBy<T>
-IHandleSagaMessage<T>
 
-4 interfejsy do obslugi komunikatow. Jak to ujednoliciæ
+1. odbieranie
 
-Message bus -> saga, service, message consumer, custom message handler
-Service call -> IMessageHandlerService -> saga
+connection string -> transport/kolejka -> dispatcher
+tworzy transaction scope, sam sobie otwiera po³aczenie i zarz¹dza transakcj¹.
 
-Jak to wszystko pogodzic?
-Jeden dispatcher czy wielu???
+2. wysy³anie
+zak³adamy ¿e jesteœmy w transaction scopie - mo¿emy? raczej tak bo przy odbieraniu takie za³o¿enie jest.
+po³¹czenie pochodzi z zewn¹trz, albo jest nasze w³asne
+czy mo¿emy po³¹czenie sobie otworzyæ sami? 
+tylko gdy a) wysy³amy do innej bazy danych 
+lub b) nikt nam nie da³ po³¹czenia - ale to musi byæ sterowane przez konfiguracjê, tzn konfiguracja musi jawnie dopuœciæ tak¹ mo¿liwoœæ.
 
-1. szukanie handlera dla komunikatu -> tak samo dla wszystkich (interfejsy, typy bazowe etc)
-   rozni sie tylko interfejs
-2. znalazles? sprawdz czy saga. Jesli tak to wyciagnij j¹ z bazy
-3. deliver message to handlers. break jesli handlecurrentmessagelater
-4. zapisz sage jesli saga
+3. wiele kolejek - jak obs³u¿yæ nie mno¿¹c w¹tków? jakiœ round-robin by móg³.
+na pewno nie wolno tworzyc wielu message busów - jeden message bus na jedn¹ bazê danych.
+czyli by default jedna glob. instancja
 
+4. jakie scenariusze
+a) normalne -> send , do kolejki, receive
+b) tylko send (tzn bez wk³adania do kolejki) - to obs³ugujemy jak a tylko ¿e nie ma subskrypcji
+c) 

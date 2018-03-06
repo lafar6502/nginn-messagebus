@@ -30,12 +30,6 @@ namespace NGinnBPM.MessageBus.Impl
     {
         #region IMessageTransport Members
 
-        public void Send(MessageContainer message)
-        {
-            List<MessageContainer> lst = new List<MessageContainer>();
-            lst.Add(message);
-            SendBatch(lst, null);
-        }
 
         public virtual void SendBatch(IList<MessageContainer> messages, object conn)
         {
