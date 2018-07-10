@@ -151,7 +151,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
                             cnt++;
                             if (cmd.Parameters.Count >= _sql.MaxNumberOfQueryParams)
                             {
-                                reuseBody = false;
+                                prevBody = null; //dont reuse
                                 qry = cmd.CommandText;
                                 qprm = SqlAbstract_sqlserver.DumpCommandParams(cmd);
                                 cmd.ExecuteNonQuery();
