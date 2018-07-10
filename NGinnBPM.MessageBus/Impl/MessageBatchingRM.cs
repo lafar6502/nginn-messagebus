@@ -14,6 +14,7 @@ namespace NGinnBPM.MessageBus.Impl
     /// </summary>
     internal class MessageBatchingRM : ISinglePhaseNotification
     {
+        internal object _appManagedConnection;
 
         public DateTime CreatedDate { get; private set; }
         public string TransactionId { get; set; }
@@ -25,6 +26,7 @@ namespace NGinnBPM.MessageBus.Impl
 
         public MessageBatchingRM(Action<MessageBatchingRM> onPrepare, Action<MessageBatchingRM> onCommit, Action<MessageBatchingRM> onRollback)
         {
+            _appManagedConnection = MessageBusContext.AppManagedConnection;
             CreatedDate = DateTime.Now;
             Messages = new List<MessageContainer>();
             TransactionOpen = true;
@@ -75,6 +77,7 @@ namespace NGinnBPM.MessageBus.Impl
                     catch (Exception e2)
                     {
                         log.Error("Error performing rollback after a failed prepare: {0}", e2);
+                        throw;
                     }
                 }
             }

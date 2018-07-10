@@ -40,12 +40,15 @@ namespace NGinnBPM.MessageBus.Impl
                 if (sc == null && AllowUseOfApplicationDbConnectionForSending)
                 {
                     sc = MessageBusContext.AppManagedConnection as DbConnection;
+                    if (sc != null && sc.State != ConnectionState.Open)
+                    {
+                        log.Warn("App managed connection state is {0}. ignoring", sc.State);
+                        sc = null;
+                    }
                 }
             }
 
-            if (sc != null 
-                && SqlHelper.IsSameDatabaseConnection(sc, ConnectionString.ConnectionString)
-                && sc.State == ConnectionState.Open)
+            if (sc != null && sc.State == ConnectionState.Open && SqlHelper.IsSameDatabaseConnection(sc, ConnectionString.ConnectionString))
             {
                 InsertMessageBatchToLocalQueues(sc, messages);
             }

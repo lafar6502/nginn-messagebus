@@ -568,12 +568,24 @@ namespace NGinnBPM.MessageBus.Impl
                 if (_messageBatches.TryGetValue(tid, out rm))
                     return rm;
                 log.Debug("Enlisting resource manager for {0}", tid);
-                rm = new MessageBatchingRM(r => MessageTransport.SendBatch(r.Messages, null), CommitMessageBatch, RollbackMessageBatch);
+                rm = new MessageBatchingRM(r => DoPrepare(r), CommitMessageBatch, RollbackMessageBatch);
+                rm._appManagedConnection = MessageBusContext.AppManagedConnection;
+
                 rm.TransactionId = tid;
                 _messageBatches[tid] = rm;
             }
             Transaction.Current.EnlistVolatile(rm, EnlistmentOptions.None);
             return rm;
+        }
+
+        private void DoPrepare(MessageBatchingRM rm)
+        {
+            if (rm._appManagedConnection != null && rm._appManagedConnection != MessageBusContext.AppManagedConnection)
+            {
+                log.Error("App managed connection is different. was {0}, is {1}", rm._appManagedConnection, MessageBusContext.AppManagedConnection == null ? "-null-" : MessageBusContext.AppManagedConnection.ToString());
+            }
+            MessageTransport.SendBatch(rm.Messages, null);
+            rm.Messages.Clear();
         }
 
         private void CommitMessageBatch(MessageBatchingRM rm)
