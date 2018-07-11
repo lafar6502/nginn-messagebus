@@ -130,14 +130,11 @@
     <Compile Include="Impl\HttpService\NLogLastDiagnosticMessagesServlet.cs" />
     <Compile Include="Impl\ICache.cs" />
     <Compile Include="Impl\ICustomMessageHandler.cs" />
-    <Compile Include="Impl\IMessageContainerSerializer.cs" />
     <Compile Include="Impl\IMessageTransport.cs" />
     <Compile Include="Impl\ISequenceMessages.cs" />
     <Compile Include="Impl\ISerializeMessages.cs" />
     <Compile Include="Impl\IStartableService.cs" />
     <Compile Include="Impl\ISubscriptionService.cs" />
-    <Compile Include="Impl\JsonMessageContainerSerializer.cs" />
-    <Compile Include="Impl\MSMQ\MSMQTransport.cs" />
     <Compile Include="Impl\PingService.cs" />
     <Compile Include="Impl\SqlQueue\CommonQueueOps.cs" />
     <Compile Include="Impl\SqlQueue\ISqlQueue.cs" />
