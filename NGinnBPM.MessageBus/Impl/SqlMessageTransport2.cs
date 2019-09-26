@@ -712,165 +712,175 @@ namespace NGinnBPM.MessageBus.Impl
             try
             {
                 TransactionOptions to = new TransactionOptions { IsolationLevel = System.Transactions.IsolationLevel.ReadCommitted, Timeout = DefaultTransactionTimeout };
-                using (TransactionScope ts = new TransactionScope(TransactionScopeOption.Required, to))
+                try
                 {
-                    conn.EnlistTransaction(Transaction.Current);
-                    try
+                    using (TransactionScope ts = new TransactionScope(TransactionScopeOption.Required, to))
                     {
-                        bool moreMessages = false;
-                        //var mc = UseSqlOutputClause ? SelectNextMessageForProcessing2008(conn, out retryTime) : SelectNextMessageForProcessing(conn, out retryTime, out moreMessages);
-                        var mc = GetQueueOps(conn).SelectAndLockNextInputMessage(conn, _queueTable, () => _nowProcessing.Keys, out retryTime, out moreMessages);
-                        if (mc == null) return moreMessages;
-                        id = mc.BusMessageId;
-                        _nowProcessing[id] = DateTime.Now;
-                        NLog.MappedDiagnosticsContext.Set("nmbrecvmsg", id);
-                        log.Debug("Selected message {0} for processing", id);
-                        
-                        _frequency.Enqueue(_freqSw.ElapsedTicks);
-                        long tmp;
-                        while (_frequency.Count > MaxConcurrentMessages && _frequency.TryDequeue(out tmp)) {};
-                    
-
-                        retryCount = mc.RetryCount;
-                        mc.IsFinalRetry = retryCount >= _retryTimes.Length;
-                        doRetry = mc.IsFinalRetry ? MessageFailureDisposition.Fail : MessageFailureDisposition.RetryIncrementRetryCount;
-                        
-                        nextRetry = doRetry == MessageFailureDisposition.RetryIncrementRetryCount ? DateTime.Now + _retryTimes[retryCount] : (DateTime?)null;
-
-                        _curMsg = new CurMsgInfo(mc);
-                        if (retryTime.HasValue)
-                        {
-                            TimeSpan latency = DateTime.Now - retryTime.Value;
-                            statLog.Info("LATENCY:{0}", (long) latency.TotalMilliseconds);
-                        }
+                        conn.EnlistTransaction(Transaction.Current);
                         try
                         {
-                            if (mc.HasHeader(MessageContainer.HDR_TTL))
+                            bool moreMessages = false;
+                            //var mc = UseSqlOutputClause ? SelectNextMessageForProcessing2008(conn, out retryTime) : SelectNextMessageForProcessing(conn, out retryTime, out moreMessages);
+                            var mc = GetQueueOps(conn).SelectAndLockNextInputMessage(conn, _queueTable, () => _nowProcessing.Keys, out retryTime, out moreMessages);
+                            if (mc == null) return moreMessages;
+                            id = mc.BusMessageId;
+                            _nowProcessing[id] = DateTime.Now;
+                            NLog.MappedDiagnosticsContext.Set("nmbrecvmsg", id);
+                            log.Debug("Selected message {0} for processing", id);
+
+                            _frequency.Enqueue(_freqSw.ElapsedTicks);
+                            long tmp;
+                            while (_frequency.Count > MaxConcurrentMessages && _frequency.TryDequeue(out tmp)) { };
+
+
+                            retryCount = mc.RetryCount;
+                            mc.IsFinalRetry = retryCount >= _retryTimes.Length;
+                            doRetry = mc.IsFinalRetry ? MessageFailureDisposition.Fail : MessageFailureDisposition.RetryIncrementRetryCount;
+
+                            nextRetry = doRetry == MessageFailureDisposition.RetryIncrementRetryCount ? DateTime.Now + _retryTimes[retryCount] : (DateTime?)null;
+
+                            _curMsg = new CurMsgInfo(mc);
+                            if (retryTime.HasValue)
                             {
-                                var ttl = mc.GetDateTimeHeader(MessageContainer.HDR_TTL, DateTime.MaxValue);
-                                if (ttl < DateTime.Now)
+                                TimeSpan latency = DateTime.Now - retryTime.Value;
+                                statLog.Info("LATENCY:{0}", (long)latency.TotalMilliseconds);
+                            }
+                            try
+                            {
+                                if (mc.HasHeader(MessageContainer.HDR_TTL))
                                 {
-                                    log.Info("Message #{0} TTL expired", id);
+                                    var ttl = mc.GetDateTimeHeader(MessageContainer.HDR_TTL, DateTime.MaxValue);
+                                    if (ttl < DateTime.Now)
+                                    {
+                                        log.Info("Message #{0} TTL expired", id);
+                                        abort = false;
+                                        return true;
+                                    }
+                                }
+                                if (!IsLocalEndpoint(mc.To))
+                                {
+                                    ForwardMessageToRemoteEndpoint(mc);
                                     abort = false;
                                     return true;
                                 }
-                            }
-                            if (!IsLocalEndpoint(mc.To))
-                            {
-                                ForwardMessageToRemoteEndpoint(mc);
-                                abort = false;
-                                return true;
-                            }
-                            if (mc.HasHeader(MessageContainer.HDR_SeqId) && SequenceManager != null)
-                            {
-                                var seqn = mc.SequenceNumber;
-                                if (seqn < 0) throw new Exception("Invalid sequence ordinal number");
+                                if (mc.HasHeader(MessageContainer.HDR_SeqId) && SequenceManager != null)
+                                {
+                                    var seqn = mc.SequenceNumber;
+                                    if (seqn < 0) throw new Exception("Invalid sequence ordinal number");
 
-                                var md = SequenceManager.SequenceMessageArrived(mc.SequenceId, seqn, mc.SequenceLength, conn, id);
-                                if (md.MessageDispositon == SequenceMessageDisposition.ProcessingDisposition.RetryImmediately)
-                                {
-                                    return true;
-                                }
-                                else if (md.MessageDispositon == SequenceMessageDisposition.ProcessingDisposition.Postpone)
-                                {
-                                	GetQueueOps(conn).MarkMessageForProcessingLater(conn, _queueTable, id, md.EstimatedRetry.HasValue ? md.EstimatedRetry.Value : DateTime.Now.AddMinutes(1));
-                                    abort = false; //save the transaction
-                                    return true;
-                                }
-                                else if (md.MessageDispositon == SequenceMessageDisposition.ProcessingDisposition.HandleMessage)
-                                {
-                                    if (!string.IsNullOrEmpty(md.NextMessageId))
+                                    var md = SequenceManager.SequenceMessageArrived(mc.SequenceId, seqn, mc.SequenceLength, conn, id);
+                                    if (md.MessageDispositon == SequenceMessageDisposition.ProcessingDisposition.RetryImmediately)
                                     {
-                                    	GetQueueOps(conn).MoveMessageFromRetryToInput(conn, _queueTable, md.NextMessageId);
+                                        return true;
                                     }
+                                    else if (md.MessageDispositon == SequenceMessageDisposition.ProcessingDisposition.Postpone)
+                                    {
+                                        GetQueueOps(conn).MarkMessageForProcessingLater(conn, _queueTable, id, md.EstimatedRetry.HasValue ? md.EstimatedRetry.Value : DateTime.Now.AddMinutes(1));
+                                        abort = false; //save the transaction
+                                        return true;
+                                    }
+                                    else if (md.MessageDispositon == SequenceMessageDisposition.ProcessingDisposition.HandleMessage)
+                                    {
+                                        if (!string.IsNullOrEmpty(md.NextMessageId))
+                                        {
+                                            GetQueueOps(conn).MoveMessageFromRetryToInput(conn, _queueTable, md.NextMessageId);
+                                        }
+                                    }
+                                    else throw new Exception();
                                 }
-                                else throw new Exception();
-                            }
 
-                            //log.Trace("Processing message {0} locally", mc.BusMessageId);
-                            if (OnMessageArrived != null)
-                            {
-                                OnMessageArrived(mc, this);
-                                if (mc.Body != null) mtype = mc.Body.GetType().Name;
-                            }
-                            else
-                            {
-                                throw new Exception("OnMessageArrived not configured for Sql transport " + Endpoint);
-                            }
-                            abort = false;
-
-                            if (_curMsg.ProcessLater.HasValue)
-                            {
-                                if (_curMsg.ProcessLater.Value <= DateTime.Now)
+                                //log.Trace("Processing message {0} locally", mc.BusMessageId);
+                                if (OnMessageArrived != null)
                                 {
-                                    abort = true;
+                                    OnMessageArrived(mc, this);
+                                    if (mc.Body != null) mtype = mc.Body.GetType().Name;
                                 }
                                 else
                                 {
-                                	GetQueueOps(conn).MarkMessageForProcessingLater(conn, _queueTable, id, _curMsg.ProcessLater.Value);
-                                    //MarkMessageForProcessingLater(id, _curMsg.ProcessLater.Value, null, conn);
+                                    throw new Exception("OnMessageArrived not configured for Sql transport " + Endpoint);
+                                }
+                                abort = false;
+
+                                if (_curMsg.ProcessLater.HasValue)
+                                {
+                                    if (_curMsg.ProcessLater.Value <= DateTime.Now)
+                                    {
+                                        abort = true;
+                                    }
+                                    else
+                                    {
+                                        GetQueueOps(conn).MarkMessageForProcessingLater(conn, _queueTable, id, _curMsg.ProcessLater.Value);
+                                        //MarkMessageForProcessingLater(id, _curMsg.ProcessLater.Value, null, conn);
+                                    }
+                                }
+                                if (Transaction.Current.TransactionInformation.Status == TransactionStatus.Aborted)
+                                {
+                                    throw new Exception("Current transaction has aborted without an exception (probably because inner TransactionScope has aborted)");
+                                }
+                                return true;
+                            }
+                            catch (ThreadAbortException)
+                            {
+                                log.Warn("ThreadAbort when processing message");
+                                abort = true;
+                                throw;
+                            }
+                            catch (RetryMessageProcessingException ex)
+                            {
+                                log.Info("Retry message processing at {1}: {0}", ex.Message, ex.RetryTime);
+                                abort = true;
+                                doRetry = MessageFailureDisposition.RetryDontIncrementRetryCount;
+                                nextRetry = ex.RetryTime;
+                            }
+                            catch (Exception ex)
+                            {
+                                abort = true;
+                                messageFailed = true;
+                                log.Warn("Error processing message {0}: {1}", id, ex);
+                                handlingError = ex;
+                                if (ex is System.Reflection.TargetInvocationException)
+                                {
+                                    handlingError = ex.InnerException;
+                                }
+                                else if (ex is PermanentMessageProcessingException)
+                                {
+                                    if (ex.InnerException != null) handlingError = ex.InnerException;
+                                    doRetry = MessageFailureDisposition.Fail;
+                                }
+                                if (MessageFailed != null) MessageFailed(mc, handlingError);
+                                if (doRetry == MessageFailureDisposition.Fail)
+                                {
+                                    if (MessageFailedAllRetries != null) MessageFailedAllRetries(mc, handlingError);
                                 }
                             }
-                            if (Transaction.Current.TransactionInformation.Status == TransactionStatus.Aborted)
+                            finally
                             {
-                                throw new Exception("Current transaction has aborted without an exception (probably because inner TransactionScope has aborted)");
+                                _curMsg = null;
                             }
-                            return true;
-                        }
-                        catch (ThreadAbortException)
-                        {
-                            log.Warn("ThreadAbort when processing message");
-                            abort = true;
-                            throw;
-                        }
-                        catch (RetryMessageProcessingException ex)
-                        {
-                            log.Info("Retry message processing at {1}: {0}", ex.Message, ex.RetryTime);
-                            abort = true;
-                            doRetry = MessageFailureDisposition.RetryDontIncrementRetryCount;
-                            nextRetry = ex.RetryTime;
+
                         }
                         catch (Exception ex)
                         {
+                            log.Error("Unexpected error processing message {0}: {1}", id, ex.ToString());
                             abort = true;
-                            messageFailed = true;
-                            log.Warn("Error processing message {0}: {1}", id, ex);
-                            handlingError = ex;
-                            if (ex is System.Reflection.TargetInvocationException)
-                            {
-                                handlingError = ex.InnerException;
-                            }
-                            else if (ex is PermanentMessageProcessingException)
-                            {
-                                if (ex.InnerException != null) handlingError = ex.InnerException;
-                                doRetry = MessageFailureDisposition.Fail;
-                            }
-                            if (MessageFailed != null) MessageFailed(mc, handlingError);
-                            if (doRetry == MessageFailureDisposition.Fail)
-                            {
-                                if (MessageFailedAllRetries != null) MessageFailedAllRetries(mc, handlingError);
-                            }
+                            throw new Exception("Unexpected error", ex);
                         }
                         finally
                         {
-                            _curMsg = null;
+                            if (!abort)
+                            {
+                                ts.Complete();
+                            }
                         }
-
-                    }
-                    catch (Exception ex)
-                    {
-                        log.Error("Unexpected error processing message {0}: {1}", id, ex.ToString());
-                        abort = true;
-                        throw new Exception("Unexpected error", ex);
-                    }
-                    finally
-                    {
-                        if (!abort)
-                        {
-                            ts.Complete();
-                        }
-                    }
-                } //end transaction 1
+                    } //end transaction 1
+                }
+                catch (TransactionAbortedException ex) //  something goes wrong during Commit (eg. Prepare phase of commit throws exception)
+                {
+                    log.Error("Transaction aborted during processing message {0}: {1}", id, ex);
+                    abort = true;
+                    messageFailed = true;
+                    handlingError = ex;
+                }
                 
                 if (abort && messageFailed)
                 {
