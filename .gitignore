@@ -168,3 +168,5 @@ pip-log.txt
 
 # difftools
 *.orig
+
+.vs/

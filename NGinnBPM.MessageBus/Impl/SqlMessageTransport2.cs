@@ -45,6 +45,11 @@ namespace NGinnBPM.MessageBus.Impl
                         log.Warn("App managed connection state is {0}. ignoring", sc.State);
                         sc = null;
                     }
+                    if (sc == null && RequireUseOfApplicationDbConnectionForSending)
+                    {
+                        throw new Exception("App-managed db connection not available when sending a message");
+                    }
+                    
                 }
             }
 
@@ -110,7 +115,8 @@ namespace NGinnBPM.MessageBus.Impl
         /// This way you have a transactional receive and send without employing a distributed 
         /// transaction.
         /// </summary>
-        public bool UseReceiveTransactionForSending { get; set; }
+        public bool UseReceiveTransactionForSending { get; set; } = true;
+        
         /// <summary>
         /// If true, local messages will be inserted directly to their destination tables.
         /// Local messages are the ones that don't leave the database (sender and recipient are in the same database
@@ -230,6 +236,7 @@ namespace NGinnBPM.MessageBus.Impl
             DefaultTransactionTimeout = TimeSpan.FromMinutes(1);
             SendLocalMessagesDirectly = true;
             AllowUseOfApplicationDbConnectionForSending = true;
+            RequireUseOfApplicationDbConnectionForSending = false;
             UseReceiveTransactionForSending = true;
             ExposeReceiveConnection = true;
             SendOnly = false;
@@ -274,6 +281,12 @@ namespace NGinnBPM.MessageBus.Impl
         /// by the application for sending messages
         /// </summary>
         public bool AllowUseOfApplicationDbConnectionForSending { get; set; }
+        /// <summary>
+        /// set it to true when app-managed sending connection must always be present
+        /// if not present an error will be reported.
+        /// </summary>
+        public bool RequireUseOfApplicationDbConnectionForSending { get; set; }
+
         public bool ExposeReceiveConnection { get; set; }
         /// <summary>
         /// Set to true to pause processing

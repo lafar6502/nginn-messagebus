@@ -448,7 +448,8 @@ namespace NGinnBPM.MessageBus.Windsor
         }
 
         public bool UseAppManagedConnectionForSending { get; set; }
-        
+        public bool RequireAppManagedConnectionForSending { get; set; } = false;
+
 
         /// <summary>
         /// If true the message bus will try to use application-supplied db connection when
@@ -457,9 +458,10 @@ namespace NGinnBPM.MessageBus.Windsor
         /// </summary>
         /// <param name="b"></param>
         /// <returns></returns>
-        public MessageBusConfigurator UseApplicationManagedConnectionForSending(bool b)
+        public MessageBusConfigurator UseApplicationManagedConnectionForSending(bool b, bool require = false)
         {
             UseAppManagedConnectionForSending = b;
+            RequireAppManagedConnectionForSending = b ? require : false;
             return this;
         }
 
@@ -510,6 +512,7 @@ namespace NGinnBPM.MessageBus.Windsor
                     AutoStartProcessing = false,
                     UseReceiveTransactionForSending = ReuseReceiveConnectionForSending,
                     AllowUseOfApplicationDbConnectionForSending = UseAppManagedConnectionForSending,
+                    RequireUseOfApplicationDbConnectionForSending = UseAppManagedConnectionForSending && RequireAppManagedConnectionForSending,
                     ExposeReceiveConnection = ExposeReceiveConnectionToApplication,
                     DefaultTransactionTimeout = TransactionTimeout,
                     UseSqlOutputClause = _useSqlOutputClause,
@@ -583,6 +586,7 @@ namespace NGinnBPM.MessageBus.Windsor
                     AutoStartProcessing = false,
                     UseReceiveTransactionForSending = ReuseReceiveConnectionForSending,
                     AllowUseOfApplicationDbConnectionForSending = UseAppManagedConnectionForSending,
+                    RequireUseOfApplicationDbConnectionForSending = UseAppManagedConnectionForSending && RequireAppManagedConnectionForSending,
                     ExposeReceiveConnection = ExposeReceiveConnectionToApplication,
                     DefaultTransactionTimeout = TransactionTimeout,
                     UseSqlOutputClause = _useSqlOutputClause,
