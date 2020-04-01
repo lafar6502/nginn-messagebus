@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29123.88
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{F0163AC1-3926-4F2A-8033-9AB2B48B1C77}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NGinnBPM.MessageBus.Windsor", "NGinnBPM.MessageBus.Windsor\NGinnBPM.MessageBus.Windsor.csproj", "{6837107E-5C65-4228-BB86-F8C97334016D}"
@@ -16,10 +18,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NGinnBPM.ServiceHost", "NGinnBPM.ServiceHost\NGinnBPM.ServiceHost.csproj", "{835397FB-EC02-4BA8-9E20-78F1EE3745EB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerfTesting", "PerfTesting\PerfTesting.csproj", "{2C0D8214-5172-4FD1-8714-ECD25A2240BC}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NGinnBPM.MessageBus.Mongo", "NGinnBPM.MessageBus.Mongo\NGinnBPM.MessageBus.Mongo.csproj", "{26131B9A-9DCB-46FD-BBAC-8EC15109E804}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NGinnBPM.MessageBus.Mongo.Windsor", "NGinnBPM.MessageBus.Mongo.Windsor\NGinnBPM.MessageBus.Mongo.Windsor.csproj", "{4F4877EC-6608-4532-A91A-303DD2A35F39}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{D72F9F55-BDD9-434F-B37A-58772403905D}"
 	ProjectSection(SolutionItems) = preProject
@@ -92,26 +90,6 @@ Global
 		{2C0D8214-5172-4FD1-8714-ECD25A2240BC}.Release|Mixed Platforms.Build.0 = Release|x86
 		{2C0D8214-5172-4FD1-8714-ECD25A2240BC}.Release|x86.ActiveCfg = Release|x86
 		{2C0D8214-5172-4FD1-8714-ECD25A2240BC}.Release|x86.Build.0 = Release|x86
-		{26131B9A-9DCB-46FD-BBAC-8EC15109E804}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{26131B9A-9DCB-46FD-BBAC-8EC15109E804}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{26131B9A-9DCB-46FD-BBAC-8EC15109E804}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{26131B9A-9DCB-46FD-BBAC-8EC15109E804}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{26131B9A-9DCB-46FD-BBAC-8EC15109E804}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{26131B9A-9DCB-46FD-BBAC-8EC15109E804}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{26131B9A-9DCB-46FD-BBAC-8EC15109E804}.Release|Any CPU.Build.0 = Release|Any CPU
-		{26131B9A-9DCB-46FD-BBAC-8EC15109E804}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{26131B9A-9DCB-46FD-BBAC-8EC15109E804}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{26131B9A-9DCB-46FD-BBAC-8EC15109E804}.Release|x86.ActiveCfg = Release|Any CPU
-		{4F4877EC-6608-4532-A91A-303DD2A35F39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4F4877EC-6608-4532-A91A-303DD2A35F39}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4F4877EC-6608-4532-A91A-303DD2A35F39}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{4F4877EC-6608-4532-A91A-303DD2A35F39}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{4F4877EC-6608-4532-A91A-303DD2A35F39}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{4F4877EC-6608-4532-A91A-303DD2A35F39}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4F4877EC-6608-4532-A91A-303DD2A35F39}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4F4877EC-6608-4532-A91A-303DD2A35F39}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{4F4877EC-6608-4532-A91A-303DD2A35F39}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{4F4877EC-6608-4532-A91A-303DD2A35F39}.Release|x86.ActiveCfg = Release|Any CPU
 		{FDE72C46-684F-444D-A659-186774B8FF16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FDE72C46-684F-444D-A659-186774B8FF16}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FDE72C46-684F-444D-A659-186774B8FF16}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -125,5 +103,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0584E8B5-DF6B-483C-88E7-B15C15999DF5}
 	EndGlobalSection
 EndGlobal

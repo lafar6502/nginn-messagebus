@@ -67,10 +67,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NGinnBPM.MessageBus.Mongo\NGinnBPM.MessageBus.Mongo.csproj">
-      <Project>{26131B9A-9DCB-46FD-BBAC-8EC15109E804}</Project>
-      <Name>NGinnBPM.MessageBus.Mongo</Name>
-    </ProjectReference>
     <ProjectReference Include="..\NGinnBPM.MessageBus.Windsor\NGinnBPM.MessageBus.Windsor.csproj">
       <Project>{6837107E-5C65-4228-BB86-F8C97334016D}</Project>
       <Name>NGinnBPM.MessageBus.Windsor</Name>
