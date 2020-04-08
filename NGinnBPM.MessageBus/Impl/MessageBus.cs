@@ -574,6 +574,7 @@ namespace NGinnBPM.MessageBus.Impl
                 rm.TransactionId = tid;
                 _messageBatches[tid] = rm;
             }
+            
             Transaction.Current.EnlistVolatile(rm, EnlistmentOptions.None);
             return rm;
         }

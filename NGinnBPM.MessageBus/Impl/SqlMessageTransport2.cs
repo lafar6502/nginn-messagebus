@@ -485,11 +485,15 @@ namespace NGinnBPM.MessageBus.Impl
             lock (this)
             {
                 _stop = true;
-                foreach (Thread thr in _messageHandlerThreads)
+                if (_messageHandlerThreads != null)
                 {
-                    log.Debug("Interrupting message handler thread {0}", thr.Name);
-                    thr.Interrupt();
+                    foreach (Thread thr in _messageHandlerThreads)
+                    {
+                        log.Debug("Interrupting message handler thread {0}", thr.Name);
+                        thr.Interrupt();
+                    }
                 }
+                
 				if (_processorThread != null)
                 {
                     log.Debug("Stopping manager thread {0}", _processorThread.Name);
@@ -498,10 +502,13 @@ namespace NGinnBPM.MessageBus.Impl
                     _processorThread = null;
                     log.Debug("Manager thread stopped");
                 }
-                foreach (Thread thr in _messageHandlerThreads)
+                if (_messageHandlerThreads != null)
                 {
-                    thr.Join();
-                    log.Debug("Stopped message handler thread {0}", thr.Name);
+                    foreach (Thread thr in _messageHandlerThreads)
+                    {
+                        thr.Join();
+                        log.Debug("Stopped message handler thread {0}", thr.Name);
+                    }
                 }
                 _messageHandlerThreads = new List<Thread>();
             }
