@@ -37,17 +37,19 @@ namespace NGinnBPM.MessageBus.Impl
         /// </summary>
         protected IServiceResolver ServiceLocator { get; set; }
 
+        protected ITransactionScopeFactory TransFactory { get; set; }
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="transport">Message transport used as a backend for this message bus</param>
-        public MessageBus(IMessageTransport transport, IMessageDispatcher dispatcher, ISerializeMessages serializer, IServiceResolver serviceResolver)
+        public MessageBus(IMessageTransport transport, IMessageDispatcher dispatcher, ISerializeMessages serializer, IServiceResolver serviceResolver, ITransactionScopeFactory scopeFactory)
         {
             log = LogManager.GetLogger("BUS_" + transport.Endpoint);
             log.Info("Message Bus {0} created", transport.Endpoint);
             MessageSerializer = serializer;
             Dispatcher = dispatcher;
             ServiceLocator = serviceResolver;
+            TransFactory = scopeFactory;
             _transport = transport;
             _transport.OnMessageArrived += new MessageArrived(_transport_OnMessageArrived);
             _transport.OnMessageToUnknownDestination += new MessageArrived(_transport_OnMessageToUnknownDestination);
@@ -150,11 +152,7 @@ namespace NGinnBPM.MessageBus.Impl
                 _currentMessage = new CurMsg(mc);
                 if (UseTransactionScope && Transaction.Current == null)
                 {
-                    TransactionOptions to = new TransactionOptions();
-                    to.IsolationLevel = IsolationLevel.ReadCommitted;
-                    to.Timeout = TimeSpan.FromSeconds(30);
-                    TransactionScopeOption tso = MessageHandlerTransactionScopeOption;
-                    using (TransactionScope ts = new TransactionScope(tso, to))
+                    using (var ts = TransFactory.CreateTransactionScope())
                     {
                         Dispatcher.DispatchMessage(mc.Body, this);
                         ts.Complete();
@@ -575,7 +573,7 @@ namespace NGinnBPM.MessageBus.Impl
                 _messageBatches[tid] = rm;
             }
             
-            Transaction.Current.EnlistVolatile(rm, EnlistmentOptions.None);
+            Transaction.Current.EnlistVolatile(rm, EnlistmentOptions.EnlistDuringPrepareRequired);
             return rm;
         }
 

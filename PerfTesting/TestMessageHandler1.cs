@@ -51,7 +51,7 @@ public class TestMessageHandler1 :
     public void OnMessageSend(TestMessage1 message)
     {
         log.Warn("**** OUT {0}", message.Id);
-        MessageBus.Notify(new TestMessageX { Id = int.Parse(message.Id)});
+        //MessageBus.Notify(new TestMessageX { Id = int.Parse(message.Id)});
     }
 }
 

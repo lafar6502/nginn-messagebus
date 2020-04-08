@@ -144,7 +144,10 @@
     <Compile Include="Impl\SqlSequenceManager.cs" />
     <Compile Include="Impl\SqlUtil.cs" />
     <Compile Include="Impl\StaticMessageRouting.cs" />
+    <Compile Include="Impl\SystemTransactionScopeFactory.cs" />
+    <Compile Include="Impl\TransactionScopeFactoryEx.cs" />
     <Compile Include="Impl\TypeUtil.cs" />
+    <Compile Include="ITransactionScopeFactory.cs" />
     <Compile Include="MessageBusContext.cs" />
     <Compile Include="MessageBusException.cs" />
     <Compile Include="Messages\ControlMessages.cs" />
