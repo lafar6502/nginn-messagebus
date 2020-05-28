@@ -1033,7 +1033,14 @@ namespace NGinnBPM.MessageBus.Windsor
                 }
                 _wc.Register(reg);
             }
-
+            if (!IsServiceRegistered<ITransactionScopeFactory>())
+            {
+                _wc.Register(Component.For<ITransactionScopeFactory>().ImplementedBy<TransactionScopeFactoryEx>()
+                    .DependsOn(new
+                    {
+                        DefaultTransactionTimeout = TransactionTimeout
+                    }).LifeStyle.Singleton);
+            }
             if (!IsServiceRegistered<IServiceMessageDispatcher>())
             {
                 _wc.Register(Component.For<IServiceMessageDispatcher>()

@@ -76,8 +76,8 @@ namespace PerfTesting
                 .SetSendOnly(sendOnly)
                 .AddMessageHandlersFromAssembly(typeof(Program).Assembly)
                 .AutoStartMessageBus(true)
-                .BatchOutgoingMessages(true
-                )
+                .SetReuseReceiveConnectionForSending(true)
+                .BatchOutgoingMessages(true)
                 //.UseExternalHandlerContainer(new WindsorServiceResolver(null))
                 .FinishConfiguration();
             return mc.Container;
@@ -130,11 +130,12 @@ namespace PerfTesting
             var mb = mc.Resolve<IMessageBus>();
             var st = new System.Diagnostics.Stopwatch();
             st.Start();
-            using (var ts = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            var sf = mc.Resolve<ITransactionScopeFactory>();
+            using (var ts = sf.CreateTransactionScope())
             {
                 for (int i = 0; i < 5000; i++)
                 {
-                    mb.Send("sql://nginn/MQ_PT2", new TestMessage1 { Id = i.ToString() });
+                    mb.Send("sql://nginn/MQ_PT1", new TestMessage1 { Id = i.ToString() });
                 }
                 ts.Complete();
             }

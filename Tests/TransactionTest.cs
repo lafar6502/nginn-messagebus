@@ -11,6 +11,8 @@ namespace Tests
 {
     class TransactionTest
     {
+        
+
         private static Logger log = LogManager.GetCurrentClassLogger();
         
         static TransactionTest()
@@ -24,6 +26,11 @@ namespace Tests
 
         }
 
+       
+        public static void DisposeTest()
+        {
+            
+        }
         public static void Test3(string connstr)
         {
             using (TransactionScope ts1 = new TransactionScope())

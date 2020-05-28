@@ -82,6 +82,8 @@ namespace NGinnBPM.MessageBus.Impl
         private string _queueTable = "MessageQueue";
         private Dictionary<string, ConnectionStringSettings> _connStrings = new  Dictionary<string, ConnectionStringSettings>();
 
+        public ITransactionScopeFactory TransactionFactory { get; set; }
+
 
         public virtual string Endpoint
         {
@@ -128,12 +130,6 @@ namespace NGinnBPM.MessageBus.Impl
         /// Will not receive messages - send only
         /// </summary>
         public bool SendOnly { get; set; }
-        /// <summary>
-        /// Default timeout for message receive transaction
-        /// If message handling takes longer than the timeout value the transaction
-        /// will be aborted. So better be quick with messages.
-        /// </summary>
-        public TimeSpan DefaultTransactionTimeout { get; set; }
         /// <summary>
         /// Maximum number of parameters in SQL insert query
         /// </summary>
@@ -239,7 +235,6 @@ namespace NGinnBPM.MessageBus.Impl
         public SqlMessageTransport2()
         {
             MessageRetentionPeriod = TimeSpan.FromHours(12);
-            DefaultTransactionTimeout = TimeSpan.FromMinutes(1);
             SendLocalMessagesDirectly = true;
             AllowUseOfApplicationDbConnectionForSending = true;
             RequireUseOfApplicationDbConnectionForSending = false;
@@ -491,11 +486,15 @@ namespace NGinnBPM.MessageBus.Impl
             lock (this)
             {
                 _stop = true;
-                foreach (Thread thr in _messageHandlerThreads)
+                if (_messageHandlerThreads != null)
                 {
-                    log.Debug("Interrupting message handler thread {0}", thr.Name);
-                    thr.Interrupt();
+                    foreach (Thread thr in _messageHandlerThreads)
+                    {
+                        log.Debug("Interrupting message handler thread {0}", thr.Name);
+                        thr.Interrupt();
+                    }
                 }
+                
 				if (_processorThread != null)
                 {
                     log.Debug("Stopping manager thread {0}", _processorThread.Name);
@@ -504,10 +503,13 @@ namespace NGinnBPM.MessageBus.Impl
                     _processorThread = null;
                     log.Debug("Manager thread stopped");
                 }
-                foreach (Thread thr in _messageHandlerThreads)
+                if (_messageHandlerThreads != null)
                 {
-                    thr.Join();
-                    log.Debug("Stopped message handler thread {0}", thr.Name);
+                    foreach (Thread thr in _messageHandlerThreads)
+                    {
+                        thr.Join();
+                        log.Debug("Stopped message handler thread {0}", thr.Name);
+                    }
                 }
                 _messageHandlerThreads = new List<Thread>();
             }
@@ -743,8 +745,7 @@ namespace NGinnBPM.MessageBus.Impl
             
             try
             {
-                TransactionOptions to = new TransactionOptions { IsolationLevel = System.Transactions.IsolationLevel.ReadCommitted, Timeout = DefaultTransactionTimeout };
-                using (TransactionScope ts = new TransactionScope(TransactionScopeOption.Required, to))
+                using (var ts = TransactionFactory.CreateTransactionScope())
                 {
                     conn.EnlistTransaction(Transaction.Current);
                     try
@@ -917,7 +918,7 @@ namespace NGinnBPM.MessageBus.Impl
                     ///message record and someone may snatch it in the meantime
                     ///But we shouldn't worry too much, if someone steals the message he
                     ///will be responsible for updating its status
-                    using (var ts = new TransactionScope(TransactionScopeOption.Required, to))
+                    using (var ts = TransactionFactory.CreateTransactionScope())
                     {
                         conn.EnlistTransaction(Transaction.Current);
                         if (GetQueueOps(conn).MarkMessageFailed(conn, _queueTable, id, handlingError.ToString(), doRetry, nextRetry.HasValue ? nextRetry.Value : DateTime.Now))
