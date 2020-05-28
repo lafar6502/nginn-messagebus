@@ -142,6 +142,12 @@ namespace NGinnBPM.MessageBus.Impl
         /// Throttling. Maximum message receiving frequency.
         /// </summary>
         public double? MaxReceiveFrequency { get; set; }
+        /// <summary>
+        /// if this is non-zero, extra delay will be added to message processing loop after it's woken up by a signal
+        /// (signal = new message inserted to queue or message retry). This is to give additional time for the signaling transaction to commit 
+        /// (we dont have another way of waiting until that transaction commits).
+        /// </summary>
+        public int AddDelayMsAfterWakeup { get; set; }
         
         /// <summary>
         /// DB connnection string configuration, alias names are required
@@ -588,6 +594,7 @@ namespace NGinnBPM.MessageBus.Impl
             log.Info("Processing thread {0} started", Thread.CurrentThread.ManagedThreadId);
             NLog.MappedDiagnosticsContext.Set("nmbendpoint", Endpoint.Replace('/', '_').Replace(':', '_'));
             Thread.Sleep(2000);
+            bool wokenBySig = false;
             while (!_stop)
             {
                 try
@@ -627,6 +634,10 @@ namespace NGinnBPM.MessageBus.Impl
                                 }
                             }
                         }
+                        if (cnt == 0 && wokenBySig)
+                        {
+                            log.Info("Woken up by notification, but no messages received");
+                        }
                     }
                     finally
                     {
@@ -638,7 +649,11 @@ namespace NGinnBPM.MessageBus.Impl
                     if (pause && !_stop)
                     {
                         TimeSpan tt = delayMs > 0 ? TimeSpan.FromMilliseconds(delayMs) : TimeSpan.FromSeconds(5 + _rand.Next(1, 10));
-                        bool b = _waiter.WaitOne(tt);
+                        wokenBySig = _waiter.WaitOne(tt);
+                        if (wokenBySig && AddDelayMsAfterWakeup > 0)
+                        {
+                            Thread.Sleep(AddDelayMsAfterWakeup + _rand.Next(0, 10));
+                        }
                     }
                 }
                 catch (ThreadInterruptedException)
