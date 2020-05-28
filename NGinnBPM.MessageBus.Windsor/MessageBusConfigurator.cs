@@ -505,7 +505,7 @@ namespace NGinnBPM.MessageBus.Windsor
                     MessageRetentionPeriod = MessageRetentionPeriod,
                     MaxConcurrentMessages = MaxConcurrentReceivers,
                     AutoCreateQueueTable = AutoCreateQueues,
-                    AddDelayMsAfterWakeup = 10,
+                    AddDelayMsAfterWakeup = Convert.ToInt32(GetAppConfigString("NGinnMessageBus.AddDelayMsAfterWakeup", "0")),
                     RequireHandler = true,
                     Endpoint = Endpoint,
                     ConnectionStrings = _connStrings,

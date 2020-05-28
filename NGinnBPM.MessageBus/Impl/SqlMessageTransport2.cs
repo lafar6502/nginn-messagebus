@@ -634,7 +634,7 @@ namespace NGinnBPM.MessageBus.Impl
                                 }
                             }
                         }
-                        if (cnt == 0 && wokenBySig)
+                        if (cnt == 0 && wokenBySig && AddDelayMsAfterWakeup > 0)
                         {
                             log.Info("Woken up by notification, but no messages received");
                         }
