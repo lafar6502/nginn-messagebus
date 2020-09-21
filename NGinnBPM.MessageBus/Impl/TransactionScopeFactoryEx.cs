@@ -32,17 +32,29 @@ namespace NGinnBPM.MessageBus.Impl
         public void Dispose()
         {
             if (_tran == null) throw new Exception("Already disposed");
-            if (_completed)
+            try
             {
-                _tran.Commit();
+                if (_completed)
+                {
+                    _tran.Commit();
+                }
+                else
+                {
+                    _tran.Rollback();
+                }
             }
-            else
+            finally
             {
-                _tran.Rollback();
+                try
+                {
+                    _tran.Dispose();
+                }
+                finally
+                {
+                    _tran = null;
+                    Transaction.Current = _prevTran;
+                }
             }
-            _tran.Dispose();
-            _tran = null;
-            Transaction.Current = _prevTran;
         }
     }
     public class TransactionScopeFactoryEx : ITransactionScopeFactory
