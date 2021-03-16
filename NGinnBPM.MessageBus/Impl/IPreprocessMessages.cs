@@ -34,6 +34,15 @@ namespace NGinnBPM.MessageBus.Impl
         /// <param name="transport"></param>
         /// <param name="ex"></param>
         void AfterMessageProcessed(MessageContainer message, IMessageBus bus, IMessageTransport transport, Exception ex);
+
+        /// <summary>
+        /// after message has failed and transaction has ended (so there's no current transaction from message bus)
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="bus"></param>
+        /// <param name="transport"></param>
+        /// <param name="ex">Exception that caused transaction abort</param>
+        void AfterTransactionEnded(bool completed, MessageContainer message, Exception ex, IMessageBus bus, IMessageTransport transport);
     }
 
 }

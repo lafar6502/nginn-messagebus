@@ -30,6 +30,7 @@ namespace NGinnBPM.MessageBus.Impl
         public event MessageArrived OnMessageArrived;
 
         public event MessageArrived OnMessageToUnknownDestination;
+        public event MessageTransactionEnded OnTransactionEnded;
 
         public MessageContainer CurrentMessage
         {

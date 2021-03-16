@@ -115,6 +115,7 @@ namespace NGinnBPM.MessageBus.Impl
 
 
         public event MessageArrived OnMessageToUnknownDestination;
+        public event MessageTransactionEnded OnTransactionEnded;
 
         #endregion
 

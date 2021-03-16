@@ -330,7 +330,7 @@ namespace NGinnBPM.MessageBus.Impl
 
     public delegate void MessageArrived(MessageContainer message, IMessageTransport source);
 
-    
+    public delegate void MessageTransactionEnded(bool transactionCompleted, MessageContainer message, Exception handlerError, IMessageTransport transport);
 
     /// <summary>
     /// Unused as for now
@@ -355,6 +355,8 @@ namespace NGinnBPM.MessageBus.Impl
         /// destination.
         /// </summary>
         event MessageArrived OnMessageToUnknownDestination;
+
+        event MessageTransactionEnded OnTransactionEnded;
         /// <summary>
         /// Current message information
         /// </summary>

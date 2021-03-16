@@ -52,6 +52,7 @@ namespace NGinnBPM.MessageBus.Impl
             TransFactory = scopeFactory;
             _transport = transport;
             _transport.OnMessageArrived += new MessageArrived(_transport_OnMessageArrived);
+            _transport.OnTransactionEnded += _transport_OnTransactionEnded;
             _transport.OnMessageToUnknownDestination += new MessageArrived(_transport_OnMessageToUnknownDestination);
             SubscriptionService = new DummySubscriptionService();
             BatchOutgoingMessagesInTransaction = true;
@@ -59,6 +60,15 @@ namespace NGinnBPM.MessageBus.Impl
 			UseTransactionScope = true;
             DefaultSubscriptionLifetime = TimeSpan.FromHours(48);
             PublishLocalByDefault = true;
+        }
+
+        private void _transport_OnTransactionEnded(bool transactionCompleted, MessageContainer message, Exception handlerError, IMessageTransport transport)
+        {
+            foreach(IPreprocessMessages pm in this.ServiceLocator.GetAllInstances<IPreprocessMessages>())
+            {
+                pm.AfterTransactionEnded(transactionCompleted, message, handlerError, this, transport);
+            }
+
         }
 
         void _transport_OnMessageToUnknownDestination(MessageContainer message, IMessageTransport transport)

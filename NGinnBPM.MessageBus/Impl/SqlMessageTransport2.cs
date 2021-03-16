@@ -205,6 +205,7 @@ namespace NGinnBPM.MessageBus.Impl
 
         public event MessageContainerFailureHandler MessageFailedAllRetries;
         public event MessageContainerFailureHandler MessageFailed;
+        public event MessageTransactionEnded OnTransactionEnded;
 
         public TimeSpan[] RetryTimes
         {
@@ -894,6 +895,7 @@ namespace NGinnBPM.MessageBus.Impl
                     catch (Exception ex)
                     {
                         log.Error("Unexpected error processing message {0}: {1}", id, ex.ToString());
+                        handlingError = ex;
                         abort = true;
                         throw new Exception("Unexpected error", ex);
                     }
@@ -901,7 +903,7 @@ namespace NGinnBPM.MessageBus.Impl
                     {
                         if (Transaction.Current == null)
                         {
-                            log.Warn("Transaction timed out for message {0}", id);
+                            log.Error("Transaction timed out for message {0}", id);
                         }
 
                         if (!abort)
@@ -927,18 +929,6 @@ namespace NGinnBPM.MessageBus.Impl
                         }
                         ts.Complete();
                     }
-
-                    if (mc.Body != null && handlingError != null)
-                    {
-                        try
-                        {
-                            var mi = mc.Body.GetType().GetMethod("NGinnMessageHandlingFailed", new Type[] { typeof(Exception) });
-                            if (mi != null) mi.Invoke(mc.Body, new object[] { handlingError });
-                        }
-                        catch (Exception e) {
-                            log.Warn("Failure handler failure: {0}", e);
-                        }
-                    }
                 }
                 return false;
             }
@@ -954,6 +944,17 @@ namespace NGinnBPM.MessageBus.Impl
                     if (!string.IsNullOrEmpty(mtype))
                     {
                         statLog.Info("ProcessMessage_{0}:{1}", mtype, sw.ElapsedMilliseconds);
+                    }
+                }
+                if (OnTransactionEnded != null && mc != null)
+                {
+                    try
+                    {
+                        OnTransactionEnded(!abort, mc, handlingError, this);
+                    }
+                    catch(Exception e)
+                    {
+                        log.Warn("OnTransactionEnded error: {0}", e);
                     }
                 }
                 NLog.MappedDiagnosticsContext.Remove("nmbrecvmsg");
