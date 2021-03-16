@@ -161,6 +161,7 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
                         return false;
                     }
                     if (!createNew) throw new Exception("Saga instance not found: " + sagaId);
+                    log.Info("Got saga {0}/{1} with lock", sagaHandler.GetType().Name, sagaId);
                 }
             }
             else //create new id
@@ -181,7 +182,7 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
                 if (!createNew)
                 {
                     SagaStateRepo.Delete(sagaId);
-                    log.Info("Deleted saga {0}/{1}", sagaHandler.GetType().Name, sagaId);
+                    log.Warn("Deleted saga {0}/{1}", sagaHandler.GetType().Name, sagaId);
                 }
             }
             else
@@ -190,12 +191,12 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
                 if (!found)
                 {
                     SagaStateRepo.InsertNew(sagaHandler.Id, sagaState);
-                    log.Info("Saved new saga {0}/{1}", sagaHandler.GetType().Name, sagaId);
+                    log.Warn("Saved new saga {0}/{1}", sagaHandler.GetType().Name, sagaId);
                 }
                 else
                 {
                     SagaStateRepo.Update(sagaHandler.Id, sagaState, version);
-                    log.Debug("Updated saga {0}/{1}", sagaHandler.GetType().Name, sagaId);
+                    log.Warn("Updated saga {0}/{1}", sagaHandler.GetType().Name, sagaId);
                 }
             }
             st.Stop();

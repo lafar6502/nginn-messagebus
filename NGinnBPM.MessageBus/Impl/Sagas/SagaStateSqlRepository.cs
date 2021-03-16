@@ -75,6 +75,7 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
                 if (MessageBusContext.CurrentMessage != null && UseReceivingConnection) throw new Exception("Should not be opening a new db connection");
                 using (cn = SqlHelper.OpenConnection(cs))
                 {
+                    log.Warn("SAGA Opening db connection");
                     act(cn);
                 }
             }
@@ -109,6 +110,7 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
                         }
                         else
                         {
+                            log.Warn("Got saga {0} with lock? for update={1}, nowait: {2}", id, forUpdate, nowait);
                             s = dr.GetString(0);
                             v = dr.GetString(1);
                             ret = true;
@@ -160,7 +162,7 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
 
                     if (cmd.ExecuteNonQuery() == 0)
                     {
-                        throw new Exception("Version conflict");
+                        throw new Exception("Version conflict when updating saga " + id);
                     }
                 }
             });

@@ -33,7 +33,7 @@
   "SqlSagaStateRepository_SelectWithLock": "select data, version from {0} with(rowlock, updlock) where id=@id",
   "SqlSagaStateRepository_SelectWithLock_Nowait": "select data, version from {0} with(readpast, rowlock, updlock) where id=@id",
   "SqlSagaStateRepository_GetVersionNolock": "select version from {0} with (nolock) where id=@id",
-  "SqlSagaStateRepository_UpdateSaga": "update {0} set data=@data, version=@newVersion, last_updated=@updateDate where id=@id and version=@version",
+  "SqlSagaStateRepository_UpdateSaga": "update {0} with(rowlock) set data=@data, version=@newVersion, last_updated=@updateDate where id=@id and version=@version",
   "SqlSagaStateRepository_DeleteSaga": "delete {0} where id=@id",
   "SqlSagaStateRepository_InsertSaga": "insert into {0} (id, data, version, created_date, last_updated) values(@id, @data, @version, @updDate, @updDate)",
 
