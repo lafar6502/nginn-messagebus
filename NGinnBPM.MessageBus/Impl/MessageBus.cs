@@ -883,5 +883,10 @@ namespace NGinnBPM.MessageBus.Impl
             get { return Message.IsFinalRetry; }
         }
         
+        public Action<bool, Exception> AfterCurrentTransactionEnded 
+        {
+            get { return Message.AfterTransactionEnded; }
+            set { Message.AfterTransactionEnded = value; }
+        }
     }
 }

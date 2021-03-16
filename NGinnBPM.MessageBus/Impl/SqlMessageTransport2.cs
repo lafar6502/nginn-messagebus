@@ -946,6 +946,17 @@ namespace NGinnBPM.MessageBus.Impl
                         statLog.Info("ProcessMessage_{0}:{1}", mtype, sw.ElapsedMilliseconds);
                     }
                 }
+                if (mc != null && mc.AfterTransactionEnded != null)
+                {
+                    try
+                    {
+                        mc.AfterTransactionEnded(!abort, handlingError);
+                    }
+                    catch (Exception e)
+                    {
+                        log.Warn("OnTransactionEnded error: {0}", e);
+                    }
+                }
                 if (OnTransactionEnded != null && mc != null)
                 {
                     try

@@ -324,6 +324,9 @@ namespace NGinnBPM.MessageBus.Impl
         }
 
         #endregion
+
+        [IgnoreDataMember]
+        public Action<bool, Exception> AfterTransactionEnded { get; set; }
     }
 
     
