@@ -742,7 +742,7 @@ namespace NGinnBPM.MessageBus.Impl
             int retryCount = 0; bool messageFailed = false;
             bool abort = true; //by default, abort 
             Exception handlingError = null;
-            
+            MessageContainer mc = null;
             try
             {
                 using (var ts = TransactionFactory.CreateTransactionScope())
@@ -752,7 +752,7 @@ namespace NGinnBPM.MessageBus.Impl
                     {
                         bool moreMessages = false;
                         //var mc = UseSqlOutputClause ? SelectNextMessageForProcessing2008(conn, out retryTime) : SelectNextMessageForProcessing(conn, out retryTime, out moreMessages);
-                        var mc = GetQueueOps(conn).SelectAndLockNextInputMessage(conn, _queueTable, () => _nowProcessing.Keys, out retryTime, out moreMessages);
+                        mc = GetQueueOps(conn).SelectAndLockNextInputMessage(conn, _queueTable, () => _nowProcessing.Keys, out retryTime, out moreMessages);
                         if (mc == null) return moreMessages;
                         id = mc.BusMessageId;
                         _nowProcessing[id] = DateTime.Now;
@@ -926,6 +926,18 @@ namespace NGinnBPM.MessageBus.Impl
                             log.Info("Message {0}  marked {1} because of  failure. Retry number: {2}", id, doRetry, retryCount);
                         }
                         ts.Complete();
+                    }
+
+                    if (mc.Body != null && handlingError != null)
+                    {
+                        try
+                        {
+                            var mi = mc.Body.GetType().GetMethod("NGinnMessageHandlingFailed", new Type[] { typeof(Exception) });
+                            if (mi != null) mi.Invoke(mc.Body, new object[] { handlingError });
+                        }
+                        catch (Exception e) {
+                            log.Warn("Failure handler failure: {0}", e);
+                        }
                     }
                 }
                 return false;
