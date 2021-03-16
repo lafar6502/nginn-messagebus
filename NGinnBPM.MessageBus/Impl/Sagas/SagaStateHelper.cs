@@ -130,20 +130,18 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
                 else throw new Exception("Saga Id could not be determined");
             }
 
-            bool b = ExclusiveLock(sagaId, wait, delegate()
-            {
-                DispatchToSagaInternal(sagaId, createNew, sagaHandler, callback);
-            });
+            bool b = DispatchToSagaInternal(sagaId, createNew, !wait, sagaHandler, callback);
+            
             if (!b)
             {
-                log.Info("Concurrent update of saga {0}, will process the message later", sagaId);    
+                log.Warn("Concurrent update of saga {0}, will process the message later", sagaId);    
             }
             return b ? SagaDispatchResult.MessageHandled : SagaDispatchResult.ConcurrentUpdateHandleLater;
         }
 
         
 
-        protected void DispatchToSagaInternal(string sagaId, bool createNew, SagaBase sagaHandler, Action<SagaBase> callback)
+        protected bool DispatchToSagaInternal(string sagaId, bool createNew, bool nowait, SagaBase sagaHandler, Action<SagaBase> callback)
         {
             string version = null;
             bool found = false; 
@@ -153,18 +151,26 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
             
             if (!string.IsNullOrEmpty(sagaId))
             {
-                found = SagaStateRepo.Get(sagaId, sagaStateType, true, out sagaState, out version);
+                found = SagaStateRepo.Get(sagaId, sagaStateType, true, nowait, out sagaState, out version);
+                if (!found)
+                {
+                    if (nowait && !string.IsNullOrEmpty(version))
+                    {
+                        //saga exists but is locked
+                        log.Warn("Saga {0} exists v{1} locked", sagaId, version);
+                        return false;
+                    }
+                    if (!createNew) throw new Exception("Saga instance not found: " + sagaId);
+                }
             }
             else //create new id
             {
                 sagaId = Guid.NewGuid().ToString("N");
             }
             
-            if (!found)
+            if (!found) //just create new instance
             {
-                if (!createNew) throw new Exception("Saga instance not found: " + sagaId);
                 sagaState = Activator.CreateInstance(sagaStateType);
-                
                 version = "1";
             }
             sagaHandler.IsNew = !found;
@@ -194,6 +200,7 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
             }
             st.Stop();
             statLog.Info("Dispatch:{0}", st.ElapsedMilliseconds);
+            return true;
         }
     }
 }

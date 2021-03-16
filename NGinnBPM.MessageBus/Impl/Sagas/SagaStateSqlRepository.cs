@@ -20,6 +20,8 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
         public string ProviderName { get; set; }
         public bool AutoCreateDatabase { get; set; }
 
+        public bool UseReceivingConnection { get; set; } = true;
+
         private bool _inited = false;
         private JsonSerializer _ser = new JsonSerializer { TypeNameHandling = TypeNameHandling.None, DefaultValueHandling = DefaultValueHandling.Ignore };
         private Logger log = LogManager.GetCurrentClassLogger();
@@ -70,6 +72,7 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
             else
             {
                 if (cs == null) throw new Exception("Connection string is not set");
+                if (MessageBusContext.CurrentMessage != null && UseReceivingConnection) throw new Exception("Should not be opening a new db connection");
                 using (cn = SqlHelper.OpenConnection(cs))
                 {
                     act(cn);
@@ -77,7 +80,7 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
             }
         }
 
-        public bool Get(string id, Type stateType, bool forUpdate, out object state, out string version)
+        public bool Get(string id, Type stateType, bool forUpdate, bool nowait, out object state, out string version)
         {
             bool ret = false;
             string s = null, v = null;
@@ -86,16 +89,49 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
                 var sq = SqlHelper.GetSqlAbstraction(con);
                 using (var cmd = sq.CreateCommand(con))
                 {
-                    cmd.CommandText = string.Format("select data, version from {0} where id=@id", TableName);
-                    if (forUpdate) cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSagaStateRepository_SelectWithLock", sq.Dialect), TableName);
+                    if (forUpdate)
+                    {
+                        cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery(nowait ? "SqlSagaStateRepository_SelectWithLock_Nowait" : "SqlSagaStateRepository_SelectWithLock2", sq.Dialect), TableName);
+                    }
+                    else
+                    {
+                        cmd.CommandText = string.Format("select data, version from {0} where id=@id", TableName);
+                        if (nowait) cmd.CommandText = string.Format("select data, version from {0} with(nolock) where id=@id", TableName);
+                    }
+                    
                     sq.AddParameter(cmd, "id", id);
 
                     using (var dr = cmd.ExecuteReader())
                     {
-                        if (!dr.Read()) return;
-                        s = dr.GetString(0);
-                        v = dr.GetString(1);
-                        ret = true;
+                        if (!dr.Read())
+                        {
+                            if (!nowait) return; // not found
+                        }
+                        else
+                        {
+                            s = dr.GetString(0);
+                            v = dr.GetString(1);
+                            ret = true;
+                        }
+                    }
+                    if (!ret && forUpdate && nowait)
+                    {
+                        //check if exists
+                        cmd.CommandText = string.Format(SqlHelper.GetNamedSqlQuery("SqlSagaStateRepository_GetVersionNolock", sq.Dialect), TableName);
+                        using (var dr2 = cmd.ExecuteReader())
+                        {
+                            if (dr2.Read())
+                            {
+                                log.Warn("Saga exists {0} but locked", id);
+                                v = dr2.GetString(0);
+                                if (string.IsNullOrEmpty(v)) v = id;
+                            }
+                            else
+                            {
+                                log.Warn("Saga doesnt exist {0}", id);
+                                ret = false;
+                            }
+                        }
                     }
                 }
             });

@@ -1090,7 +1090,8 @@ namespace NGinnBPM.MessageBus.Windsor
                             ConnectionString = cs == null ? calias : cs.ConnectionString,
                             ProviderName = cs == null ? DefaultDbProviderName : cs.ProviderName,
                             TableName = "NG_Sagas",
-                            AutoCreateDatabase = AutoCreateQueues
+                            AutoCreateDatabase = AutoCreateQueues,
+                            UseReceivingConnection = ExposeReceiveConnectionToApplication
                         }));
                 }
                 
