@@ -52,7 +52,7 @@ namespace NGinnBPM.MessageBus.Impl
                     
                 }
             }
-
+            var endpoints = messages.Select(x => x.To).Distinct();
             if (sc != null && sc.State == ConnectionState.Open && SqlHelper.IsSameDatabaseConnection(sc, ConnectionString.ConnectionString))
             {
                 InsertMessageBatchToLocalQueues(sc, messages);
@@ -65,7 +65,7 @@ namespace NGinnBPM.MessageBus.Impl
                 }
                 InsertMessageBatchToLocalQueues(messages);
             }
-            Wakeup();
+            Wakeup(endpoints);
         }
 
        
@@ -477,8 +477,10 @@ namespace NGinnBPM.MessageBus.Impl
                         _processorThread.IsBackground = true;
                         _processorThread.Start();
                     }
+
+                    _wakeNotifiers.TryAdd(this.Endpoint, Wakeup);
                 }
-            
+                
             }
         }
 
@@ -487,6 +489,8 @@ namespace NGinnBPM.MessageBus.Impl
             lock (this)
             {
                 _stop = true;
+                Action a;
+                _wakeNotifiers.TryRemove(this.Endpoint, out a);
                 if (_messageHandlerThreads != null)
                 {
                     foreach (Thread thr in _messageHandlerThreads)
@@ -527,6 +531,16 @@ namespace NGinnBPM.MessageBus.Impl
         private void Wakeup()
         {
             _waiter.Set();
+        }
+
+        private static ConcurrentDictionary<string, Action> _wakeNotifiers = new ConcurrentDictionary<string, Action>();
+        private void Wakeup(IEnumerable<string> endpoints)
+        {
+            Action a;
+            foreach(var e in endpoints)
+            {
+                if (_wakeNotifiers.TryGetValue(e, out a) && a != null) a();
+            }
         }
 
         protected virtual void DetectStuckMessages()
