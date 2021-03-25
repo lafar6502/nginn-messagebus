@@ -525,7 +525,7 @@ namespace NGinnBPM.MessageBus.Windsor
             
 
 
-            _wc.Register(Component.For<IMessageBus>()
+            _wc.Register(Component.For<IMessageBus, MessageBus.Impl.MessageBus>()
                 .ImplementedBy<MessageBus.Impl.MessageBus>()
                 .DependsOn(new
                 {
@@ -598,7 +598,7 @@ namespace NGinnBPM.MessageBus.Windsor
 
             if (!IsServiceRegistered<IMessageDispatcher>()) throw new Exception("no message dispatcher");
 
-            _wc.Register(Component.For<IMessageBus>()
+            _wc.Register(Component.For<IMessageBus, MessageBus.Impl.MessageBus>()
                 .ImplementedBy<MessageBus.Impl.MessageBus>()
                 .DependsOn(new
                 {
