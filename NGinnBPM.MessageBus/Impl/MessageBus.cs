@@ -279,14 +279,44 @@ namespace NGinnBPM.MessageBus.Impl
             }
             if (!set.Contains(Endpoint))
             {
-                if (PublishLocalByDefault) 
+                if (PublishLocalByDefault)
+                {
                     set.Add(Endpoint);
-                else if (Dispatcher.HasHandlerFor(msgType))
-                    set.Add(Endpoint);
+                }
+                else
+                {
+                    if (Dispatcher.HasHandlerFor(msgType))
+                    {
+                        var endps = LocalEndpoints;
+                        if (!endps.Any(x => set.Contains(x))) set.Add(Endpoint);
+                    }
+                }
             }
             return set.ToArray();
         }
 
+        private string[] _localEndpoints = null;
+        public IEnumerable<string> LocalEndpoints
+        {
+            get
+            {
+                var v = _localEndpoints;
+                if (v != null) return v;
+                var mbuses = ServiceLocator.GetAllInstances<MessageBus>();
+                var s = new List<string>();
+                foreach (var mb in mbuses)
+                {
+                    if (mb.Endpoint != null && mb.Dispatcher == this.Dispatcher && !s.Contains(mb.Endpoint))
+                    {
+                        s.Add(mb.Endpoint);
+                    }
+                    ServiceLocator.ReleaseInstance(mb);
+                }
+                v = s.ToArray();
+                _localEndpoints = v;
+                return v;
+            }
+        }
         /// <summary>
         /// This method dispatches the message directly to their handlers (local only)
         /// without persisting it in database and in a non-transactional way.
