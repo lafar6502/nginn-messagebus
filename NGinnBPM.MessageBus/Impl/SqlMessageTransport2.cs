@@ -65,10 +65,20 @@ namespace NGinnBPM.MessageBus.Impl
                 }
                 InsertMessageBatchToLocalQueues(messages);
             }
-            Wakeup(endpoints);
+            if (Transaction.Current != null)
+            {
+                Transaction.Current.TransactionCompleted += (s, e) =>
+                {
+                    Wakeup(endpoints);
+                };
+            }
+            else
+            {
+                Wakeup(endpoints);
+            }
+            
         }
 
-       
         public event MessageArrived OnMessageArrived;
         public event MessageArrived OnMessageToUnknownDestination;
         public event Action<DbConnection> OnDatabaseInit;
