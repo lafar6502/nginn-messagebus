@@ -1,5 +1,0 @@
-﻿{
-    "SelectAndLockNext1": "SELECT ... FROM {0} WHERE subqueue='I' and pg_try_advisory_xact_lock(id) [FOR UPDATE] LIMIT 1",
-    
-
-}
