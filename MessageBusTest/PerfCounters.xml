@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<PerfCounterSet Name="PERF">
+	
+	<PercentileCalculator Name="MessageHandling95" MatchMessageRE="STAT.NGinnBPM.SQLQueueProcessor\|ProcessNextMessage\|" ExtractValueRE="\|(\d+\.?\d*)$" Percentile="95" />
+	<PercentileCalculator Name="MessageHandling50" MatchMessageRE="STAT.NGinnBPM.SQLQueueProcessor\|ProcessNextMessage\|" ExtractValueRE="\|(\d+\.?\d*)$" Percentile="50" />
+	<PercentileCalculator Name="MessageInsert95" MatchMessageRE="STAT.NGinnBPM.SQLQueueProcessor\|InsertMessageBatchToQueue\|" ExtractValueRE="\|(\d+\.?\d*)$" Percentile="95" />
+	<PercentileCalculator Name="MessageInsert50" MatchMessageRE="STAT.NGinnBPM.SQLQueueProcessor\|InsertMessageBatchToQueue\|" ExtractValueRE="\|(\d+\.?\d*)$" Percentile="50" />
+	<FreqCalculator Name="MsgsSec" MatchMessageRE="STAT.NGinnBPM.SQLQueueProcessor\|ProcessNextMessage\|" TimePeriodSecs="60" NumEvents="50"/>
+
+</PerfCounterSet>
+
+

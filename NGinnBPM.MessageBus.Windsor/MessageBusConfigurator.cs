@@ -530,7 +530,7 @@ namespace NGinnBPM.MessageBus.Windsor
                     DefaultSubscriptionLifetime = SubscriptionLifetime,
                     PublishLocalByDefault = !SendOnly && AlwaysPublishLocal
                 })
-                .Parameters(Parameter.ForKey("transport").Eq("${MessageTransport_sql}"))
+                .DependsOn(Dependency.OnComponent("transport", "MessageTransport_sql"))
                 .LifeStyle.Singleton);
 
             return this;
@@ -602,7 +602,7 @@ namespace NGinnBPM.MessageBus.Windsor
                     DefaultSubscriptionLifetime = SubscriptionLifetime,
                     PublishLocalByDefault = AlwaysPublishLocal
                 })
-                .Parameters(Parameter.ForKey("transport").Eq("${" + transName + "}"))
+                .DependsOn(Dependency.OnComponent("transport", transName))
                 .Named(cfg.BusName)
                 .LifeStyle.Singleton);
             return this;
@@ -892,7 +892,7 @@ namespace NGinnBPM.MessageBus.Windsor
                 .ImplementedBy<HttpMessageTransport>()
                 .LifeStyle.Singleton
                 .Named("MessageTransport_http")
-                .Parameters(Parameter.ForKey("Endpoint").Eq(endpoint)));
+                .DependsOn(Dependency.OnValue("Endpoint", endpoint)));
             log.Info("Registered http message transport for endpoint {0}", endpoint);
             log.Info("Http listener configured for {0}", listenAddress);
             _wc.Register(Component.For<IReceivedMessageRegistry>()
@@ -903,7 +903,7 @@ namespace NGinnBPM.MessageBus.Windsor
                 }));
             _wc.Register(Component.For<HttpMessageGateway>()
                 .ImplementedBy<HttpMessageGateway>()
-                .Parameters(Parameter.ForKey("busTransport").Eq("${MessageTransport_sql}"), Parameter.ForKey("httpTransport").Eq("${MessageTransport_http}"))
+                .DependsOn(Dependency.OnComponent("busTransport", "MessageTransport_sql"), Dependency.OnComponent("httpTransport", "MessageTransport_http"))
                 .LifeStyle.Singleton);
 
             RegisterHttpHandlersFromAssembly(typeof(NGinnBPM.MessageBus.IMessageBus).Assembly);
@@ -1024,7 +1024,7 @@ namespace NGinnBPM.MessageBus.Windsor
                     .LifeStyle.Singleton;
                 if (c != null)
                 {
-                    reg = reg.Parameters(Parameter.ForKey("resolver").Eq("${ExternalServiceResolver}"));
+                    reg = reg.DependsOn(Dependency.OnComponent("resolver", "ExternalServiceResolver"));
                 }
                 _wc.Register(reg);
             }

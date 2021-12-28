@@ -1,0 +1,43 @@
+﻿{
+    "SelectAndLockNext1": "select top 1 id, correlation_id, from_endpoint, to_endpoint, retry_count, msg_text, msg_headers, unique_id, retry_time from {0} with (UPDLOCK, READPAST) where subqueue='I' order by retry_time",
+    
+    "SelectAndLockNext2": "update {0} with(readpast, rowlock) set subqueue='X', last_processed = getdate() where id=@id and subqueue='I'",
+    
+    "MarkMessageForProcessingLater": "update {0} with(rowlock) set retry_time=@retry_time, last_processed=getdate(), subqueue='R' where id=@id",
+    
+    "InsertMessageBatch_InsertSql": "INSERT INTO {0} with(rowlock) ([from_endpoint], [to_endpoint],[subqueue],[insert_time],[last_processed],[retry_count],[retry_time],[error_info],[msg_text],[correlation_id],[label], [msg_headers], [unique_id]) VALUES (@from_endpoint{1}, @to_endpoint{1}, @subqueue{1}, getdate(), null, 0, @retry_time{1}, null, @{2}, @correl_id{1}, @label{1}, @headers{1}, @unique_id{1});",
+    
+    "MoveMessageFromRetryToInput": "update {0} with(readpast, rowlock) set subqueue='I' where id=@id and subqueue='R'",
+	
+    "MarkMessageFailed": "update {0} with(readpast, rowlock) set retry_count = retry_count + {1}, retry_time=@retry_time, error_info=@error_info, last_processed=getdate(), subqueue=@subq where id=@id and subqueue in ('I', 'R')",
+    
+    "CleanupProcessedMessages": "delete top(10000) {0} with(READPAST) where retry_time <= @lmt and subqueue='X'",
+    
+    "MoveScheduledMessagesToInputQueue": "update top (1000) {0} with(READPAST) set subqueue='I' where subqueue='R' and retry_time <= getdate()",
+    
+	"GetAverageLatencyMs": "select coalesce(avg(DATEDIFF(millisecond, retry_time, last_processed)), 0) from {0} with(nolock) where retry_time >= @time_limit and subqueue='X'",
+    
+	"RetryAllFailedMessages": "update {0} with(READPAST) set subqueue='I', retry_count=0, error_info=null where subqueue='F'",
+    
+	"GetSubqueueSize": "select count(*) from {0} with(nolock) where subqueue='{1}'",
+    
+	"MoveMessageToSubqueue": "update {0} with(READPAST) set subqueue=@sq_to, error_info=null where id=@id'",
+
+
+	"SqlSubscriptionService_GetSubscriptions" : "select subscriber_endpoint, message_type from {0} where publisher_endpoint=@pub and (expiration_date is null or expiration_date >= getdate())",
+	"SqlSubscriptionService_UpdateSubscription" : "update {0} set expiration_date=@expiration where publisher_endpoint=@pub and subscriber_endpoint=@sub and message_type=@mtype",
+	"SqlSubscriptionService_InsertSubscription" : "insert into {0} (publisher_endpoint, subscriber_endpoint, message_type, created_date, expiration_date) values(@pub, @sub, @mtype, getdate(), @expiration)",
+	"SqlSubscriptionService_DeleteSubscription" : "delete {0} where publisher_endpoint=:pub and subscriber_endpoint=:sub and message_type=:mtype",
+    "SqlSubscriptionService_ExpireSubscriptions" : "delete {0} where publisher_endpoint=@pub and subscriber_endpoint=@sub and message_type=@mtype and expiration_date <= getdate()",
+
+	"SqlSagaStateRepository_SelectWithLock" : "select data, version from {0} with(rowlock, updlock) where id=@id",
+	"SqlSagaStateRepository_UpdateSaga" : "update {0} set data=@data, version=@newVersion, last_updated=@updateDate where id=@id and version=@version",
+	"SqlSagaStateRepository_DeleteSaga" : "delete {0} where id=@id",
+	"SqlSagaStateRepository_InsertSaga" : "insert into {0} (id, data, version, created_date, last_updated) values(@id, @data, @version, @updDate, @updDate)",
+	
+	"SqlSequenceManager_SelectWithLock" : "select data from {0} with(updlock) where id=@id",
+	"SqlSequenceManager_Update" : "update {0} set data=@json, last_modified=@mdate where id=@id",
+	"SqlSequenceManager_Insert" : "insert into {0} (id, data, last_modified) values(@id, @json, @mdate)",
+	"SqlSequenceManager_Delete" : "delete {0} where id=@id"
+
+}
