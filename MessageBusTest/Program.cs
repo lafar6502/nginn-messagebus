@@ -92,7 +92,7 @@ namespace Tests
                 }
                 Console.WriteLine("Batch sent. Enter");
                 Console.ReadLine();
-                return;
+                //return;
                 using (var ts = new TransactionScope())
                 {
                 	mb1.Notify(new TestMessage1 { });
@@ -108,6 +108,7 @@ namespace Tests
                 }
                 
                 Console.ReadLine();
+                return;
                 SagaTest(wc1);
                 Console.ReadLine();
                 return;
