@@ -6,21 +6,11 @@
       "DisplayName": "NGinnBPM.MessageBus",
       "ColorIndex": 0
     },
-    "a2fe74e1-b743-11d0-ae1a-00a0c90fffc3": {
-      "ProjectGuid": "a2fe74e1-b743-11d0-ae1a-00a0c90fffc3",
-      "DisplayName": "Miscellaneous Files",
-      "ColorIndex": -1
-    },
-    "6837107e-5c65-4228-bb86-f8c97334016d": {
-      "ProjectGuid": "6837107e-5c65-4228-bb86-f8c97334016d",
-      "DisplayName": "NGinnBPM.MessageBus.Windsor",
-      "ColorIndex": 1
-    },
     "04029211-41ba-4d44-9b79-322c3856cae2": {
       "ProjectGuid": "04029211-41ba-4d44-9b79-322c3856cae2",
       "DisplayName": "MessageBusTest",
-      "ColorIndex": 2
+      "ColorIndex": 1
     }
   },
-  "NextColorIndex": 3
+  "NextColorIndex": 2
 }

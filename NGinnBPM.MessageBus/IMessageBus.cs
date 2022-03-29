@@ -90,6 +90,8 @@ namespace NGinnBPM.MessageBus
         /// <param name="name"></param>
         /// <param name="value"></param>
         /// <returns></returns>
+        /// 
+        ISendMessage ExclusiveId(string exclId);
         ISendMessage AddHeader(string name, string value);
         /// <summary>
         /// Set message label
