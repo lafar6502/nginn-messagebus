@@ -72,6 +72,7 @@ namespace NGinnBPM.MessageBus.Impl
         public static readonly string HDR_TTL = "_NG-TTL";
         public static readonly string HDR_ContentType = "_NG-ContentType";
         public static readonly string HDR_ReplyTo = "_NG-ReplyTo";
+        public static readonly string HDR_UniqueSend = "_NG-UniqueSend";
         /// <summary>
         /// Message sequence id number
         /// </summary>

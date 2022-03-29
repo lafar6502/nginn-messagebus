@@ -29,7 +29,8 @@ namespace NGinnBPM.MessageBus.Impl
 		
 		///Handle messages inside Microsoft.Transactions.TransactionScope
 		public bool UseTransactionScope { get; set; }
-        
+
+
         /// <summary>
         /// Service locator
         /// currently used for locating message transports when
@@ -437,8 +438,6 @@ namespace NGinnBPM.MessageBus.Impl
         internal void SendMessages(IList<MessageContainer> lst, object dbTran)
         {
             if (lst == null || lst.Count == 0) return;
-            object prevbody = null;
-            string prevstr = null;
             foreach (MessageContainer mc in lst)
             {
                 if (string.IsNullOrEmpty(mc.To)) throw new Exception("Message destination missing");
@@ -447,19 +446,9 @@ namespace NGinnBPM.MessageBus.Impl
                     mc.From = MessageTransport.Endpoint;
                 if (mc.UniqueId == null || mc.UniqueId.Length == 0)
                     mc.UniqueId = CreateNewMessageUniqueId();
-                if (mc.Body == prevbody)
-                {
-                    mc.BodyStr = prevstr;
-                }
-                else
-                {
-                    prevbody = mc.Body;
-                    StringWriter sw = new StringWriter();
-                    MessageSerializer.Serialize(mc.Body, sw);
-                    //MessageSerializer.Serialize(mc.Body, sw);
-                    mc.BodyStr = sw.ToString();
-                    prevstr = mc.BodyStr;
-                }
+                StringWriter sw = new StringWriter();
+                MessageSerializer.Serialize(mc.Body, sw);
+                mc.BodyStr = sw.ToString();
             }
             if (Transaction.Current == null || BatchOutgoingMessagesInTransaction == false)
             {
@@ -477,6 +466,13 @@ namespace NGinnBPM.MessageBus.Impl
 
                 foreach (MessageContainer mw in lst)
                 {
+                    var uniq = mw.GetStringHeader(MessageContainer.HDR_UniqueSend, "0");
+
+                    if ("1".Equals(uniq) || "true".Equals(uniq))
+                    {
+                        var m0 = rm.Messages.FirstOrDefault(x => x.Body != null && x.Body.Equals(mw.Body));
+                        if (m0 != null) continue;
+                    }
                     rm.Messages.Add(mw);
                 }
             }
