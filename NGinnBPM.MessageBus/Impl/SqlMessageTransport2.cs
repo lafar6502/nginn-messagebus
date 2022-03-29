@@ -792,6 +792,7 @@ namespace NGinnBPM.MessageBus.Impl
                                 if (n0 > 5)
                                 {
                                     log.Warn("Message {0} with excl.id {1} postponed because of {2}", id, exid, _exclusiveIds[exid]);
+                                    exid = null;
                                     return true;
                                 }
                                 else
