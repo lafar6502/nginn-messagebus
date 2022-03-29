@@ -72,7 +72,15 @@ namespace NGinnBPM.MessageBus.Impl
         public static readonly string HDR_TTL = "_NG-TTL";
         public static readonly string HDR_ContentType = "_NG-ContentType";
         public static readonly string HDR_ReplyTo = "_NG-ReplyTo";
+        /// <summary>
+        /// check if message body is unique in current transaction and dont send it if same message already waits to be sent
+        /// </summary>
         public static readonly string HDR_UniqueSend = "_NG-UniqueSend";
+        /// <summary>
+        /// two messages with same exclusive id cannot be processed at the same time
+        /// </summary>
+        public static readonly string HDR_ExclusiveId = "_NG-ExclId";
+        /// <summary>
         /// <summary>
         /// Message sequence id number
         /// </summary>

@@ -742,7 +742,7 @@ namespace NGinnBPM.MessageBus.Impl
         private ConcurrentDictionary<string, DateTime> _nowProcessing = new ConcurrentDictionary<string, DateTime>();
         private ConcurrentQueue<long> _frequency = new ConcurrentQueue<long>();
         private Stopwatch _freqSw = Stopwatch.StartNew();
-
+        private ConcurrentDictionary<string, string> _exclusiveIds = new ConcurrentDictionary<string, string>();
         /// <summary>
         /// Process next message from the queue
         /// </summary>
@@ -768,6 +768,7 @@ namespace NGinnBPM.MessageBus.Impl
             bool abort = true; //by default, abort 
             Exception handlingError = null;
             MessageContainer mc = null;
+            string exid = null;
             try
             {
                 using (var ts = TransactionFactory.CreateTransactionScope())
@@ -781,6 +782,28 @@ namespace NGinnBPM.MessageBus.Impl
                         if (mc == null) return moreMessages;
                         id = mc.BusMessageId;
                         _nowProcessing[id] = DateTime.Now;
+                        exid = mc.GetStringHeader(MessageContainer.HDR_ExclusiveId, null);
+                        if (!string.IsNullOrEmpty(exid))
+                        {
+                            int n0 = 0;
+                            while (true)
+                            {
+                                if (!_exclusiveIds.TryAdd(exid, id))
+                                {
+                                    n0++;
+                                    log.Warn("Message {0} with excl.id {1} postponed because of {2}", id, exid, _exclusiveIds[exid]);
+                                    if (n0 > 5)
+                                    {
+                                        return true;
+                                    }
+                                    else
+                                    {
+                                        Thread.Sleep(500);
+                                    }
+                                }
+                            }
+                        }
+
                         NLog.MappedDiagnosticsContext.Set("nmbrecvmsg", id);
                         log.Debug("Selected message {0} for processing", id);
                         
@@ -788,6 +811,7 @@ namespace NGinnBPM.MessageBus.Impl
                         long tmp;
                         while (_frequency.Count > MaxConcurrentMessages && _frequency.TryDequeue(out tmp)) {};
                     
+
 
                         retryCount = mc.RetryCount;
                         mc.IsFinalRetry = retryCount >= _retryTimes.Length;
@@ -958,6 +982,14 @@ namespace NGinnBPM.MessageBus.Impl
             }
             finally
             {
+                if (!string.IsNullOrEmpty(exid))
+                {
+                    string t;
+                    if (!_exclusiveIds.TryRemove(exid, out t))
+                    {
+                        log.Warn("Message {0}, failed to remove exid {1}", id, exid);
+                    }
+                }
                 if (!string.IsNullOrEmpty(id))
                 {
                 	DateTime tm1;

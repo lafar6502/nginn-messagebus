@@ -816,8 +816,13 @@ namespace NGinnBPM.MessageBus.Impl
         }
 
         private DeliveryMode _deliveryMode = DeliveryMode.DurableAsync;
-        
 
+
+        public ISendMessage ExclusiveId(string exclId)
+        {
+            this.mc.SetHeader(MessageContainer.HDR_ExclusiveId, exclId);
+            return this;
+        }
         #endregion
 
 

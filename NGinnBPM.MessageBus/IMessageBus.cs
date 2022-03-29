@@ -148,6 +148,13 @@ namespace NGinnBPM.MessageBus
         /// Publish message
         /// </summary>
         void Publish();
+
+        /// <summary>
+        /// set message exclusive id (HDR_ExclusiveId)
+        /// </summary>
+        /// <param name="exclId"></param>
+        /// <returns></returns>
+        ISendMessage ExclusiveId(string exclId);
     }
 
     /// <summary>
