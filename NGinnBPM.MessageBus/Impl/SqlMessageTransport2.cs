@@ -786,20 +786,17 @@ namespace NGinnBPM.MessageBus.Impl
                         if (!string.IsNullOrEmpty(exid))
                         {
                             int n0 = 0;
-                            while (true)
+                            while (!_exclusiveIds.TryAdd(exid, id))
                             {
-                                if (!_exclusiveIds.TryAdd(exid, id))
+                                n0++;
+                                if (n0 > 5)
                                 {
-                                    n0++;
                                     log.Warn("Message {0} with excl.id {1} postponed because of {2}", id, exid, _exclusiveIds[exid]);
-                                    if (n0 > 5)
-                                    {
-                                        return true;
-                                    }
-                                    else
-                                    {
-                                        Thread.Sleep(500);
-                                    }
+                                    return true;
+                                }
+                                else
+                                {
+                                    Thread.Sleep(500);
                                 }
                             }
                         }
