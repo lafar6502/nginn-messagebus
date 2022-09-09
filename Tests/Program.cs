@@ -31,7 +31,10 @@ namespace Tests
         static void Main(string[] args)
         {
             //NLog.Config.SimpleConfigurator.ConfigureForConsoleLogging(LogLevel.Info);
-            
+
+            TestNinject();
+            return;
+
             try
             {
                 //ConfigExample.TestSendOnly();
@@ -203,6 +206,11 @@ namespace Tests
             }
         }
         
+        public static void TestNinject()
+        {
+            NGinnBPM.MessageBus.NinjectConfig.MessageBusConfigurator2.Test();
+        }
+
         public static IWindsorContainer ConfigureMessageBus(string endpointName, IDictionary<string, string> dbConnectionStrings, string httpUrl)
         {
             MessageBusConfigurator cfg = MessageBusConfigurator.Begin()

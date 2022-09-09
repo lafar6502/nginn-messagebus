@@ -20,7 +20,7 @@ namespace NGinnBPM.MessageBus.NinjectConfig
             return _krnl.GetAll(t).ToList();
         }
 
-        public ICollection<T> GetAllInstances<T>()
+        public ICollection<T> GetAllInstances<T>() where T : class
         {
             return _krnl.GetAll<T>().ToList();
         }
@@ -35,12 +35,12 @@ namespace NGinnBPM.MessageBus.NinjectConfig
             return _krnl.Get(t, name);
         }
 
-        public T GetInstance<T>()
+        public T GetInstance<T>() where T : class
         {
             return _krnl.Get<T>();
         }
 
-        public T GetInstance<T>(string name)
+        public T GetInstance<T>(string name) where T : class
         {
             return _krnl.Get<T>(name);
         }

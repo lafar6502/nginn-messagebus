@@ -302,13 +302,13 @@ namespace NGinnBPM.MessageBus.NinjectConfig
 
         protected MessageBusConfigurator ConfigureSqlMessageBus()
         {
-            if (!IsServiceRegistered<DbInitialize>())
+            /*if (!IsServiceRegistered<DbInitialize>())
             {
                 _k.Bind<DbInitialize>().ToSelf().InSingletonScope().OnActivation((c, x) =>
                 {
                     x.ConnectionString = GetDefaultConnectionString();
                 });
-            }
+            }*/
 
             _k.Bind<IMessageTransport, IStartableService, IHealthCheck, SqlMessageTransport2>().To<SqlMessageTransport2>().InSingletonScope()
                 .OnActivation((c, x) =>
