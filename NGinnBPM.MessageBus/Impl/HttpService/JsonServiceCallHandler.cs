@@ -5,6 +5,7 @@ using System.Text;
 using Newtonsoft.Json;
 using NLog;
 using System.IO;
+using Newtonsoft.Json.Converters;
 
 namespace NGinnBPM.MessageBus.Impl.HttpService
 {
@@ -17,10 +18,20 @@ namespace NGinnBPM.MessageBus.Impl.HttpService
             _serviceDispatcher = dispatcher;
         }
 
-        public void HandleServiceCall(string serviceName, string contentType, TextReader input, TextWriter output)
+        public JsonSerializerSettings SerializationSettings { get; set; } = new JsonSerializerSettings
         {
-            JsonSerializer ser = new JsonSerializer();
-            ser.TypeNameHandling = TypeNameHandling.Objects;
+            TypeNameHandling = TypeNameHandling.Auto,
+            NullValueHandling = NullValueHandling.Ignore,
+            DateFormatHandling = DateFormatHandling.IsoDateFormat,
+            Converters = new List<JsonConverter>
+            {
+                new StringEnumConverter()
+            }
+        };
+
+        public virtual void HandleServiceCall(string serviceName, string contentType, TextReader input, TextWriter output)
+        {
+            JsonSerializer ser = JsonSerializer.Create(SerializationSettings);
             object request = null;
             object resp = null;
             if (!string.IsNullOrEmpty(serviceName))
