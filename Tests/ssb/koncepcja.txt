@@ -1,9 +1,0 @@
-
-MessageBus.NewMessage(new SomeMessage())
-	.SetConversationId("32342342342342")  //ssb
-	.Send("ssb://NGinn_Service3")
-	.EndConversation() //reply not expected
-	
-MessageBus.CurrentMessage.ConversationId //ssb con
-
-Reply -> same conversation id

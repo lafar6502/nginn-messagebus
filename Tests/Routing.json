@@ -1,4 +1,0 @@
-{
-	"*" : ["local"],
-	"Tests.TestMessage2" : ["sql://testdb1/MQueue2"]
-}
