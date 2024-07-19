@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NGinnBPM.MessageBus.Tests",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NGinnBPM.DSLServices", "NGinnBPM.DslServices\NGinnBPM.DSLServices.csproj", "{0A52F561-DAA2-4D60-BAB5-9ED0749DE642}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NGinnBPM.DSLServices.Tests", "NGinnBPM.DslServices.Tests\NGinnBPM.DSLServices.Tests.csproj", "{1A6450BD-3885-444E-BA79-919358DF5AB5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{0A52F561-DAA2-4D60-BAB5-9ED0749DE642}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0A52F561-DAA2-4D60-BAB5-9ED0749DE642}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A52F561-DAA2-4D60-BAB5-9ED0749DE642}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A6450BD-3885-444E-BA79-919358DF5AB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A6450BD-3885-444E-BA79-919358DF5AB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A6450BD-3885-444E-BA79-919358DF5AB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A6450BD-3885-444E-BA79-919358DF5AB5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
