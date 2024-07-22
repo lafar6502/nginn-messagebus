@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Boo_lang_dotnet_rg" Version="1.9.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
     <PackageReference Include="NUnit" Version="3.13.3" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
@@ -18,18 +19,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NGinnBPM.DslServices\NGinnBPM.DSLServices.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Boo.Lang">
-      <HintPath>..\extlib\Boo.Lang.dll</HintPath>
-    </Reference>
-    <Reference Include="Boo.Lang.Compiler">
-      <HintPath>..\extlib\Boo.Lang.Compiler.dll</HintPath>
-    </Reference>
-    <Reference Include="Boo.Lang.Parser">
-      <HintPath>..\extlib\Boo.Lang.Parser.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>

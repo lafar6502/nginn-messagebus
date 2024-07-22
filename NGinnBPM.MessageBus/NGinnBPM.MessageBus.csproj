@@ -8,6 +8,8 @@
     <Title>NGinn message bus</Title>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	<VersionPrefix>2.0.0</VersionPrefix>
+	<IncludeSymbols>True</IncludeSymbols>
+	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
