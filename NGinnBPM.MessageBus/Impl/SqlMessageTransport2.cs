@@ -30,6 +30,21 @@ namespace NGinnBPM.MessageBus.Impl
     {
         #region IMessageTransport Members
 
+        public SqlMessageTransport2(ITransactionScopeFactory transactionFactory, ISequenceMessages sequenceMessages)
+        {
+            TransactionFactory = transactionFactory;
+            SequenceManager = sequenceMessages;
+            MessageRetentionPeriod = TimeSpan.FromHours(12);
+            SendLocalMessagesDirectly = true;
+            AllowUseOfApplicationDbConnectionForSending = true;
+            RequireUseOfApplicationDbConnectionForSending = false;
+            UseReceiveTransactionForSending = true;
+            ExposeReceiveConnection = true;
+            SendOnly = false;
+            MaxMessagesPerSingleConnection = 50;
+            MaxSqlParamsInBatch = 200;
+            //MaxReceiveFrequency = 1000;
+        }
 
         public virtual void SendBatch(IList<MessageContainer> messages, object conn)
         {
@@ -92,7 +107,7 @@ namespace NGinnBPM.MessageBus.Impl
         private string _queueTable = "MessageQueue";
         private Dictionary<string, ConnectionStringSettings> _connStrings = new  Dictionary<string, ConnectionStringSettings>();
 
-        public ITransactionScopeFactory TransactionFactory { get; set; }
+        protected ITransactionScopeFactory TransactionFactory { get; set; }
 
 
         public virtual string Endpoint
@@ -199,7 +214,7 @@ namespace NGinnBPM.MessageBus.Impl
         /// <summary>
         /// Message sequence manager to be used
         /// </summary>
-        public ISequenceMessages SequenceManager { get; set; }
+        protected ISequenceMessages SequenceManager { get; set; }
 
         private Thread _processorThread;
         private List<Thread> _messageHandlerThreads = new List<Thread>();
@@ -243,19 +258,7 @@ namespace NGinnBPM.MessageBus.Impl
             TimeSpan.FromDays(3)
         };
 
-        public SqlMessageTransport2()
-        {
-            MessageRetentionPeriod = TimeSpan.FromHours(12);
-            SendLocalMessagesDirectly = true;
-            AllowUseOfApplicationDbConnectionForSending = true;
-            RequireUseOfApplicationDbConnectionForSending = false;
-            UseReceiveTransactionForSending = true;
-            ExposeReceiveConnection = true;
-            SendOnly = false;
-            MaxMessagesPerSingleConnection = 50;
-            MaxSqlParamsInBatch = 200;
-            //MaxReceiveFrequency = 1000;
-        }
+        
         
         private static ISqlQueue GetQueueOps(DbConnection c)
         {

@@ -17,12 +17,13 @@ namespace NGinnBPM.MessageBus.Impl
     {
         public TimeSpan DefaultSubscriptionLifetime { get; set; }
 
-        public SubscriptionMsgHandler(ISubscriptionService subscriptionService)
+        public SubscriptionMsgHandler(ISubscriptionService subscriptionService, IMessageBus messageBus)
         {
             _sub = subscriptionService;
+            MessageBus = messageBus;
         }
 
-        public IMessageBus MessageBus { get; set; }
+        protected IMessageBus MessageBus { get; set; }
 
         private ISubscriptionService _sub;
 
