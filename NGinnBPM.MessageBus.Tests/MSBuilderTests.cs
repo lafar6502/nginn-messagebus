@@ -122,8 +122,8 @@ namespace NGinnBPM.MessageBus.Tests
             sc.AddSingleton<IServiceResolver, NetDIServiceResolver>();
             sc.AddSingleton<IMessageDispatcher, MessageDispatcher>();
 
-            MessageBusConfigBuilder.RegisterHandlerType(typeof(Handler1), sc, false);
-            MessageBusConfigBuilder.RegisterHandlerType(typeof(Handler2), sc, false);
+            DIHelper.RegisterHandlerType(typeof(Handler1), sc, false);
+            DIHelper.RegisterHandlerType(typeof(Handler2), sc, false);
 
             var container = sc.BuildServiceProvider();
 

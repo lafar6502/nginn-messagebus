@@ -47,135 +47,6 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
             };
         }
 
-        protected bool IsServiceRegistered(Type t)
-        {
-            return IsServiceRegistered(_container, t);
-        }
-
-        private static bool IsServiceRegistered(IServiceCollection wc, Type t)
-        {
-            return wc.Any(x => x.ServiceType == t);
-        }
-
-        protected bool IsServiceRegistered<T>()
-        {
-            return IsServiceRegistered(typeof(T));
-        }
-        private void RegisterMessageHandlersFromAssembly(Assembly asm)
-        {
-            foreach (Type t in asm.GetTypes())
-            {
-                if (t.IsInterface || t.IsAbstract) continue;
-                if (!t.GetInterfaces().Contains(typeof(DontAutoRegisterMe)) && !IsServiceRegistered(_container, t))
-                {
-                    RegisterHandlerType(t, _container, false);
-                }
-            }
-        }
-
-        public static void RegisterService(Type t, IEnumerable<Type> serviceInterfaces, IServiceCollection wc, ServiceLifetime lifetime)
-        {
-            var sd = ServiceDescriptor.Describe(t, t, lifetime);
-            wc.Add(sd);
-            foreach(var itf in serviceInterfaces)
-            {
-                if (itf == t) continue;
-                var isd = ServiceDescriptor.Describe(itf, sp => sp.GetService(t), lifetime);
-                wc.Add(isd);
-            }
-        }
-
-        public static void RegisterService<T>(IEnumerable<Type> serviceInterfaces, IServiceCollection wc, ServiceLifetime lifetime, Func<IServiceProvider, T> factoryFun = null)
-        {
-            ServiceDescriptor sd;
-            if (factoryFun != null)
-            {
-                sd = ServiceDescriptor.Describe(typeof(T), sp => factoryFun(sp), lifetime);
-            }
-            else
-            {
-                sd = ServiceDescriptor.Describe(typeof(T), typeof(T), lifetime);
-            }
-            wc.Add(sd);
-            if (serviceInterfaces != null)
-            {
-                foreach (var itf in serviceInterfaces)
-                {
-                    var isd = ServiceDescriptor.Describe(itf, sp => sp.GetService<T>(), lifetime);
-                    wc.Add(isd);
-                }
-            }
-        }
-
-        public static void RegisterService<T, I1>(IServiceCollection wc, ServiceLifetime lifetime, Func<IServiceProvider, T> factoryFun = null)
-        {
-            RegisterService<T>(new Type[] { typeof(I1) }, wc, lifetime, factoryFun);
-        }
-
-        public static void RegisterService<T, I1, I2>(IServiceCollection wc, ServiceLifetime lifetime, Func<IServiceProvider, T> factoryFun = null)
-        {
-            RegisterService<T>(new Type[] { typeof(I1), typeof(I2) }, wc, lifetime, factoryFun);
-        }
-
-        public static void RegisterService<T, I1, I2, I3>(IServiceCollection wc, ServiceLifetime lifetime, Func<IServiceProvider, T> factoryFun = null)
-        {
-            RegisterService<T>(new Type[] { typeof(I1), typeof(I2), typeof(I3) }, wc, lifetime, factoryFun);
-        }
-        /// <summary>
-        /// register service with 4 interfaces
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <typeparam name="I1"></typeparam>
-        /// <typeparam name="I2"></typeparam>
-        /// <typeparam name="I3"></typeparam>
-        /// <typeparam name="I4"></typeparam>
-        /// <param name="wc"></param>
-        /// <param name="lifetime"></param>
-        /// <param name="factoryFun"></param>
-        public static void RegisterService<T, I1, I2, I3, I4>(IServiceCollection wc, ServiceLifetime lifetime, Func<IServiceProvider, T> factoryFun = null)
-        {
-            RegisterService<T>(new Type[] { typeof(I1), typeof(I2), typeof(I3), typeof(I4) }, wc, lifetime, factoryFun);
-        }
-
-        /// <summary>
-        /// for a given type, register all of its nginn-related interfaces as services
-        /// </summary>
-        /// <param name="t"></param>
-        /// <param name="wc"></param>
-        /// <param name="transient"></param>
-        /// <param name="depends"></param>
-        /// <exception cref="NotImplementedException"></exception>
-        public static void RegisterHandlerType(Type t, IServiceCollection wc, bool? transient)
-        {
-            if (TypeUtil.IsSagaType(t))
-            {
-                //if (!IsServiceRegistered(wc, t)) RegisterSagaType(t, wc);
-                throw new NotImplementedException();
-                return;
-            }
-
-            List<Type> l = new List<Type>();
-            l.Add(t);
-            var l2 = TypeUtil.GetMessageHandlerInterfaces(t);
-            var l3 = TypeUtil.GetMessageHandlerServiceInterfaces(t);
-            if (l2.Count + l3.Count == 0) return;
-            l.AddRange(l2);
-            l.AddRange(l3);
-
-            var lt = ServiceLifetime.Singleton;
-            if (transient.HasValue)
-            {
-                lt = transient.Value ? ServiceLifetime.Transient : ServiceLifetime.Singleton;
-            }
-            else
-            {
-                MessageHandlerConfigAttribute attr = (MessageHandlerConfigAttribute)Attribute.GetCustomAttribute(t, typeof(MessageHandlerConfigAttribute));
-                if (attr != null) lt = attr.Transient ? ServiceLifetime.Transient : ServiceLifetime.Singleton;
-            }
-
-            RegisterService(t, l, wc, lt);
-            
-        }
 
         /// <summary>
         /// Supply an implementation of IServiceResolver that will be used for creating message handlers 
@@ -300,7 +171,7 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
         public MessageBusConfigBuilder UseSqlSubscriptions()
         {
             var connstr = GetDefaultConnectionString();
-            RegisterService<NGinnBPM.MessageBus.Impl.SqlSubscriptionService>(new Type[] { typeof(ISubscriptionService), typeof(IMessageConsumer<Impl.InternalEvents.DatabaseInit>) },
+            DIHelper.RegisterService<NGinnBPM.MessageBus.Impl.SqlSubscriptionService>(new Type[] { typeof(ISubscriptionService), typeof(IMessageConsumer<Impl.InternalEvents.DatabaseInit>) },
                 _container, ServiceLifetime.Singleton, sp =>
                 {
                     return new NGinnBPM.MessageBus.Impl.SqlSubscriptionService
@@ -318,7 +189,7 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
 
         public MessageBusConfigBuilder UseStaticMessageRouting(string configFile)
         {
-            RegisterService<StaticMessageRouting>(new Type[] { typeof(ISubscriptionService) }, _container, ServiceLifetime.Singleton, sp =>
+            DIHelper.RegisterService<StaticMessageRouting>(new Type[] { typeof(ISubscriptionService) }, _container, ServiceLifetime.Singleton, sp =>
             {
                 return new StaticMessageRouting
                 {
@@ -330,7 +201,7 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
 
         public MessageBusConfigBuilder AddMessageHandlersFromAssembly(System.Reflection.Assembly asm)
         {
-            RegisterMessageHandlersFromAssembly(asm);
+            DIHelper.RegisterMessageHandlersFromAssembly(asm, _container);
             return this;
         }
 
@@ -341,7 +212,7 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
         /// <returns></returns>
         public MessageBusConfigBuilder UseSqlSequenceManager()
         {
-            RegisterService<SqlSequenceManager, ISequenceMessages, IMessageConsumer<Impl.InternalEvents.DatabaseInit>>(_container, ServiceLifetime.Singleton, sp =>
+            DIHelper.RegisterService<SqlSequenceManager, ISequenceMessages, IMessageConsumer<Impl.InternalEvents.DatabaseInit>>(_container, ServiceLifetime.Singleton, sp =>
             {
                 return new SqlSequenceManager
                 {
@@ -452,7 +323,7 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
 
         protected MessageBusConfigBuilder ConfigureSqlMessageBus()
         {
-            RegisterService<SqlMessageTransport2, IMessageTransport, IStartableService, IHealthCheck>(_container, ServiceLifetime.Singleton, sp =>
+            DIHelper.RegisterService<SqlMessageTransport2, IMessageTransport, IStartableService, IHealthCheck>(_container, ServiceLifetime.Singleton, sp =>
             {
                 var t = new SqlMessageTransport2(sp.GetService<ITransactionScopeFactory>(), sp.GetService<ISequenceMessages>())
                 {
@@ -473,7 +344,7 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
                 return t;
             });
 
-            RegisterService<MessageBus.Impl.MessageBus, IMessageBus>(_container, ServiceLifetime.Singleton, sp =>
+            DIHelper.RegisterService<MessageBus.Impl.MessageBus, IMessageBus>(_container, ServiceLifetime.Singleton, sp =>
             {
                 return new Impl.MessageBus(sp.GetService<IMessageTransport>(), sp.GetService<IMessageDispatcher>(), sp.GetService<ISerializeMessages>(),
                     sp.GetService<IServiceResolver>(), sp.GetService<ITransactionScopeFactory>())
@@ -497,22 +368,22 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
         /// <returns></returns>
         public MessageBusConfigBuilder FinishConfiguration()
         {
-            if (!IsServiceRegistered<IServiceResolver>())
+            if (!DIHelper.IsServiceRegistered<IServiceResolver>(_container))
             {
                 _container.AddSingleton<IServiceResolver, NetDIServiceResolver>();
             }
-            if (!IsServiceRegistered<IMessageDispatcher>())
+            if (!DIHelper.IsServiceRegistered<IMessageDispatcher>(_container))
             {
                 var hasExternal = _container.Any(x => x.IsKeyedService && "ExternalServiceResolver".Equals(x.ServiceKey) && x.ServiceType.IsAssignableTo(typeof(IServiceResolver)));
-                RegisterService<MessageDispatcher, IMessageDispatcher>(_container, ServiceLifetime.Singleton, sp =>
+                DIHelper.RegisterService<MessageDispatcher, IMessageDispatcher>(_container, ServiceLifetime.Singleton, sp =>
                 {
                     var r = new MessageDispatcher(hasExternal ? sp.GetKeyedService<IServiceResolver>("ExternalServiceResolver") : sp.GetService<IServiceResolver>());
                     return r;
                 });
             }
-            if (!IsServiceRegistered<ITransactionScopeFactory>())
+            if (!DIHelper.IsServiceRegistered<ITransactionScopeFactory>(_container))
             {
-                RegisterService<TransactionScopeFactoryEx, ITransactionScopeFactory>(_container, ServiceLifetime.Singleton, sp =>
+                DIHelper.RegisterService<TransactionScopeFactoryEx, ITransactionScopeFactory>(_container, ServiceLifetime.Singleton, sp =>
                 {
                     return new TransactionScopeFactoryEx
                     {
@@ -520,19 +391,19 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
                     };
                 });
             }
-            if (!IsServiceRegistered<IServiceMessageDispatcher>())
+            if (!DIHelper.IsServiceRegistered<IServiceMessageDispatcher>(_container))
             {
-                RegisterService<ServiceMessageDispatcher, IServiceMessageDispatcher>(_container, ServiceLifetime.Singleton);
+                DIHelper.RegisterService<ServiceMessageDispatcher, IServiceMessageDispatcher>(_container, ServiceLifetime.Singleton);
             }
             _container.AddSingleton<JsonServiceCallHandler>();
 
-            if (!IsServiceRegistered<IMessageConsumer<Ping>>())
+            if (!DIHelper.IsServiceRegistered<IMessageConsumer<Ping>>(_container))
             {
-                RegisterHandlerType(typeof(PingService), _container, false);
+                DIHelper.RegisterHandlerType(typeof(PingService), _container, false);
             }
-            if (!IsServiceRegistered<IMessageConsumer<SubscribeRequest>>())
+            if (!DIHelper.IsServiceRegistered<IMessageConsumer<SubscribeRequest>>(_container))
             {
-                RegisterService<SubscriptionMsgHandler, IMessageConsumer<SubscribeRequest>, IMessageConsumer<UnsubscribeRequest>, IMessageConsumer<SubscriptionExpiring>, IMessageConsumer<SubscriptionTimeout>>(
+                DIHelper.RegisterService<SubscriptionMsgHandler, IMessageConsumer<SubscribeRequest>, IMessageConsumer<UnsubscribeRequest>, IMessageConsumer<SubscriptionExpiring>, IMessageConsumer<SubscriptionTimeout>>(
                     _container, ServiceLifetime.Singleton, sp =>
                     {
                         return new SubscriptionMsgHandler(sp.GetService<ISubscriptionService>(), sp.GetService<IMessageBus>())
@@ -541,22 +412,22 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
                         };
                     });
             }
-            if (!IsServiceRegistered<ISerializeMessages>())
+            if (!DIHelper.IsServiceRegistered<ISerializeMessages>(_container))
             {
-                RegisterService<JsonMessageSerializer, ISerializeMessages>(_container, ServiceLifetime.Singleton);
+                DIHelper.RegisterService<JsonMessageSerializer, ISerializeMessages>(_container, ServiceLifetime.Singleton);
             }
-            if (!IsServiceRegistered<ISubscriptionService>())
+            if (!DIHelper.IsServiceRegistered<ISubscriptionService>(_container))
             {
                 UseSqlSubscriptions();
             }
             var dcs = GetDefaultConnectionString();
             if (EnableSagas && !SendOnly)
             {
-                if (!IsServiceRegistered<SagaStateHelper>())
+                if (!DIHelper.IsServiceRegistered<SagaStateHelper>(_container))
                 {
                     _container.AddSingleton<SagaStateHelper>();
                 }
-                if (!IsServiceRegistered<ISagaRepository>())
+                if (!DIHelper.IsServiceRegistered<ISagaRepository>(_container))
                 {
                     string calias, tmp;
                     ConnectionStringSettings cs = null;
@@ -567,7 +438,7 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
                     }
                     else throw new Exception("Endpoint");
 
-                    RegisterService<SqlSagaStateRepository, ISagaRepository>(_container, ServiceLifetime.Singleton, sp =>
+                    DIHelper.RegisterService<SqlSagaStateRepository, ISagaRepository>(_container, ServiceLifetime.Singleton, sp =>
                     {
                         return new SqlSagaStateRepository
                         {
@@ -581,7 +452,7 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
                 }
 
             }
-            if (!IsServiceRegistered<IMessageBus>())
+            if (!DIHelper.IsServiceRegistered<IMessageBus>(_container))
             {
                 ConfigureSqlMessageBus();
             }
