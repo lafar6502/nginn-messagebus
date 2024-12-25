@@ -1,0 +1,2 @@
+2022-09-09 18:49:35.3308|Warn|M_|SQLMT_sql://testdb/MQ_Test1|Error initializing queue table: CREATE TABLE permission denied in database 'NGInn'.
+2022-09-09 18:51:28.5821|Warn|M_|SQLMT_sql://testdb/MQ_Test1|Error initializing queue table: CREATE TABLE permission denied in database 'NGInn'.

@@ -1,0 +1,583 @@
+2022-09-09 18:47:04.8568 Info Loading assembly name: NGinnBPM.MessageBus
+2022-09-09 18:47:04.8568 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Targets.TargetAttribute','NLog.Targets.Target')
+2022-09-09 18:47:04.8568 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Filters.FilterAttribute','NLog.Filters.Filter')
+2022-09-09 18:47:04.8568 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.LayoutRenderers.LayoutRendererAttribute','NLog.LayoutRenderers.LayoutRenderer')
+2022-09-09 18:47:04.8568 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Layouts.LayoutAttribute','NLog.Layouts.Layout')
+2022-09-09 18:47:04.8568 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Conditions.ConditionMethodsAttribute','NLog.Conditions.ConditionMethodAttribute')
+2022-09-09 18:47:04.8568 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.LayoutRenderers.AmbientPropertyAttribute','NLog.LayoutRenderers.LayoutRenderer')
+2022-09-09 18:47:04.8568 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Time.TimeSourceAttribute','NLog.Time.TimeSource')
+2022-09-09 18:47:04.8734 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:47:04.8734 Debug Setting 'FileTarget.name' to 'mdc'
+2022-09-09 18:47:04.8734 Debug Setting 'FileTarget.fileName' to '${basedir}/../../logs/nginn_${mdc:nmbendpoint}.${shortdate}.log'
+2022-09-09 18:47:04.8734 Debug Setting 'MdcLayoutRenderer.Item' to 'nmbendpoint'
+2022-09-09 18:47:04.8734 Debug Setting 'FileTarget.layout' to '${longdate}|${level}|M_${mdc:nmbrecvmsg}|${logger}|${message}'
+2022-09-09 18:47:04.8734 Debug Setting 'MdcLayoutRenderer.Item' to 'nmbrecvmsg'
+2022-09-09 18:47:04.8734 Info Adding target File Target[mdc]
+2022-09-09 18:47:04.8734 Debug Registering target mdc: NLog.Targets.FileTarget
+2022-09-09 18:47:04.8734 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:47:04.8734 Debug Setting 'FileTarget.name' to 'all'
+2022-09-09 18:47:04.8734 Debug Setting 'FileTarget.fileName' to '${basedir}/../../logs/nginn_whost.${shortdate}.log'
+2022-09-09 18:47:04.8734 Debug Setting 'FileTarget.layout' to '${time}|T${threadid}|${level}|${message}'
+2022-09-09 18:47:04.8734 Info Adding target File Target[all]
+2022-09-09 18:47:04.8734 Debug Registering target all: NLog.Targets.FileTarget
+2022-09-09 18:47:04.8734 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:47:04.8734 Debug Setting 'FileTarget.name' to 'err'
+2022-09-09 18:47:04.8734 Debug Setting 'FileTarget.fileName' to '${basedir}/../../logs/nginn_whost_errors.${shortdate}.log'
+2022-09-09 18:47:04.8734 Info Adding target File Target[err]
+2022-09-09 18:47:04.8734 Debug Registering target err: NLog.Targets.FileTarget
+2022-09-09 18:47:04.8734 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:47:04.8734 Debug Setting 'ConsoleTarget.name' to 'con'
+2022-09-09 18:47:04.8734 Debug Setting 'ConsoleTarget.layout' to '${time}|${mdc:nmbendpoint}|T${threadid}|${level}|${message}'
+2022-09-09 18:47:04.8734 Debug Setting 'MdcLayoutRenderer.Item' to 'nmbendpoint'
+2022-09-09 18:47:04.8734 Info Adding target Console Target[con]
+2022-09-09 18:47:04.8734 Debug Registering target con: NLog.Targets.ConsoleTarget
+2022-09-09 18:47:04.8734 Info Configured from an XML element in C:\devs\nginn-messagebus\Tests\bin\Debug\NLog.config...
+2022-09-09 18:47:04.8734 Debug --- NLog configuration dump. ---
+2022-09-09 18:47:04.8734 Debug Targets:
+2022-09-09 18:47:04.8734 Info File Target[mdc]
+2022-09-09 18:47:04.8734 Info File Target[all]
+2022-09-09 18:47:04.8734 Info File Target[err]
+2022-09-09 18:47:04.8734 Info Console Target[con]
+2022-09-09 18:47:04.8884 Debug Rules:
+2022-09-09 18:47:04.8884 Info logNamePattern: (:All) levels: [ ] appendTo: [ mdc ]
+2022-09-09 18:47:04.8884 Info logNamePattern: (STAT:StartsWith) levels: [ ] appendTo: [ all ]
+2022-09-09 18:47:04.8884 Info logNamePattern: (:All) levels: [ ] appendTo: [ all con ]
+2022-09-09 18:47:04.8884 Info logNamePattern: (:All) levels: [ ] appendTo: [ err ]
+2022-09-09 18:47:04.8884 Debug --- End of NLog configuration dump ---
+2022-09-09 18:47:04.8884 Info Watching path 'C:\devs\nginn-messagebus\Tests\bin\Debug' filter 'NLog.config' for changes.
+2022-09-09 18:47:04.8884 Info Found 60 configuration items
+2022-09-09 18:47:04.8884 Debug Targets for Tests.Program by level:
+2022-09-09 18:47:04.8884 Debug Trace =>
+2022-09-09 18:47:04.8884 Debug Debug =>
+2022-09-09 18:47:04.8884 Debug Info => all con
+2022-09-09 18:47:04.8884 Debug Warn => mdc all con err
+2022-09-09 18:47:04.8884 Debug Error => mdc all con err
+2022-09-09 18:47:04.8884 Debug Fatal => mdc all con err
+2022-09-09 18:47:04.9764 Debug Targets for NGinnBPM.MessageBus.Impl.SqlMessageTransport2 by level:
+2022-09-09 18:47:04.9764 Debug Trace =>
+2022-09-09 18:47:04.9764 Debug Debug =>
+2022-09-09 18:47:04.9764 Debug Info => all con
+2022-09-09 18:47:04.9764 Debug Warn => mdc all con err
+2022-09-09 18:47:04.9764 Debug Error => mdc all con err
+2022-09-09 18:47:04.9764 Debug Fatal => mdc all con err
+2022-09-09 18:47:04.9764 Debug Targets for STAT.SqlMessageTransport2 by level:
+2022-09-09 18:47:04.9764 Debug Trace =>
+2022-09-09 18:47:04.9764 Debug Debug =>
+2022-09-09 18:47:04.9764 Debug Info => all
+2022-09-09 18:47:04.9764 Debug Warn => mdc all
+2022-09-09 18:47:04.9764 Debug Error => mdc all
+2022-09-09 18:47:04.9764 Debug Fatal => mdc all
+2022-09-09 18:47:04.9878 Debug Targets for SQLMT_sql://testdb/MQ_Test1 by level:
+2022-09-09 18:47:04.9878 Debug Trace =>
+2022-09-09 18:47:04.9878 Debug Debug =>
+2022-09-09 18:47:04.9878 Debug Info => all con
+2022-09-09 18:47:04.9878 Debug Warn => mdc all con err
+2022-09-09 18:47:04.9878 Debug Error => mdc all con err
+2022-09-09 18:47:04.9878 Debug Fatal => mdc all con err
+2022-09-09 18:47:04.9878 Debug Targets for STATSQLMT_sql://testdb/MQ_Test1 by level:
+2022-09-09 18:47:04.9878 Debug Trace =>
+2022-09-09 18:47:04.9878 Debug Debug =>
+2022-09-09 18:47:04.9878 Debug Info => all
+2022-09-09 18:47:04.9878 Debug Warn => mdc all
+2022-09-09 18:47:04.9878 Debug Error => mdc all
+2022-09-09 18:47:04.9878 Debug Fatal => mdc all
+2022-09-09 18:47:04.9878 Debug Targets for MessageDispatcher_8864859 by level:
+2022-09-09 18:47:04.9878 Debug Trace =>
+2022-09-09 18:47:04.9878 Debug Debug =>
+2022-09-09 18:47:04.9878 Debug Info => all con
+2022-09-09 18:47:04.9878 Debug Warn => mdc all con err
+2022-09-09 18:47:04.9878 Debug Error => mdc all con err
+2022-09-09 18:47:04.9878 Debug Fatal => mdc all con err
+2022-09-09 18:47:05.0554 Debug Targets for NGinnBPM.MessageBus.Impl.MessageBus by level:
+2022-09-09 18:47:05.0554 Debug Trace =>
+2022-09-09 18:47:05.0554 Debug Debug =>
+2022-09-09 18:47:05.0554 Debug Info => all con
+2022-09-09 18:47:05.0554 Debug Warn => mdc all con err
+2022-09-09 18:47:05.0554 Debug Error => mdc all con err
+2022-09-09 18:47:05.0554 Debug Fatal => mdc all con err
+2022-09-09 18:47:05.0554 Debug Targets for BUS_sql://testdb/MQ_Test1 by level:
+2022-09-09 18:47:05.0554 Debug Trace =>
+2022-09-09 18:47:05.0554 Debug Debug =>
+2022-09-09 18:47:05.0554 Debug Info => all con
+2022-09-09 18:47:05.0554 Debug Warn => mdc all con err
+2022-09-09 18:47:05.0554 Debug Error => mdc all con err
+2022-09-09 18:47:05.0554 Debug Fatal => mdc all con err
+2022-09-09 18:49:19.7128 Info Loading assembly name: NGinnBPM.MessageBus
+2022-09-09 18:49:19.7128 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Targets.TargetAttribute','NLog.Targets.Target')
+2022-09-09 18:49:19.7178 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Filters.FilterAttribute','NLog.Filters.Filter')
+2022-09-09 18:49:19.7178 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.LayoutRenderers.LayoutRendererAttribute','NLog.LayoutRenderers.LayoutRenderer')
+2022-09-09 18:49:19.7178 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Layouts.LayoutAttribute','NLog.Layouts.Layout')
+2022-09-09 18:49:19.7178 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Conditions.ConditionMethodsAttribute','NLog.Conditions.ConditionMethodAttribute')
+2022-09-09 18:49:19.7178 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.LayoutRenderers.AmbientPropertyAttribute','NLog.LayoutRenderers.LayoutRenderer')
+2022-09-09 18:49:19.7178 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Time.TimeSourceAttribute','NLog.Time.TimeSource')
+2022-09-09 18:49:19.7178 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:49:19.7323 Debug Setting 'FileTarget.name' to 'mdc'
+2022-09-09 18:49:19.7323 Debug Setting 'FileTarget.fileName' to '${basedir}/../../logs/nginn_${mdc:nmbendpoint}.${shortdate}.log'
+2022-09-09 18:49:19.7323 Debug Setting 'MdcLayoutRenderer.Item' to 'nmbendpoint'
+2022-09-09 18:49:19.7323 Debug Setting 'FileTarget.layout' to '${longdate}|${level}|M_${mdc:nmbrecvmsg}|${logger}|${message}'
+2022-09-09 18:49:19.7323 Debug Setting 'MdcLayoutRenderer.Item' to 'nmbrecvmsg'
+2022-09-09 18:49:19.7323 Info Adding target File Target[mdc]
+2022-09-09 18:49:19.7323 Debug Registering target mdc: NLog.Targets.FileTarget
+2022-09-09 18:49:19.7323 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:49:19.7323 Debug Setting 'FileTarget.name' to 'all'
+2022-09-09 18:49:19.7323 Debug Setting 'FileTarget.fileName' to '${basedir}/../../logs/nginn_whost.${shortdate}.log'
+2022-09-09 18:49:19.7323 Debug Setting 'FileTarget.layout' to '${time}|T${threadid}|${level}|${message}'
+2022-09-09 18:49:19.7323 Info Adding target File Target[all]
+2022-09-09 18:49:19.7323 Debug Registering target all: NLog.Targets.FileTarget
+2022-09-09 18:49:19.7323 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:49:19.7323 Debug Setting 'FileTarget.name' to 'err'
+2022-09-09 18:49:19.7323 Debug Setting 'FileTarget.fileName' to '${basedir}/../../logs/nginn_whost_errors.${shortdate}.log'
+2022-09-09 18:49:19.7323 Info Adding target File Target[err]
+2022-09-09 18:49:19.7323 Debug Registering target err: NLog.Targets.FileTarget
+2022-09-09 18:49:19.7323 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:49:19.7323 Debug Setting 'ConsoleTarget.name' to 'con'
+2022-09-09 18:49:19.7323 Debug Setting 'ConsoleTarget.layout' to '${time}|${mdc:nmbendpoint}|T${threadid}|${level}|${message}'
+2022-09-09 18:49:19.7323 Debug Setting 'MdcLayoutRenderer.Item' to 'nmbendpoint'
+2022-09-09 18:49:19.7323 Info Adding target Console Target[con]
+2022-09-09 18:49:19.7323 Debug Registering target con: NLog.Targets.ConsoleTarget
+2022-09-09 18:49:19.7323 Info Configured from an XML element in C:\devs\nginn-messagebus\Tests\bin\Debug\NLog.config...
+2022-09-09 18:49:19.7323 Debug --- NLog configuration dump. ---
+2022-09-09 18:49:19.7323 Debug Targets:
+2022-09-09 18:49:19.7323 Info File Target[mdc]
+2022-09-09 18:49:19.7323 Info File Target[all]
+2022-09-09 18:49:19.7323 Info File Target[err]
+2022-09-09 18:49:19.7323 Info Console Target[con]
+2022-09-09 18:49:19.7323 Debug Rules:
+2022-09-09 18:49:19.7323 Info logNamePattern: (:All) levels: [ ] appendTo: [ mdc ]
+2022-09-09 18:49:19.7323 Info logNamePattern: (STAT:StartsWith) levels: [ ] appendTo: [ all ]
+2022-09-09 18:49:19.7323 Info logNamePattern: (:All) levels: [ ] appendTo: [ all con ]
+2022-09-09 18:49:19.7323 Info logNamePattern: (:All) levels: [ ] appendTo: [ err ]
+2022-09-09 18:49:19.7323 Debug --- End of NLog configuration dump ---
+2022-09-09 18:49:19.7323 Info Watching path 'C:\devs\nginn-messagebus\Tests\bin\Debug' filter 'NLog.config' for changes.
+2022-09-09 18:49:19.7483 Info Found 60 configuration items
+2022-09-09 18:49:19.7483 Debug Targets for Tests.Program by level:
+2022-09-09 18:49:19.7483 Debug Trace =>
+2022-09-09 18:49:19.7483 Debug Debug =>
+2022-09-09 18:49:19.7483 Debug Info => all con
+2022-09-09 18:49:19.7483 Debug Warn => mdc all con err
+2022-09-09 18:49:19.7483 Debug Error => mdc all con err
+2022-09-09 18:49:19.7483 Debug Fatal => mdc all con err
+2022-09-09 18:49:19.8300 Debug Targets for NGinnBPM.MessageBus.Impl.SqlMessageTransport2 by level:
+2022-09-09 18:49:19.8300 Debug Trace =>
+2022-09-09 18:49:19.8300 Debug Debug =>
+2022-09-09 18:49:19.8300 Debug Info => all con
+2022-09-09 18:49:19.8300 Debug Warn => mdc all con err
+2022-09-09 18:49:19.8300 Debug Error => mdc all con err
+2022-09-09 18:49:19.8300 Debug Fatal => mdc all con err
+2022-09-09 18:49:19.8300 Debug Targets for STAT.SqlMessageTransport2 by level:
+2022-09-09 18:49:19.8300 Debug Trace =>
+2022-09-09 18:49:19.8300 Debug Debug =>
+2022-09-09 18:49:19.8300 Debug Info => all
+2022-09-09 18:49:19.8300 Debug Warn => mdc all
+2022-09-09 18:49:19.8300 Debug Error => mdc all
+2022-09-09 18:49:19.8300 Debug Fatal => mdc all
+2022-09-09 18:49:19.8446 Debug Targets for SQLMT_sql://testdb/MQ_Test1 by level:
+2022-09-09 18:49:19.8446 Debug Trace =>
+2022-09-09 18:49:19.8446 Debug Debug =>
+2022-09-09 18:49:19.8446 Debug Info => all con
+2022-09-09 18:49:19.8446 Debug Warn => mdc all con err
+2022-09-09 18:49:19.8446 Debug Error => mdc all con err
+2022-09-09 18:49:19.8446 Debug Fatal => mdc all con err
+2022-09-09 18:49:19.8446 Debug Targets for STATSQLMT_sql://testdb/MQ_Test1 by level:
+2022-09-09 18:49:19.8446 Debug Trace =>
+2022-09-09 18:49:19.8446 Debug Debug =>
+2022-09-09 18:49:19.8446 Debug Info => all
+2022-09-09 18:49:19.8446 Debug Warn => mdc all
+2022-09-09 18:49:19.8446 Debug Error => mdc all
+2022-09-09 18:49:19.8446 Debug Fatal => mdc all
+2022-09-09 18:49:19.8446 Debug Targets for MessageDispatcher_8864859 by level:
+2022-09-09 18:49:19.8446 Debug Trace =>
+2022-09-09 18:49:19.8446 Debug Debug =>
+2022-09-09 18:49:19.8446 Debug Info => all con
+2022-09-09 18:49:19.8446 Debug Warn => mdc all con err
+2022-09-09 18:49:19.8446 Debug Error => mdc all con err
+2022-09-09 18:49:19.8446 Debug Fatal => mdc all con err
+2022-09-09 18:49:19.8576 Debug Targets for NGinnBPM.MessageBus.Impl.MessageBus by level:
+2022-09-09 18:49:19.8576 Debug Trace =>
+2022-09-09 18:49:19.8576 Debug Debug =>
+2022-09-09 18:49:19.8576 Debug Info => all con
+2022-09-09 18:49:19.8576 Debug Warn => mdc all con err
+2022-09-09 18:49:19.8576 Debug Error => mdc all con err
+2022-09-09 18:49:19.8576 Debug Fatal => mdc all con err
+2022-09-09 18:49:19.8576 Debug Targets for BUS_sql://testdb/MQ_Test1 by level:
+2022-09-09 18:49:19.8576 Debug Trace =>
+2022-09-09 18:49:19.8576 Debug Debug =>
+2022-09-09 18:49:19.8576 Debug Info => all con
+2022-09-09 18:49:19.8576 Debug Warn => mdc all con err
+2022-09-09 18:49:19.8576 Debug Error => mdc all con err
+2022-09-09 18:49:19.8576 Debug Fatal => mdc all con err
+2022-09-09 18:49:35.1156 Info Loading assembly name: NGinnBPM.MessageBus
+2022-09-09 18:49:35.1156 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Targets.TargetAttribute','NLog.Targets.Target')
+2022-09-09 18:49:35.1156 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Filters.FilterAttribute','NLog.Filters.Filter')
+2022-09-09 18:49:35.1156 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.LayoutRenderers.LayoutRendererAttribute','NLog.LayoutRenderers.LayoutRenderer')
+2022-09-09 18:49:35.1156 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Layouts.LayoutAttribute','NLog.Layouts.Layout')
+2022-09-09 18:49:35.1226 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Conditions.ConditionMethodsAttribute','NLog.Conditions.ConditionMethodAttribute')
+2022-09-09 18:49:35.1226 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.LayoutRenderers.AmbientPropertyAttribute','NLog.LayoutRenderers.LayoutRenderer')
+2022-09-09 18:49:35.1226 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Time.TimeSourceAttribute','NLog.Time.TimeSource')
+2022-09-09 18:49:35.1226 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:49:35.1226 Debug Setting 'FileTarget.name' to 'mdc'
+2022-09-09 18:49:35.1226 Debug Setting 'FileTarget.fileName' to '${basedir}/../../logs/nginn_${mdc:nmbendpoint}.${shortdate}.log'
+2022-09-09 18:49:35.1386 Debug Setting 'MdcLayoutRenderer.Item' to 'nmbendpoint'
+2022-09-09 18:49:35.1386 Debug Setting 'FileTarget.layout' to '${longdate}|${level}|M_${mdc:nmbrecvmsg}|${logger}|${message}'
+2022-09-09 18:49:35.1386 Debug Setting 'MdcLayoutRenderer.Item' to 'nmbrecvmsg'
+2022-09-09 18:49:35.1386 Info Adding target File Target[mdc]
+2022-09-09 18:49:35.1386 Debug Registering target mdc: NLog.Targets.FileTarget
+2022-09-09 18:49:35.1386 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:49:35.1386 Debug Setting 'FileTarget.name' to 'all'
+2022-09-09 18:49:35.1386 Debug Setting 'FileTarget.fileName' to '${basedir}/../../logs/nginn_whost.${shortdate}.log'
+2022-09-09 18:49:35.1386 Debug Setting 'FileTarget.layout' to '${time}|T${threadid}|${level}|${message}'
+2022-09-09 18:49:35.1386 Info Adding target File Target[all]
+2022-09-09 18:49:35.1386 Debug Registering target all: NLog.Targets.FileTarget
+2022-09-09 18:49:35.1386 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:49:35.1386 Debug Setting 'FileTarget.name' to 'err'
+2022-09-09 18:49:35.1386 Debug Setting 'FileTarget.fileName' to '${basedir}/../../logs/nginn_whost_errors.${shortdate}.log'
+2022-09-09 18:49:35.1386 Info Adding target File Target[err]
+2022-09-09 18:49:35.1386 Debug Registering target err: NLog.Targets.FileTarget
+2022-09-09 18:49:35.1386 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:49:35.1386 Debug Setting 'ConsoleTarget.name' to 'con'
+2022-09-09 18:49:35.1386 Debug Setting 'ConsoleTarget.layout' to '${time}|${mdc:nmbendpoint}|T${threadid}|${level}|${message}'
+2022-09-09 18:49:35.1386 Debug Setting 'MdcLayoutRenderer.Item' to 'nmbendpoint'
+2022-09-09 18:49:35.1386 Info Adding target Console Target[con]
+2022-09-09 18:49:35.1386 Debug Registering target con: NLog.Targets.ConsoleTarget
+2022-09-09 18:49:35.1386 Info Configured from an XML element in C:\devs\nginn-messagebus\Tests\bin\Debug\NLog.config...
+2022-09-09 18:49:35.1386 Debug --- NLog configuration dump. ---
+2022-09-09 18:49:35.1386 Debug Targets:
+2022-09-09 18:49:35.1386 Info File Target[mdc]
+2022-09-09 18:49:35.1386 Info File Target[all]
+2022-09-09 18:49:35.1386 Info File Target[err]
+2022-09-09 18:49:35.1386 Info Console Target[con]
+2022-09-09 18:49:35.1386 Debug Rules:
+2022-09-09 18:49:35.1386 Info logNamePattern: (:All) levels: [ ] appendTo: [ mdc ]
+2022-09-09 18:49:35.1386 Info logNamePattern: (STAT:StartsWith) levels: [ ] appendTo: [ all ]
+2022-09-09 18:49:35.1386 Info logNamePattern: (:All) levels: [ ] appendTo: [ all con ]
+2022-09-09 18:49:35.1386 Info logNamePattern: (:All) levels: [ ] appendTo: [ err ]
+2022-09-09 18:49:35.1386 Debug --- End of NLog configuration dump ---
+2022-09-09 18:49:35.1386 Info Watching path 'C:\devs\nginn-messagebus\Tests\bin\Debug' filter 'NLog.config' for changes.
+2022-09-09 18:49:35.1536 Info Found 60 configuration items
+2022-09-09 18:49:35.1536 Debug Targets for Tests.Program by level:
+2022-09-09 18:49:35.1536 Debug Trace =>
+2022-09-09 18:49:35.1536 Debug Debug =>
+2022-09-09 18:49:35.1536 Debug Info => all con
+2022-09-09 18:49:35.1536 Debug Warn => mdc all con err
+2022-09-09 18:49:35.1536 Debug Error => mdc all con err
+2022-09-09 18:49:35.1536 Debug Fatal => mdc all con err
+2022-09-09 18:49:35.2204 Debug Targets for NGinnBPM.MessageBus.Impl.SqlMessageTransport2 by level:
+2022-09-09 18:49:35.2204 Debug Trace =>
+2022-09-09 18:49:35.2204 Debug Debug =>
+2022-09-09 18:49:35.2204 Debug Info => all con
+2022-09-09 18:49:35.2204 Debug Warn => mdc all con err
+2022-09-09 18:49:35.2204 Debug Error => mdc all con err
+2022-09-09 18:49:35.2204 Debug Fatal => mdc all con err
+2022-09-09 18:49:35.2204 Debug Targets for STAT.SqlMessageTransport2 by level:
+2022-09-09 18:49:35.2204 Debug Trace =>
+2022-09-09 18:49:35.2204 Debug Debug =>
+2022-09-09 18:49:35.2204 Debug Info => all
+2022-09-09 18:49:35.2204 Debug Warn => mdc all
+2022-09-09 18:49:35.2204 Debug Error => mdc all
+2022-09-09 18:49:35.2204 Debug Fatal => mdc all
+2022-09-09 18:49:35.2385 Debug Targets for SQLMT_sql://testdb/MQ_Test1 by level:
+2022-09-09 18:49:35.2385 Debug Trace =>
+2022-09-09 18:49:35.2385 Debug Debug =>
+2022-09-09 18:49:35.2385 Debug Info => all con
+2022-09-09 18:49:35.2385 Debug Warn => mdc all con err
+2022-09-09 18:49:35.2385 Debug Error => mdc all con err
+2022-09-09 18:49:35.2385 Debug Fatal => mdc all con err
+2022-09-09 18:49:35.2385 Debug Targets for STATSQLMT_sql://testdb/MQ_Test1 by level:
+2022-09-09 18:49:35.2385 Debug Trace =>
+2022-09-09 18:49:35.2385 Debug Debug =>
+2022-09-09 18:49:35.2385 Debug Info => all
+2022-09-09 18:49:35.2385 Debug Warn => mdc all
+2022-09-09 18:49:35.2385 Debug Error => mdc all
+2022-09-09 18:49:35.2385 Debug Fatal => mdc all
+2022-09-09 18:49:35.2475 Debug Targets for MessageDispatcher_8864859 by level:
+2022-09-09 18:49:35.2475 Debug Trace =>
+2022-09-09 18:49:35.2475 Debug Debug =>
+2022-09-09 18:49:35.2475 Debug Info => all con
+2022-09-09 18:49:35.2475 Debug Warn => mdc all con err
+2022-09-09 18:49:35.2475 Debug Error => mdc all con err
+2022-09-09 18:49:35.2475 Debug Fatal => mdc all con err
+2022-09-09 18:49:35.2475 Debug Targets for NGinnBPM.MessageBus.Impl.MessageBus by level:
+2022-09-09 18:49:35.2475 Debug Trace =>
+2022-09-09 18:49:35.2475 Debug Debug =>
+2022-09-09 18:49:35.2475 Debug Info => all con
+2022-09-09 18:49:35.2475 Debug Warn => mdc all con err
+2022-09-09 18:49:35.2475 Debug Error => mdc all con err
+2022-09-09 18:49:35.2475 Debug Fatal => mdc all con err
+2022-09-09 18:49:35.2475 Debug Targets for BUS_sql://testdb/MQ_Test1 by level:
+2022-09-09 18:49:35.2475 Debug Trace =>
+2022-09-09 18:49:35.2475 Debug Debug =>
+2022-09-09 18:49:35.2475 Debug Info => all con
+2022-09-09 18:49:35.2475 Debug Warn => mdc all con err
+2022-09-09 18:49:35.2475 Debug Error => mdc all con err
+2022-09-09 18:49:35.2475 Debug Fatal => mdc all con err
+2022-09-09 18:49:35.2685 Debug Targets for NGinnBPM.MessageBus.Impl.SqlQueue.SqlHelper by level:
+2022-09-09 18:49:35.2685 Debug Trace =>
+2022-09-09 18:49:35.2685 Debug Debug =>
+2022-09-09 18:49:35.2685 Debug Info => all con
+2022-09-09 18:49:35.2785 Debug Warn => mdc all con err
+2022-09-09 18:49:35.2785 Debug Error => mdc all con err
+2022-09-09 18:49:35.2785 Debug Fatal => mdc all con err
+2022-09-09 18:49:35.2785 Debug Targets for NGinnBPM.MessageBus.Impl.SqlQueue.SqlAbstract_sqlserver by level:
+2022-09-09 18:49:35.2785 Debug Trace =>
+2022-09-09 18:49:35.2785 Debug Debug =>
+2022-09-09 18:49:35.2785 Debug Info => all con
+2022-09-09 18:49:35.2785 Debug Warn => mdc all con err
+2022-09-09 18:49:35.2785 Debug Error => mdc all con err
+2022-09-09 18:49:35.2785 Debug Fatal => mdc all con err
+2022-09-09 18:49:37.3588 Debug Targets for NGinnBPM.MessageBus.Impl.SqlQueue.CommonQueueOps by level:
+2022-09-09 18:49:37.3588 Debug Trace =>
+2022-09-09 18:49:37.3588 Debug Debug =>
+2022-09-09 18:49:37.3588 Debug Info => all con
+2022-09-09 18:49:37.3588 Debug Warn => mdc all con err
+2022-09-09 18:49:37.3588 Debug Error => mdc all con err
+2022-09-09 18:49:37.3588 Debug Fatal => mdc all con err
+2022-09-09 18:50:29.7696 Info Loading assembly name: NGinnBPM.MessageBus
+2022-09-09 18:50:29.7696 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Targets.TargetAttribute','NLog.Targets.Target')
+2022-09-09 18:50:29.7828 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Filters.FilterAttribute','NLog.Filters.Filter')
+2022-09-09 18:50:29.7828 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.LayoutRenderers.LayoutRendererAttribute','NLog.LayoutRenderers.LayoutRenderer')
+2022-09-09 18:50:29.7828 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Layouts.LayoutAttribute','NLog.Layouts.Layout')
+2022-09-09 18:50:29.7828 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Conditions.ConditionMethodsAttribute','NLog.Conditions.ConditionMethodAttribute')
+2022-09-09 18:50:29.7828 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.LayoutRenderers.AmbientPropertyAttribute','NLog.LayoutRenderers.LayoutRenderer')
+2022-09-09 18:50:29.7828 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Time.TimeSourceAttribute','NLog.Time.TimeSource')
+2022-09-09 18:50:29.7949 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:50:29.7949 Debug Setting 'FileTarget.name' to 'mdc'
+2022-09-09 18:50:29.7949 Debug Setting 'FileTarget.fileName' to '${basedir}/../../logs/nginn_${mdc:nmbendpoint}.${shortdate}.log'
+2022-09-09 18:50:29.7949 Debug Setting 'MdcLayoutRenderer.Item' to 'nmbendpoint'
+2022-09-09 18:50:29.7949 Debug Setting 'FileTarget.layout' to '${longdate}|${level}|M_${mdc:nmbrecvmsg}|${logger}|${message}'
+2022-09-09 18:50:29.7949 Debug Setting 'MdcLayoutRenderer.Item' to 'nmbrecvmsg'
+2022-09-09 18:50:29.7949 Info Adding target File Target[mdc]
+2022-09-09 18:50:29.7949 Debug Registering target mdc: NLog.Targets.FileTarget
+2022-09-09 18:50:29.7949 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:50:29.7949 Debug Setting 'FileTarget.name' to 'all'
+2022-09-09 18:50:29.7949 Debug Setting 'FileTarget.fileName' to '${basedir}/../../logs/nginn_whost.${shortdate}.log'
+2022-09-09 18:50:29.7949 Debug Setting 'FileTarget.layout' to '${time}|T${threadid}|${level}|${message}'
+2022-09-09 18:50:29.7949 Info Adding target File Target[all]
+2022-09-09 18:50:29.7949 Debug Registering target all: NLog.Targets.FileTarget
+2022-09-09 18:50:29.7949 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:50:29.7949 Debug Setting 'FileTarget.name' to 'err'
+2022-09-09 18:50:29.7949 Debug Setting 'FileTarget.fileName' to '${basedir}/../../logs/nginn_whost_errors.${shortdate}.log'
+2022-09-09 18:50:29.7949 Info Adding target File Target[err]
+2022-09-09 18:50:29.7949 Debug Registering target err: NLog.Targets.FileTarget
+2022-09-09 18:50:29.7949 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:50:29.7949 Debug Setting 'ConsoleTarget.name' to 'con'
+2022-09-09 18:50:29.7949 Debug Setting 'ConsoleTarget.layout' to '${time}|${mdc:nmbendpoint}|T${threadid}|${level}|${message}'
+2022-09-09 18:50:29.7949 Debug Setting 'MdcLayoutRenderer.Item' to 'nmbendpoint'
+2022-09-09 18:50:29.7949 Info Adding target Console Target[con]
+2022-09-09 18:50:29.7949 Debug Registering target con: NLog.Targets.ConsoleTarget
+2022-09-09 18:50:29.7949 Info Configured from an XML element in C:\devs\nginn-messagebus\Tests\bin\Debug\NLog.config...
+2022-09-09 18:50:29.7949 Debug --- NLog configuration dump. ---
+2022-09-09 18:50:29.7949 Debug Targets:
+2022-09-09 18:50:29.8098 Info File Target[mdc]
+2022-09-09 18:50:29.8098 Info File Target[all]
+2022-09-09 18:50:29.8098 Info File Target[err]
+2022-09-09 18:50:29.8098 Info Console Target[con]
+2022-09-09 18:50:29.8098 Debug Rules:
+2022-09-09 18:50:29.8098 Info logNamePattern: (:All) levels: [ ] appendTo: [ mdc ]
+2022-09-09 18:50:29.8098 Info logNamePattern: (STAT:StartsWith) levels: [ ] appendTo: [ all ]
+2022-09-09 18:50:29.8098 Info logNamePattern: (:All) levels: [ ] appendTo: [ all con ]
+2022-09-09 18:50:29.8098 Info logNamePattern: (:All) levels: [ ] appendTo: [ err ]
+2022-09-09 18:50:29.8098 Debug --- End of NLog configuration dump ---
+2022-09-09 18:50:29.8098 Info Watching path 'C:\devs\nginn-messagebus\Tests\bin\Debug' filter 'NLog.config' for changes.
+2022-09-09 18:50:29.8098 Info Found 60 configuration items
+2022-09-09 18:50:29.8098 Debug Targets for Tests.Program by level:
+2022-09-09 18:50:29.8098 Debug Trace =>
+2022-09-09 18:50:29.8098 Debug Debug =>
+2022-09-09 18:50:29.8098 Debug Info => all con
+2022-09-09 18:50:29.8098 Debug Warn => mdc all con err
+2022-09-09 18:50:29.8098 Debug Error => mdc all con err
+2022-09-09 18:50:29.8098 Debug Fatal => mdc all con err
+2022-09-09 18:50:31.1866 Debug Targets for NGinnBPM.MessageBus.Impl.SqlMessageTransport2 by level:
+2022-09-09 18:50:31.1866 Debug Trace =>
+2022-09-09 18:50:31.1866 Debug Debug =>
+2022-09-09 18:50:31.1866 Debug Info => all con
+2022-09-09 18:50:31.1866 Debug Warn => mdc all con err
+2022-09-09 18:50:31.1866 Debug Error => mdc all con err
+2022-09-09 18:50:31.1866 Debug Fatal => mdc all con err
+2022-09-09 18:50:31.1866 Debug Targets for STAT.SqlMessageTransport2 by level:
+2022-09-09 18:50:31.1866 Debug Trace =>
+2022-09-09 18:50:31.1866 Debug Debug =>
+2022-09-09 18:50:31.1866 Debug Info => all
+2022-09-09 18:50:31.1866 Debug Warn => mdc all
+2022-09-09 18:50:31.1866 Debug Error => mdc all
+2022-09-09 18:50:31.1866 Debug Fatal => mdc all
+2022-09-09 18:50:31.2016 Debug Targets for SQLMT_sql://testdb/MQ_Test1 by level:
+2022-09-09 18:50:31.2016 Debug Trace =>
+2022-09-09 18:50:31.2016 Debug Debug =>
+2022-09-09 18:50:31.2016 Debug Info => all con
+2022-09-09 18:50:31.2016 Debug Warn => mdc all con err
+2022-09-09 18:50:31.2016 Debug Error => mdc all con err
+2022-09-09 18:50:31.2016 Debug Fatal => mdc all con err
+2022-09-09 18:50:31.2016 Debug Targets for STATSQLMT_sql://testdb/MQ_Test1 by level:
+2022-09-09 18:50:31.2016 Debug Trace =>
+2022-09-09 18:50:31.2016 Debug Debug =>
+2022-09-09 18:50:31.2016 Debug Info => all
+2022-09-09 18:50:31.2016 Debug Warn => mdc all
+2022-09-09 18:50:31.2016 Debug Error => mdc all
+2022-09-09 18:50:31.2016 Debug Fatal => mdc all
+2022-09-09 18:50:31.2016 Debug Targets for MessageDispatcher_8864859 by level:
+2022-09-09 18:50:31.2016 Debug Trace =>
+2022-09-09 18:50:31.2016 Debug Debug =>
+2022-09-09 18:50:31.2016 Debug Info => all con
+2022-09-09 18:50:31.2016 Debug Warn => mdc all con err
+2022-09-09 18:50:31.2016 Debug Error => mdc all con err
+2022-09-09 18:50:31.2016 Debug Fatal => mdc all con err
+2022-09-09 18:50:31.2166 Debug Targets for NGinnBPM.MessageBus.Impl.MessageBus by level:
+2022-09-09 18:50:31.2166 Debug Trace =>
+2022-09-09 18:50:31.2166 Debug Debug =>
+2022-09-09 18:50:31.2166 Debug Info => all con
+2022-09-09 18:50:31.2166 Debug Warn => mdc all con err
+2022-09-09 18:50:31.2166 Debug Error => mdc all con err
+2022-09-09 18:50:31.2166 Debug Fatal => mdc all con err
+2022-09-09 18:50:31.2166 Debug Targets for BUS_sql://testdb/MQ_Test1 by level:
+2022-09-09 18:50:31.2166 Debug Trace =>
+2022-09-09 18:50:31.2166 Debug Debug =>
+2022-09-09 18:50:31.2166 Debug Info => all con
+2022-09-09 18:50:31.2166 Debug Warn => mdc all con err
+2022-09-09 18:50:31.2166 Debug Error => mdc all con err
+2022-09-09 18:50:31.2166 Debug Fatal => mdc all con err
+2022-09-09 18:50:40.0090 Debug Targets for NGinnBPM.MessageBus.Impl.SqlQueue.SqlHelper by level:
+2022-09-09 18:50:40.0090 Debug Trace =>
+2022-09-09 18:50:40.0090 Debug Debug =>
+2022-09-09 18:50:40.0090 Debug Info => all con
+2022-09-09 18:50:40.0090 Debug Warn => mdc all con err
+2022-09-09 18:50:40.0090 Debug Error => mdc all con err
+2022-09-09 18:50:40.0090 Debug Fatal => mdc all con err
+2022-09-09 18:50:40.0160 Debug Targets for NGinnBPM.MessageBus.Impl.SqlQueue.SqlAbstract_sqlserver by level:
+2022-09-09 18:50:40.0160 Debug Trace =>
+2022-09-09 18:50:40.0160 Debug Debug =>
+2022-09-09 18:50:40.0160 Debug Info => all con
+2022-09-09 18:50:40.0160 Debug Warn => mdc all con err
+2022-09-09 18:50:40.0160 Debug Error => mdc all con err
+2022-09-09 18:50:40.0160 Debug Fatal => mdc all con err
+2022-09-09 18:51:30.6263 Debug Targets for NGinnBPM.MessageBus.Impl.SqlQueue.CommonQueueOps by level:
+2022-09-09 18:51:30.6263 Debug Trace =>
+2022-09-09 18:51:30.6263 Debug Debug =>
+2022-09-09 18:51:30.6263 Debug Info => all con
+2022-09-09 18:51:30.6263 Debug Warn => mdc all con err
+2022-09-09 18:51:30.6263 Debug Error => mdc all con err
+2022-09-09 18:51:30.6263 Debug Fatal => mdc all con err
+2022-09-09 18:51:54.8997 Info Loading assembly name: NGinnBPM.MessageBus
+2022-09-09 18:51:54.8997 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Targets.TargetAttribute','NLog.Targets.Target')
+2022-09-09 18:51:54.9057 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Filters.FilterAttribute','NLog.Filters.Filter')
+2022-09-09 18:51:54.9057 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.LayoutRenderers.LayoutRendererAttribute','NLog.LayoutRenderers.LayoutRenderer')
+2022-09-09 18:51:54.9057 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Layouts.LayoutAttribute','NLog.Layouts.Layout')
+2022-09-09 18:51:54.9057 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Conditions.ConditionMethodsAttribute','NLog.Conditions.ConditionMethodAttribute')
+2022-09-09 18:51:54.9057 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.LayoutRenderers.AmbientPropertyAttribute','NLog.LayoutRenderers.LayoutRenderer')
+2022-09-09 18:51:54.9057 Debug ScanAssembly('NGinnBPM.MessageBus, Version=1.2.4.0, Culture=neutral, PublicKeyToken=null','NLog.Time.TimeSourceAttribute','NLog.Time.TimeSource')
+2022-09-09 18:51:54.9057 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:51:54.9202 Debug Setting 'FileTarget.name' to 'mdc'
+2022-09-09 18:51:54.9202 Debug Setting 'FileTarget.fileName' to '${basedir}/../../logs/nginn_${mdc:nmbendpoint}.${shortdate}.log'
+2022-09-09 18:51:54.9202 Debug Setting 'MdcLayoutRenderer.Item' to 'nmbendpoint'
+2022-09-09 18:51:54.9202 Debug Setting 'FileTarget.layout' to '${longdate}|${level}|M_${mdc:nmbrecvmsg}|${logger}|${message}'
+2022-09-09 18:51:54.9202 Debug Setting 'MdcLayoutRenderer.Item' to 'nmbrecvmsg'
+2022-09-09 18:51:54.9202 Info Adding target File Target[mdc]
+2022-09-09 18:51:54.9202 Debug Registering target mdc: NLog.Targets.FileTarget
+2022-09-09 18:51:54.9202 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:51:54.9202 Debug Setting 'FileTarget.name' to 'all'
+2022-09-09 18:51:54.9202 Debug Setting 'FileTarget.fileName' to '${basedir}/../../logs/nginn_whost.${shortdate}.log'
+2022-09-09 18:51:54.9202 Debug Setting 'FileTarget.layout' to '${time}|T${threadid}|${level}|${message}'
+2022-09-09 18:51:54.9202 Info Adding target File Target[all]
+2022-09-09 18:51:54.9202 Debug Registering target all: NLog.Targets.FileTarget
+2022-09-09 18:51:54.9202 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:51:54.9202 Debug Setting 'FileTarget.name' to 'err'
+2022-09-09 18:51:54.9202 Debug Setting 'FileTarget.fileName' to '${basedir}/../../logs/nginn_whost_errors.${shortdate}.log'
+2022-09-09 18:51:54.9202 Info Adding target File Target[err]
+2022-09-09 18:51:54.9202 Debug Registering target err: NLog.Targets.FileTarget
+2022-09-09 18:51:54.9202 Debug Setting 'UppercaseLayoutRendererWrapper.uppercase' to 'true'
+2022-09-09 18:51:54.9202 Debug Setting 'ConsoleTarget.name' to 'con'
+2022-09-09 18:51:54.9202 Debug Setting 'ConsoleTarget.layout' to '${time}|${mdc:nmbendpoint}|T${threadid}|${level}|${message}'
+2022-09-09 18:51:54.9202 Debug Setting 'MdcLayoutRenderer.Item' to 'nmbendpoint'
+2022-09-09 18:51:54.9202 Info Adding target Console Target[con]
+2022-09-09 18:51:54.9202 Debug Registering target con: NLog.Targets.ConsoleTarget
+2022-09-09 18:51:54.9202 Info Configured from an XML element in C:\devs\nginn-messagebus\Tests\bin\Debug\NLog.config...
+2022-09-09 18:51:54.9202 Debug --- NLog configuration dump. ---
+2022-09-09 18:51:54.9202 Debug Targets:
+2022-09-09 18:51:54.9202 Info File Target[mdc]
+2022-09-09 18:51:54.9202 Info File Target[all]
+2022-09-09 18:51:54.9202 Info File Target[err]
+2022-09-09 18:51:54.9202 Info Console Target[con]
+2022-09-09 18:51:54.9202 Debug Rules:
+2022-09-09 18:51:54.9202 Info logNamePattern: (:All) levels: [ ] appendTo: [ mdc ]
+2022-09-09 18:51:54.9202 Info logNamePattern: (STAT:StartsWith) levels: [ ] appendTo: [ all ]
+2022-09-09 18:51:54.9202 Info logNamePattern: (:All) levels: [ ] appendTo: [ all con ]
+2022-09-09 18:51:54.9202 Info logNamePattern: (:All) levels: [ ] appendTo: [ err ]
+2022-09-09 18:51:54.9202 Debug --- End of NLog configuration dump ---
+2022-09-09 18:51:54.9202 Info Watching path 'C:\devs\nginn-messagebus\Tests\bin\Debug' filter 'NLog.config' for changes.
+2022-09-09 18:51:54.9362 Info Found 60 configuration items
+2022-09-09 18:51:54.9362 Debug Targets for Tests.Program by level:
+2022-09-09 18:51:54.9362 Debug Trace =>
+2022-09-09 18:51:54.9362 Debug Debug =>
+2022-09-09 18:51:54.9362 Debug Info => all con
+2022-09-09 18:51:54.9362 Debug Warn => mdc all con err
+2022-09-09 18:51:54.9362 Debug Error => mdc all con err
+2022-09-09 18:51:54.9362 Debug Fatal => mdc all con err
+2022-09-09 18:51:55.0004 Debug Targets for NGinnBPM.MessageBus.Impl.SqlMessageTransport2 by level:
+2022-09-09 18:51:55.0004 Debug Trace =>
+2022-09-09 18:51:55.0004 Debug Debug =>
+2022-09-09 18:51:55.0004 Debug Info => all con
+2022-09-09 18:51:55.0004 Debug Warn => mdc all con err
+2022-09-09 18:51:55.0004 Debug Error => mdc all con err
+2022-09-09 18:51:55.0004 Debug Fatal => mdc all con err
+2022-09-09 18:51:55.0004 Debug Targets for STAT.SqlMessageTransport2 by level:
+2022-09-09 18:51:55.0004 Debug Trace =>
+2022-09-09 18:51:55.0004 Debug Debug =>
+2022-09-09 18:51:55.0004 Debug Info => all
+2022-09-09 18:51:55.0004 Debug Warn => mdc all
+2022-09-09 18:51:55.0004 Debug Error => mdc all
+2022-09-09 18:51:55.0004 Debug Fatal => mdc all
+2022-09-09 18:51:55.0134 Debug Targets for SQLMT_sql://testdb/MQ_Test1 by level:
+2022-09-09 18:51:55.0134 Debug Trace =>
+2022-09-09 18:51:55.0134 Debug Debug =>
+2022-09-09 18:51:55.0134 Debug Info => all con
+2022-09-09 18:51:55.0134 Debug Warn => mdc all con err
+2022-09-09 18:51:55.0134 Debug Error => mdc all con err
+2022-09-09 18:51:55.0134 Debug Fatal => mdc all con err
+2022-09-09 18:51:55.0134 Debug Targets for STATSQLMT_sql://testdb/MQ_Test1 by level:
+2022-09-09 18:51:55.0134 Debug Trace =>
+2022-09-09 18:51:55.0134 Debug Debug =>
+2022-09-09 18:51:55.0134 Debug Info => all
+2022-09-09 18:51:55.0134 Debug Warn => mdc all
+2022-09-09 18:51:55.0134 Debug Error => mdc all
+2022-09-09 18:51:55.0134 Debug Fatal => mdc all
+2022-09-09 18:51:55.0134 Debug Targets for MessageDispatcher_8864859 by level:
+2022-09-09 18:51:55.0134 Debug Trace =>
+2022-09-09 18:51:55.0134 Debug Debug =>
+2022-09-09 18:51:55.0134 Debug Info => all con
+2022-09-09 18:51:55.0134 Debug Warn => mdc all con err
+2022-09-09 18:51:55.0134 Debug Error => mdc all con err
+2022-09-09 18:51:55.0134 Debug Fatal => mdc all con err
+2022-09-09 18:51:55.0304 Debug Targets for NGinnBPM.MessageBus.Impl.MessageBus by level:
+2022-09-09 18:51:55.0304 Debug Trace =>
+2022-09-09 18:51:55.0304 Debug Debug =>
+2022-09-09 18:51:55.0304 Debug Info => all con
+2022-09-09 18:51:55.0304 Debug Warn => mdc all con err
+2022-09-09 18:51:55.0304 Debug Error => mdc all con err
+2022-09-09 18:51:55.0304 Debug Fatal => mdc all con err
+2022-09-09 18:51:55.0304 Debug Targets for BUS_sql://testdb/MQ_Test1 by level:
+2022-09-09 18:51:55.0304 Debug Trace =>
+2022-09-09 18:51:55.0304 Debug Debug =>
+2022-09-09 18:51:55.0304 Debug Info => all con
+2022-09-09 18:51:55.0304 Debug Warn => mdc all con err
+2022-09-09 18:51:55.0304 Debug Error => mdc all con err
+2022-09-09 18:51:55.0304 Debug Fatal => mdc all con err
+2022-09-09 18:51:55.0444 Debug Targets for NGinnBPM.MessageBus.Impl.SqlQueue.SqlHelper by level:
+2022-09-09 18:51:55.0444 Debug Trace =>
+2022-09-09 18:51:55.0444 Debug Debug =>
+2022-09-09 18:51:55.0444 Debug Info => all con
+2022-09-09 18:51:55.0444 Debug Warn => mdc all con err
+2022-09-09 18:51:55.0444 Debug Error => mdc all con err
+2022-09-09 18:51:55.0444 Debug Fatal => mdc all con err
+2022-09-09 18:51:55.0444 Debug Targets for NGinnBPM.MessageBus.Impl.SqlQueue.SqlAbstract_sqlserver by level:
+2022-09-09 18:51:55.0444 Debug Trace =>
+2022-09-09 18:51:55.0444 Debug Debug =>
+2022-09-09 18:51:55.0444 Debug Info => all con
+2022-09-09 18:51:55.0444 Debug Warn => mdc all con err
+2022-09-09 18:51:55.0444 Debug Error => mdc all con err
+2022-09-09 18:51:55.0444 Debug Fatal => mdc all con err
+2022-09-09 18:51:57.1112 Debug Targets for NGinnBPM.MessageBus.Impl.SqlQueue.CommonQueueOps by level:
+2022-09-09 18:51:57.1112 Debug Trace =>
+2022-09-09 18:51:57.1112 Debug Debug =>
+2022-09-09 18:51:57.1112 Debug Info => all con
+2022-09-09 18:51:57.1112 Debug Warn => mdc all con err
+2022-09-09 18:51:57.1112 Debug Error => mdc all con err
+2022-09-09 18:51:57.1112 Debug Fatal => mdc all con err
