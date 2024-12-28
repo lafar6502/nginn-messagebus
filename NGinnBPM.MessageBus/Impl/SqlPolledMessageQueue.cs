@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Dapper;
 using NGinnBPM.MessageBus.Messages;
+using System.Collections.Concurrent;
 
 namespace NGinnBPM.MessageBus.Impl
 {
@@ -52,23 +53,75 @@ namespace NGinnBPM.MessageBus.Impl
             }
         }
 
+        private ConcurrentDictionary<string, AutoResetEvent> _waiters = new ConcurrentDictionary<string, AutoResetEvent>();
+
+        private bool AwaitForWakeup(string clientName, int timeoutSeconds)
+        {
+            var ev = _waiters.GetOrAdd(clientName, (k) => new AutoResetEvent(false));
+            var r = ev.WaitOne(timeoutSeconds * 1000);
+            return r;
+        }
+
+        protected class MessageDTO
+        {
+            public int id { get; set; }
+            public string unique_id { get; set; }
+
+            public string from_endpoint { get; set; }
+            public string to_endpoint { get; set; }
+            public char subqueue { get; set; }
+            public DateTime insert_time { get; set; }
+            public DateTime retry_time { get; set; }
+            public string correlation_id { get; set; }
+            public string label { get; set; }
+            public string msg_text { get; set; }
+            public string msg_headers { get; set; }
+        }
 
         IEnumerable<MessageContainer> CheckoutNextJobs(string clientId, int maxJobs, int ackTimeoutSeconds)
         {
+            Newtonsoft.Json.Serialization.DefaultContractResolver sr;
+            Newtonsoft.Json.JsonSerializer ser = null;
+            var sw = new StringWriter();
+            ser.Serialize(sw, DateTime.Now);
             var q = @"
             WITH    q AS
             (
                     select top {=limit} * 
-		            from {0} with(updlock, readpast)
-		            where QueueId=@clientName and Status='I'
-		            order by retry_time
+		            from {=table} with(updlock, readpast)
+		            where to_endpoint=@clientName and subqueue='I'
+		            order by insert_time
             )
             UPDATE  q
             set Status='E', LockedBy=@myId, LockDeadline=DATEADD(second, @timeoutSecs, getdate())
             output inserted.*
             ";
-
+            q = String.Format(q, clientId);
             throw new NotImplementedException();
+        }
+
+
+
+        public IEnumerable<MessageContainer> WaitAndCheckoutNextJobs(string clientName, int maxJobs, int ackTimeoutSeconds, int waitTimeoutSeconds = 30)
+        {
+            var d0 = DateTime.Now.AddSeconds(waitTimeoutSeconds);
+            while (true)
+            {
+                var job = CheckoutNextJobs(clientName, maxJobs, ackTimeoutSeconds);
+                if (job != null && job.Any()) return job;
+                var timeRemain = (int)(d0 - DateTime.Now).TotalSeconds;
+                if (timeRemain <= 0) break;
+                if (!AwaitForWakeup(clientName, Math.Min(timeRemain, 30)))
+                {
+                    timeRemain = (int)(d0 - DateTime.Now).TotalSeconds;
+                    if (timeRemain <= 0) break;
+                }
+                else
+                {
+                    log.Info("Client {0} notified", clientName);
+                }
+            }
+            return Enumerable.Empty<ClientJobBase>();
         }
 
         /// <summary>
@@ -122,7 +175,7 @@ namespace NGinnBPM.MessageBus.Impl
                 {
                     if (!string.IsNullOrEmpty(mc.HeadersString)) //check ttl....
                     {
-                        var defTimeout = DateTime.Now /* mc.insert time */ + DefaultMessageTTL;
+                        var defTimeout = DateTime.Now /* mc.insert time */ .AddSeconds(DefaultMessageTTL);
                         var timeout = mc.GetDateTimeHeader(MessageContainer.HDR_TTL, defTimeout);
                         cn.Execute("update MQ_ set retry_time=@timeout where id=@id", new { timeout = timeout, id = mc.BusMessageId });
                     }
