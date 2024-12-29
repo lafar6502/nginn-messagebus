@@ -8,11 +8,14 @@ using System.Threading.Tasks;
 using Dapper;
 using NGinnBPM.MessageBus.Messages;
 using System.Collections.Concurrent;
+using NLog;
 
 namespace NGinnBPM.MessageBus.Impl
 {
     public class SqlPolledMessageQueue
     {
+        private static Logger log = LogManager.GetCurrentClassLogger();
+
         public string Endpoint { get; set; }
 
         public string ConnectionString { get; set; }
@@ -121,7 +124,7 @@ namespace NGinnBPM.MessageBus.Impl
                     log.Info("Client {0} notified", clientName);
                 }
             }
-            return Enumerable.Empty<ClientJobBase>();
+            return Enumerable.Empty<MessageContainer>();
         }
 
         /// <summary>
@@ -141,7 +144,8 @@ namespace NGinnBPM.MessageBus.Impl
             int n = 0;
             AccessDb(cn =>
             {
-
+                int n = cn.Execute(q, new {message = success ? (string) null : result.ToString(), status = success ? 'X' : 'F'});
+                if (n == 0) throw new Exception("Wrong message id or status");
             });
             if (success)
             {
