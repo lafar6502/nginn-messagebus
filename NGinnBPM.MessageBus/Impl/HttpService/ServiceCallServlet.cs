@@ -28,7 +28,10 @@ namespace NGinnBPM.MessageBus.Impl.HttpService
                 h[k] = ctx.QueryString[k];
             foreach (string k in ctx.Headers)
                 h[k] = ctx.Headers[k];
-            
+            if (!h.ContainsKey("ClientIP"))
+            {
+                h["ClientIP"] = ctx.ClientIP;
+            }
             ServiceCallContext.Current = new ServiceCallContext
             {
                 Headers = h,

@@ -7,6 +7,7 @@ using Castle.MicroKernel.Registration;
 using NGinnBPM.MessageBus.Impl.HttpService;
 using System.Data.Common;
 using System.Transactions;
+using NGinnBPM.MessageBus.Impl;
 
 
 namespace NGinnBPM.MessageBus.Tests
@@ -46,6 +47,8 @@ namespace NGinnBPM.MessageBus.Tests
                 .SetReuseReceiveConnectionForSending(true)
                 .SetExposeReceiveConnectionToApplication(true)
                 .SetDefaultSubscriptionLifetime(TimeSpan.FromHours(8))
+                .CreateQueueTable("sql://testdb/MQ_Test2")
+                .CreateQueueTable("sql://testdb/MQ_Polled")
                 .AutoStartMessageBus(true);
             if (httpUrl != null)
                 cfg.ConfigureHttpReceiver(httpUrl);
@@ -85,6 +88,36 @@ namespace NGinnBPM.MessageBus.Tests
             }
             System.Threading.Thread.Sleep(5000);
             Console.WriteLine("Exitin..");
+        }
+
+        [Test]
+        public void TestSendOut()
+        {
+            using (var ts = new TransactionScope())
+            {
+                _bus.Send("sql://testdb/MQ_Test2", new TestMsg { Something = "go away" });
+                
+                ts.Complete();
+            }
+            System.Threading.Thread.Sleep(5000);
+            Console.WriteLine("Exitin..");
+        }
+
+        [Test]
+        public void TestSendToPolledQueue()
+        {
+            var endp = "sql://testdb/MQ_Polled/Client1234";
+            string remConn, remTable, clid;
+            if (!SqlUtil.ParseSqlEndpoint(endp, out remConn, out remTable, out clid))
+            {
+                throw new Exception("Failed to parse sql endpoint...");
+            }
+            using (var ts = new TransactionScope())
+            {
+                _bus.Send(endp, new TestMsg { Something = "some client job..." });
+                ts.Complete();
+            }
+
         }
     }
 

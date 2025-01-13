@@ -42,6 +42,8 @@ namespace NGinnBPM.MessageBus.Impl
         /// <summary>
         /// Constructor
         /// </summary>
+        /// <remarks>TODO: this adds message handlers to the transport for receiving messages. So 
+        /// there's some circular dependency..</remarks>
         /// <param name="transport">Message transport used as a backend for this message bus</param>
         public MessageBus(IMessageTransport transport, IMessageDispatcher dispatcher, ISerializeMessages serializer, IServiceResolver serviceResolver, ITransactionScopeFactory scopeFactory)
         {
@@ -419,6 +421,12 @@ namespace NGinnBPM.MessageBus.Impl
             List<MessageContainer> lst = new List<MessageContainer>();
             foreach (object obj in msgs)
             {
+                var mc0 = obj as MessageContainer;
+                if (mc0 != null)
+                {
+                    lst.Add(mc0);
+                    continue;
+                }
                 MessageContainer mc = new MessageContainer();
                 mc.From = MessageTransport.Endpoint;
                 mc.To = destination;
