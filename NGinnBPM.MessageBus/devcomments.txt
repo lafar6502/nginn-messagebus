@@ -1,0 +1,9 @@
+﻿## how to implement polled job queue that works nicely with messagebus apis
+
+1. Sending job to job queue
+we need a table for storing polled queue. And we need to put messages in that table.
+'to' endpoint would be fine, but we also need a subqueue (client ID) 
+
+sql://testdb/MQ_Polled/CLIENTID
+would put the message into MQ_Polled table, with CLIENTID in the 'To' endpoint
+this would work nicely with current message transport

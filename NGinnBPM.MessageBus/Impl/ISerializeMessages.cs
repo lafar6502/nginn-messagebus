@@ -24,6 +24,9 @@ namespace NGinnBPM.MessageBus.Impl
         /// <param name="tr"></param>
         /// <returns></returns>
         object Deserialize(TextReader tr);
+
+        Type GetObjectType(string typeName);
+        string GetTypeName(Type objectType);
     }
 
     

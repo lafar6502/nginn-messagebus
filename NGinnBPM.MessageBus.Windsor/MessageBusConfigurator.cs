@@ -1161,7 +1161,8 @@ namespace NGinnBPM.MessageBus.Windsor
             var dcs = GetDefaultConnectionString();
             string cs, table;
             if (!SqlUtil.ParseSqlEndpoint(endpoint, out cs, out table)) throw new Exception("Invalid sql endpoint");
-            using (var con = SqlHelper.OpenConnection(cs))
+
+            using (var con = OpenConnection(cs))
             {
                 SqlHelper.RunDDLFromResource(con, "NGinnBPM.MessageBus.createmqueue.${dialect}.sql", new object[] { table });
             }
