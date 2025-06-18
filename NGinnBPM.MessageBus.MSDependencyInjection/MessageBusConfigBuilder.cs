@@ -15,7 +15,7 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
     {
         protected IServiceCollection _container;
 
-        private List<ConnectionStringSettings> _connStrings = new List<ConnectionStringSettings>();
+        private List<ConnectionStringInfo> _connStrings = new List<ConnectionStringInfo>();
         private static Logger log = LogManager.GetCurrentClassLogger();
 
         private bool _useSqlOutputClause = false;
@@ -74,10 +74,10 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
         /// <returns></returns>
         public MessageBusConfigBuilder AddConnectionString(string alias, string connString, string providerName = null)
         {
-            if (_connStrings.Any(x => x.Name == alias)) throw new Exception("Connection string already added: " + alias);
-            _connStrings.Add(new ConnectionStringSettings
+            if (_connStrings.Any(x => x.Alias == alias)) throw new Exception("Connection string already added: " + alias);
+            _connStrings.Add(new ConnectionStringInfo
             {
-                Name = alias,
+                Alias = alias,
                 ConnectionString = connString,
                 ProviderName = providerName ?? DefaultDbProviderName
             });
@@ -85,7 +85,7 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
         }
 
 
-        public IEnumerable<ConnectionStringSettings> GetConnectionStrings()
+        public IEnumerable<ConnectionStringInfo> GetConnectionStrings()
         {
             return _connStrings;
         }
@@ -119,9 +119,9 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
         /// </summary>
         /// <param name="connStrings"></param>
         /// <returns></returns>
-        public MessageBusConfigBuilder SetConnectionStrings(IEnumerable<ConnectionStringSettings> connStrings)
+        public MessageBusConfigBuilder SetConnectionStrings(IEnumerable<ConnectionStringInfo> connStrings)
         {
-            _connStrings = new List<ConnectionStringSettings>(connStrings);
+            _connStrings = new List<ConnectionStringInfo>(connStrings);
             return this;
         }
 
@@ -132,7 +132,7 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
         /// <returns></returns>
         public MessageBusConfigBuilder SetConnectionStrings(IDictionary<string, string> connStrings)
         {
-            SetConnectionStrings(connStrings.Select(kv => new ConnectionStringSettings { Name = kv.Key, ConnectionString = kv.Value, ProviderName = this.DefaultDbProviderName }));
+            SetConnectionStrings(connStrings.Select(kv => new ConnectionStringInfo { Alias = kv.Key, ConnectionString = kv.Value, ProviderName = this.DefaultDbProviderName }));
             return this;
         }
 
@@ -155,13 +155,13 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
 
         public string Endpoint { get; set; }
 
-        private ConnectionStringSettings GetDefaultConnectionString()
+        private ConnectionStringInfo GetDefaultConnectionString()
         {
             if (Endpoint == null || Endpoint.Length == 0) throw new Exception("Configure endpoint first");
             string alias, table;
             if (!Impl.SqlUtil.ParseSqlEndpoint(Endpoint, out alias, out table))
                 throw new Exception("Invalid endpoint");
-            var cs = _connStrings.FirstOrDefault(x => x.Name == alias);
+            var cs = _connStrings.FirstOrDefault(x => x.Alias == alias);
             if (cs == null) cs = SqlHelper.GetConnectionString(alias);
             if (cs == null)
                 throw new Exception("Connection string not defined for alias: " + alias);
@@ -430,10 +430,10 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
                 if (!DIHelper.IsServiceRegistered<ISagaRepository>(_container))
                 {
                     string calias, tmp;
-                    ConnectionStringSettings cs = null;
+                    ConnectionStringInfo cs = null;
                     if (SqlUtil.ParseSqlEndpoint(Endpoint, out calias, out tmp))
                     {
-                        cs = _connStrings.FirstOrDefault(x => x.Name == calias);
+                        cs = _connStrings.FirstOrDefault(x => x.Alias == calias);
                         if (cs == null) cs = SqlHelper.GetConnectionString(calias);
                     }
                     else throw new Exception("Endpoint");

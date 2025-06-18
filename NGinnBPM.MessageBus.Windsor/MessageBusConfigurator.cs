@@ -27,7 +27,7 @@ namespace NGinnBPM.MessageBus.Windsor
     public partial class MessageBusConfigurator 
     {
         private IWindsorContainer _wc;
-        private List<ConnectionStringSettings> _connStrings = new List<ConnectionStringSettings>();
+        private List<ConnectionStringInfo> _connStrings = new List<ConnectionStringInfo>();
         private static Logger log = LogManager.GetCurrentClassLogger();
         
         private bool _useSqlOutputClause = false;
@@ -109,9 +109,10 @@ namespace NGinnBPM.MessageBus.Windsor
         /// <returns></returns>
         public  MessageBusConfigurator AddConnectionString(string alias, string connString, string providerName = null)
         {
-            if (_connStrings.Any(x => x.Name == alias)) throw new Exception("Connection string already added: " + alias);
-            _connStrings.Add(new ConnectionStringSettings {
-                                 Name = alias,
+            if (_connStrings.Any(x => x.Alias == alias)) throw new Exception("Connection string already added: " + alias);
+            _connStrings.Add(new ConnectionStringInfo
+            {
+                                 Alias = alias,
                                  ConnectionString = connString,
                                  ProviderName = providerName ?? DefaultDbProviderName
                              });
@@ -119,7 +120,7 @@ namespace NGinnBPM.MessageBus.Windsor
         }
 
 
-        public IEnumerable<ConnectionStringSettings> GetConnectionStrings()
+        public IEnumerable<ConnectionStringInfo> GetConnectionStrings()
         {
             return _connStrings;
         }
@@ -172,9 +173,9 @@ namespace NGinnBPM.MessageBus.Windsor
         /// </summary>
         /// <param name="connStrings"></param>
         /// <returns></returns>
-        public MessageBusConfigurator SetConnectionStrings(IEnumerable<ConnectionStringSettings> connStrings)
+        public MessageBusConfigurator SetConnectionStrings(IEnumerable<ConnectionStringInfo> connStrings)
         {
-            _connStrings  = new List<ConnectionStringSettings>(connStrings);
+            _connStrings  = new List<ConnectionStringInfo>(connStrings);
             return this;
         }
 
@@ -185,7 +186,7 @@ namespace NGinnBPM.MessageBus.Windsor
         /// <returns></returns>
         public MessageBusConfigurator SetConnectionStrings(IDictionary<string, string> connStrings)
         {
-            SetConnectionStrings(connStrings.Select(kv => new ConnectionStringSettings { Name = kv.Key, ConnectionString = kv.Value, ProviderName = this.DefaultDbProviderName }));
+            SetConnectionStrings(connStrings.Select(kv => new ConnectionStringInfo { Alias = kv.Key, ConnectionString = kv.Value, ProviderName = this.DefaultDbProviderName }));
             return this;
         }
 
@@ -318,13 +319,13 @@ namespace NGinnBPM.MessageBus.Windsor
             return this;
         }
 
-        private ConnectionStringSettings GetDefaultConnectionString()
+        private ConnectionStringInfo GetDefaultConnectionString()
         {
             if (Endpoint == null || Endpoint.Length == 0) throw new Exception("Configure endpoint first");
             string alias, table;
             if (!Impl.SqlUtil.ParseSqlEndpoint(Endpoint, out alias, out table))
                 throw new Exception("Invalid endpoint");
-            var cs = _connStrings.FirstOrDefault(x => x.Name == alias);
+            var cs = _connStrings.FirstOrDefault(x => x.Alias == alias);
             if (cs == null) cs = SqlHelper.GetConnectionString(alias);
             if (cs == null)
                 throw new Exception("Connection string not defined for alias: " + alias);
@@ -1086,10 +1087,10 @@ namespace NGinnBPM.MessageBus.Windsor
                 if (!IsServiceRegistered<ISagaRepository>())
                 {
                     string calias, tmp;
-                    ConnectionStringSettings cs = null;
+                    ConnectionStringInfo cs = null;
                     if (SqlUtil.ParseSqlEndpoint(Endpoint, out calias, out tmp))
                     {
-                        cs = _connStrings.FirstOrDefault(x => x.Name == calias);
+                        cs = _connStrings.FirstOrDefault(x => x.Alias == calias);
                         if (cs == null) cs = SqlHelper.GetConnectionString(calias);
                     } else throw new Exception("Endpoint");
                     _wc.Register(Component.For<ISagaRepository>().ImplementedBy<SqlSagaStateRepository>().LifeStyle.Singleton
@@ -1140,7 +1141,7 @@ namespace NGinnBPM.MessageBus.Windsor
 
         private string GetAppConfigString(string key, string defval)
         {
-            var s = ConfigurationManager.AppSettings[key];
+            string s = null;//ConfigurationManager.AppSettings[key];
             if (s == null) s = defval;
             if (s == null) return defval;
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
@@ -1171,7 +1172,7 @@ namespace NGinnBPM.MessageBus.Windsor
 
         protected DbConnection OpenConnection(string cstring)
         {
-            var cs = _connStrings.FirstOrDefault(x => x.Name == cstring);
+            var cs = _connStrings.FirstOrDefault(x => x.Alias == cstring);
             return SqlHelper.OpenConnection(cs == null ? cstring : cs.ConnectionString, cs == null ? null : cs.ProviderName);
         }
         /// <summary>
@@ -1180,10 +1181,12 @@ namespace NGinnBPM.MessageBus.Windsor
         /// <returns></returns>
         public MessageBusConfigurator ConfigureFromAppConfig()
         {
-            foreach (ConnectionStringSettings cs in ConfigurationManager.ConnectionStrings)
+            /*
+            foreach (ConnectionStringInfo cs in ConfigurationManager.ConnectionStrings)
             {
                 AddConnectionString(cs.Name, cs.ConnectionString);
-            }
+            }*/
+            throw new NotImplementedException();
             SetEndpoint(GetAppConfigString("NGinnMessageBus.Endpoint", null));
             SetMaxConcurrentMessages(Int32.Parse(GetAppConfigString("NGinnMessageBus.MaxConcurrentMessages", "4")));
             _useSqlOutputClause = bool.Parse(GetAppConfigString("NGinnMessageBus.UseSqlOutputClause", "false"));

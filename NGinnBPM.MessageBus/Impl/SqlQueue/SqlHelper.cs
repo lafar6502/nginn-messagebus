@@ -154,12 +154,13 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		    return new CommonQueueOps(dialect);
 		}
 
-		public static ConnectionStringSettings GetConnectionString(string connStr, string providerName = null)
+		public static ConnectionStringInfo GetConnectionString(string connStr, string providerName = null)
 		{
 		    if (connStr == null) return null;
-            var cs = ConfigurationManager.ConnectionStrings[connStr];
+			ConnectionStringInfo cs = null; // ConfigurationManager.ConnectionStrings[connStr];
             if (cs != null) return cs;
-            return new ConnectionStringSettings {
+            return new ConnectionStringInfo
+            {
               ConnectionString = connStr,
               ProviderName = providerName == null ? "System.Data.SqlClient" : providerName
             };
@@ -167,7 +168,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
 		
         public static DbConnection OpenConnection(string connectionString, string dbProvider = null)
         {
-            var cs = ConfigurationManager.ConnectionStrings[connectionString];
+			ConnectionStringInfo cs = null; // ConfigurationManager.ConnectionStrings[connectionString];
             if (cs != null)
             {
                 dbProvider = cs.ProviderName;
@@ -188,7 +189,7 @@ namespace NGinnBPM.MessageBus.Impl.SqlQueue
             }
         }
 
-        public static DbConnection OpenConnection(ConnectionStringSettings cs)
+        public static DbConnection OpenConnection(ConnectionStringInfo cs)
         {
             if (cs == null) throw new Exception("Connection string not provided");
             return OpenConnection(cs.ConnectionString, cs.ProviderName);

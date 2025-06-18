@@ -64,8 +64,8 @@ namespace NGinnBPM.MessageBus.Impl.Sagas
         protected void AccessDb(Action<DbConnection> act)
         {
             var cn = MessageBusContext.ReceivingConnection as DbConnection;
-            var cs = SqlHelper.GetConnectionString(this.ConnectionString, this.ProviderName);
-            if (cn != null && (cs == null || SqlHelper.IsSameDatabaseConnection(cn, cs.ConnectionString)))
+            var cs = this.ConnectionString; // SqlHelper.GetConnectionString(this.ConnectionString, this.ProviderName);
+            if (cn != null && (cs == null || SqlHelper.IsSameDatabaseConnection(cn, cs)))
             {
                 act(cn);
             }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NLog;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Threading;
 using System.IO;
@@ -105,7 +105,7 @@ namespace NGinnBPM.MessageBus.Impl
         
         private string _connAlias;
         private string _queueTable = "MessageQueue";
-        private Dictionary<string, ConnectionStringSettings> _connStrings = new  Dictionary<string, ConnectionStringSettings>();
+        private Dictionary<string, ConnectionStringInfo> _connStrings = new  Dictionary<string, ConnectionStringInfo>();
 
         protected ITransactionScopeFactory TransactionFactory { get; set; }
 
@@ -173,7 +173,7 @@ namespace NGinnBPM.MessageBus.Impl
         /// <summary>
         /// DB connnection string configuration, alias names are required
         /// </summary>
-        public IEnumerable<ConnectionStringSettings> ConnectionStrings
+        public IEnumerable<ConnectionStringInfo> ConnectionStrings
         {
             get { return _connStrings.Values; }
             set 
@@ -181,8 +181,8 @@ namespace NGinnBPM.MessageBus.Impl
                 _connStrings.Clear();
                 foreach(var cs in value)
                 {
-                    if (string.IsNullOrEmpty(cs.Name)) continue;
-                    _connStrings[cs.Name] = cs;
+                    if (string.IsNullOrEmpty(cs.Alias)) continue;
+                    _connStrings[cs.Alias] = cs;
                 }
             }
         }
@@ -203,7 +203,7 @@ namespace NGinnBPM.MessageBus.Impl
         /// <summary>
         /// Connection string for current endpoint
         /// </summary>
-        public ConnectionStringSettings ConnectionString
+        public ConnectionStringInfo ConnectionString
         {
             get
             {
@@ -1073,10 +1073,13 @@ namespace NGinnBPM.MessageBus.Impl
         }
        
 
-        protected ConnectionStringSettings GetConnectionString(string alias)
+        protected ConnectionStringInfo GetConnectionString(string alias)
         {
-            ConnectionStringSettings cs;
-            if (!_connStrings.TryGetValue(alias, out cs)) cs = ConfigurationManager.ConnectionStrings[alias];
+            ConnectionStringInfo cs;
+            if (!_connStrings.TryGetValue(alias, out cs))
+            {
+                //cs = ConfigurationManager.ConnectionStrings[alias];
+            }
             if (cs != null && string.IsNullOrEmpty(cs.ProviderName)) cs.ProviderName = DefaultProviderName;
             return cs;
         }
@@ -1221,7 +1224,7 @@ namespace NGinnBPM.MessageBus.Impl
         /// <param name="messages"></param>
         /// <param name="serializer">message serializer to use</param>
         /// <returns>id of last message inserted</returns>
-        private void InsertMessageBatchToLocalDatabaseQueues(ConnectionStringSettings connString, IDictionary<string, ICollection<MessageContainer>> messages)
+        private void InsertMessageBatchToLocalDatabaseQueues(ConnectionStringInfo connString, IDictionary<string, ICollection<MessageContainer>> messages)
         {
             var cm = _curMsg;
             if (UseReceiveTransactionForSending && 
