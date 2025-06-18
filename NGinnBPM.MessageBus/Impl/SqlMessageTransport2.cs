@@ -568,6 +568,19 @@ namespace NGinnBPM.MessageBus.Impl
             }
         
         }
+
+        private void SetDebugMessageId(string messageId)
+        {
+            if (messageId != null)
+            {
+                NLog.MappedDiagnosticsContext.Set("nmbrecvmsg", messageId);
+                System.Diagnostics.Activity.Current
+            }
+            else
+            {
+                NLog.MappedDiagnosticsContext.Remove("nmbrecvmsg");
+            }
+        }
         /// <summary>
         /// Cleanup thread procedure
         /// Removes old messages and handles 'retry' messages
@@ -804,8 +817,7 @@ namespace NGinnBPM.MessageBus.Impl
                                 }
                             }
                         }
-
-                        NLog.MappedDiagnosticsContext.Set("nmbrecvmsg", id);
+                        SetDebugMessageId(id);
                         log.Debug("Selected message {0} for processing", id);
                         
                         _frequency.Enqueue(_freqSw.ElapsedTicks);
@@ -1025,7 +1037,7 @@ namespace NGinnBPM.MessageBus.Impl
                         log.Warn("OnTransactionEnded error: {0}", e);
                     }
                 }
-                NLog.MappedDiagnosticsContext.Remove("nmbrecvmsg");
+                SetDebugMessageId(null);
             }
         }
 
