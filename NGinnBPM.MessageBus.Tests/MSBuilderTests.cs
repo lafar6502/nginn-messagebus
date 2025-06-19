@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NGinnBPM.MessageBus.Impl;
+using NGinnBPM.MessageBus.Impl.SqlQueue;
 using NGinnBPM.MessageBus.MSDependencyInjection;
 using NUnit.Framework;
 
@@ -46,7 +47,16 @@ namespace NGinnBPM.MessageBus.Tests
             var sp = sc.BuildServiceProvider(true);
             var mb = sp.GetRequiredService<IMessageBus>();
 
-            for(var i=0; i<20; i++)
+            if (true)
+            {
+                using (var con = SqlHelper.OpenConnection(cs["testdb"], null))
+                {
+                    IMessageDispatcher md = sp.GetService<IMessageDispatcher>();
+                    md.DispatchMessage(new Impl.InternalEvents.DatabaseInit { Connection = con }, mb);
+                }
+            }
+
+            for (var i=0; i<20; i++)
             {
                 mb.Notify(new Tests.TestMsg { Something = "bibibi " + i });
             }

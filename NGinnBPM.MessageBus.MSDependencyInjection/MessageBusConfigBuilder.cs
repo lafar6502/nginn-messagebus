@@ -8,6 +8,7 @@ using NGinnBPM.MessageBus.Impl.SqlQueue;
 using NGinnBPM.MessageBus.Impl.HttpService;
 using NGinnBPM.MessageBus.Messages;
 using NGinnBPM.MessageBus.Impl.Sagas;
+using Microsoft.Extensions.Configuration;
 
 namespace NGinnBPM.MessageBus.MSDependencyInjection
 {
@@ -154,6 +155,60 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
         }
 
         public string Endpoint { get; set; }
+
+        protected static T GetCfgValue<T>(IConfigurationSection cs, string name, T defVal)
+        {
+            var s = cs[name];
+            if (s == null) return defVal;
+            return (T) Convert.ChangeType(s, typeof(T));
+        }
+
+        public MessageBusConfigBuilder UseConfiguration(IConfigurationSection cs)
+        {
+            SetEndpoint(cs["Endpoint"]);
+            SetMaxConcurrentMessages(GetCfgValue(cs, "MaxConcurrentMessages", 4));
+            _useSqlOutputClause = GetCfgValue(cs, "UseSqlOutputClause", false);
+            string rf = GetCfgValue(cs, "RoutingFile", (string) null);
+            if (!string.IsNullOrEmpty(rf)) UseStaticMessageRouting(rf);
+
+            string s = GetCfgValue(cs, "HttpListener", (string) null);
+            //if (!string.IsNullOrEmpty(s)) ConfigureHttpReceiver(s);
+            s = GetCfgValue(cs, "MessageRetentionPeriod", (string) null);
+            if (!string.IsNullOrEmpty(s)) SetMessageRetentionPeriod(TimeSpan.Parse(s));
+            this.SetExposeReceiveConnectionToApplication(true);
+            this.UseAppManagedConnectionForSending = true;
+            this.SetEnableSagas(GetCfgValue(cs, "EnableSagas", false));
+            this.SetSendOnly(GetCfgValue(cs, "SendOnly", false));
+            this.AutoCreateQueues = GetCfgValue(cs, "AutoCreateDatabase", false);
+            this.AlwaysPublishLocal = GetCfgValue(cs, "AlwaysPublishLocal", false);
+
+            var sectCs = cs.GetSection("ConnectionStrings");
+            if (sectCs != null)
+            {
+                foreach(var x in sectCs.AsEnumerable())
+                {
+                    if (string.IsNullOrEmpty(x.Key)) continue;
+                    this.AddConnectionString(x.Key, x.Value);
+                }
+            }
+
+            return this;
+            /*
+            
+            
+            
+            SetSendOnly(bool.Parse(GetAppConfigString("NGinnMessageBus.SendOnly", "false")));
+            AutoCreateDatabase(bool.Parse(GetAppConfigString("NGinnMessageBus.AutoCreateDatabase", "true")));
+            SetAlwaysPublishLocal(bool.Parse(GetAppConfigString("NGinnMessageBus.AlwaysPublishLocal", "true")));
+            s = GetAppConfigString("NGinnMessageBus.PluginDirectory", null);
+            if (!string.IsNullOrEmpty(s))
+            {
+                LoadPluginsFrom(s);
+            }
+            return this;
+            */
+            return this;
+        }
 
         private ConnectionStringInfo GetDefaultConnectionString()
         {
@@ -457,6 +512,7 @@ namespace NGinnBPM.MessageBus.MSDependencyInjection
                 ConfigureSqlMessageBus();
             }
 
+            
             return this;
         }
 
